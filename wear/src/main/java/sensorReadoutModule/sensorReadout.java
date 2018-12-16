@@ -1,19 +1,18 @@
 package sensorReadoutModule;
 
-import java.util.List;
-
 import android.content.Context;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 
-public class sensorReadout implements SensorEventListener {
+public class sensorReadout{
 
     private SensorManager mSensorManager;
     private Sensor AccSensor, GyroSensor, MagneticSensor;
     private SensorEventListener sensorListenerAcc, sensorListenerGyro, sensorListenerMagn;
     private float ACCX, ACCY, ACCZ, GYRX, GYRY, GYRZ, MAGX, MAGY, MAGZ;
+    private float[] dataObject;
 
     Context mContext;
 
@@ -25,33 +24,29 @@ public class sensorReadout implements SensorEventListener {
 
     public void initSensors()
     {
-        /* TODO unregister from sensors after finishing useing them.*/
+        /* TODO unregister from sensors after finishing using them.*/
         AccSensor = GyroSensor = MagneticSensor = null;
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
-
-        /* delete this:*/
-        List<Sensor> deviceSensors = mSensorManager.getSensorList(Sensor.TYPE_ALL);
-        List<Sensor> AccSensorList = mSensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER);
-        List<Sensor> GyroSensorList = mSensorManager.getSensorList(Sensor.TYPE_GYROSCOPE);
-        List<Sensor> MagneticSensorList = mSensorManager.getSensorList(Sensor.TYPE_MAGNETIC_FIELD);
-        /* \delete this*/
 
         AccSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         if (AccSensor == null)
         {
             // No Sensor found on the device
+            /* TODO handle ERRORS */
         }
 
         GyroSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         if (GyroSensor == null)
         {
             // No Sensor found on the device
+            /* TODO handle ERRORS */
         }
 
         MagneticSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         if (MagneticSensor == null)
         {
             // No Sensor found on the device
+            /* TODO handle ERRORS */
         }
 
         /* Init Event-Listeners:*/
@@ -95,33 +90,24 @@ public class sensorReadout implements SensorEventListener {
 
             }
         };
-
-
         mSensorManager.registerListener(sensorListenerAcc, AccSensor, SensorManager.SENSOR_DELAY_NORMAL);
         mSensorManager.registerListener(sensorListenerGyro, GyroSensor, SensorManager.SENSOR_DELAY_NORMAL);
         mSensorManager.registerListener(sensorListenerMagn, MagneticSensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
-    public void getValues ()
+    public void getValues (float[] dataObject)
     {
         /* Format for captured data: ACCX ACCY ACCZ GYRX GYRY GYRZ MAGX MAGY MAGZ */
         /* Required sensors: Accelerometer; Gyroscope; Magnetic Field Sensor */
-        /* Do something to get values... */
-
-
+        /* TODO Check if synchronization between sensor data is correct. (Difference in timestamp < xy? */
+        dataObject[1] = ACCX;
+        dataObject[2] = ACCY;
+        dataObject[3] = ACCZ;
+        dataObject[4] = GYRX;
+        dataObject[5] = GYRY;
+        dataObject[6] = GYRZ;
+        dataObject[7] = MAGX;
+        dataObject[8] = MAGY;
+        dataObject[9] = MAGZ;
     }
-
-    @Override
-    public final void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // Do something here if sensor accuracy changes.
-    }
-
-    @Override
-    public final void onSensorChanged(SensorEvent event) {
-        // The light sensor returns a single value.
-        // Many sensors return 3 values, one for each axis.
-        float lux = event.values[0];
-        // Do something with this sensor value.
-    }
-
 }

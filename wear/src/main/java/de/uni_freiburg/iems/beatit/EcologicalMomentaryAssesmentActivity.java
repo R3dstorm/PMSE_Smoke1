@@ -6,13 +6,11 @@ import android.support.wearable.activity.WearableActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import sensorReadoutModule.sensorReadout;
 import sensorReadoutModule.dataAcquisitionActivity;
 
 public class EcologicalMomentaryAssesmentActivity extends WearableActivity implements View.OnClickListener {
 
     private TextView mTextView;
-    private sensorReadout sensor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,9 +18,7 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
         setContentView(R.layout.activity_ecological_momentary_assesment);
 
         mTextView = (TextView) findViewById(R.id.text);
-        sensor = new sensorReadout(this);
-        sensor.initSensors();
-        sensor.getValues();
+
         // Enables Always-on
         setAmbientEnabled();
         Button daqButton = findViewById(R.id.button);
