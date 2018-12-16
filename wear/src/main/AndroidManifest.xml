@@ -32,6 +32,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="sensorReadoutModule.dataAcquisitionActivity"
+            android:label="@string/DataAcquisition"
+            android:parentActivityName=".EcologicalMomentaryAssesmentActivity">
+        </activity>
     </application>
 
 </manifest>
