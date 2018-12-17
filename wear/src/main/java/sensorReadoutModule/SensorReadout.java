@@ -1,25 +1,38 @@
 package sensorReadoutModule;
 
 import android.content.Context;
+import android.util.Log;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 
-public class sensorReadout{
+public class SensorReadout {
 
+    static class SensorReadoutConfig{
+        public boolean enableTerminalOutput;
+
+        public SensorReadoutConfig (){
+            enableTerminalOutput = false;
+        }
+    }
+    private SensorReadoutConfig readOutConfig;
     private SensorManager mSensorManager;
     private Sensor AccSensor, GyroSensor, MagneticSensor;
     private SensorEventListener sensorListenerAcc, sensorListenerGyro, sensorListenerMagn;
     private float ACCX, ACCY, ACCZ, GYRX, GYRY, GYRZ, MAGX, MAGY, MAGZ;
     private float[] dataObject;
+    private static final String TAG_ACC = "ACC";
+    private static final String TAG_GYR = "GYR";
+    private static final String TAG_MAG = "MAG";
 
     Context mContext;
 
-    public sensorReadout (Context mContext)
+    public SensorReadout(Context mContext)
     {
         /* Construct this class... */
         this.mContext = mContext;
+        this.readOutConfig = new SensorReadoutConfig();
     }
 
     public void initSensors()
@@ -50,13 +63,15 @@ public class sensorReadout{
         }
 
         /* Init Event-Listeners:*/
-
         sensorListenerAcc = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent event) {
                 ACCX = event.values[0];
                 ACCY = event.values[1];
                 ACCZ = event.values[2];
+                if (readOutConfig.enableTerminalOutput == true){
+                    Log.d(TAG_ACC, String.format("%f, %f, %f, %d", ACCX, ACCY, ACCZ, event.timestamp));
+                }
             }
 
             @Override
@@ -70,6 +85,9 @@ public class sensorReadout{
                 GYRX = event.values[0];
                 GYRY = event.values[1];
                 GYRZ = event.values[2];
+                if (readOutConfig.enableTerminalOutput == true){
+                    Log.d(TAG_GYR, String.format("%f, %f, %f, %d", GYRX, GYRY, GYRZ, event.timestamp));
+                }
             }
 
             @Override
@@ -83,6 +101,9 @@ public class sensorReadout{
                 MAGX = event.values[0];
                 MAGY = event.values[1];
                 MAGZ = event.values[2];
+                if (readOutConfig.enableTerminalOutput == true){
+                    Log.d(TAG_MAG, String.format("%f, %f, %f, %d", MAGX, MAGY, MAGZ, event.timestamp));
+                }
             }
 
             @Override
@@ -90,9 +111,9 @@ public class sensorReadout{
 
             }
         };
-        mSensorManager.registerListener(sensorListenerAcc, AccSensor, SensorManager.SENSOR_DELAY_NORMAL);
-        mSensorManager.registerListener(sensorListenerGyro, GyroSensor, SensorManager.SENSOR_DELAY_NORMAL);
-        mSensorManager.registerListener(sensorListenerMagn, MagneticSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(sensorListenerAcc, AccSensor, 20000); /* FIXME sensor always outputs sampling period of 10ms ???*/
+        mSensorManager.registerListener(sensorListenerGyro, GyroSensor, 20000);
+        mSensorManager.registerListener(sensorListenerMagn, MagneticSensor, 20000);
     }
 
     public void getValues (float[] dataObject)

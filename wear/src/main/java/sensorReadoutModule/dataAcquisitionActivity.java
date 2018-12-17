@@ -1,6 +1,5 @@
 package sensorReadoutModule;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.wearable.activity.WearableActivity;
 import android.widget.TextView;
@@ -12,7 +11,7 @@ public class dataAcquisitionActivity extends WearableActivity {
 
     private float[][] dataStorage;
     private float[] singleMeasurement;
-    private sensorReadout sensor;
+    private SensorReadout sensor;
     private TextView dataOutputTextACCX, dataOutputTextACCY, dataOutputTextACCZ;
     private TextView dataOutputTextGYRX, dataOutputTextGYRY, dataOutputTextGYRZ;
     private TextView dataOutputTextMAGX, dataOutputTextMAGY, dataOutputTextMAGZ;
@@ -35,8 +34,8 @@ public class dataAcquisitionActivity extends WearableActivity {
 
         initDAQ();
 
-        /* Create 100ms refresh timer*/
-        startDataRefreshTimerTask(100);
+        /* Create 250ms refresh timer*/
+        startDataRefreshTimerTask(250);
 
         // Enables Always-on
         setAmbientEnabled();
@@ -48,7 +47,7 @@ public class dataAcquisitionActivity extends WearableActivity {
     /* TODO create separate function for starting the sensors?*/
     private void initDAQ (){
         dataStorage = new float[10][3000];
-        sensor = new sensorReadout(this);
+        sensor = new SensorReadout(this);
         sensor.initSensors();
     }
 
