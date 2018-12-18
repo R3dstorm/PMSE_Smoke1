@@ -1,20 +1,43 @@
 package sensorReadoutModule;
 
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.wearable.activity.WearableActivity;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.ToggleButton;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
+
 import de.uni_freiburg.iems.beatit.R;
 
-public class dataAcquisitionActivity extends WearableActivity {
+import com.opencsv.CSVWriter;
+import static com.opencsv.ICSVWriter.NO_ESCAPE_CHARACTER;
+import static com.opencsv.ICSVWriter.NO_QUOTE_CHARACTER;
 
-    private float[][] dataStorage;
+/* Callback interface for measurementCompleteEvent*/
+interface MeasurementCompleteListener {
+    void measurementCompleted();
+}
+
+public class dataAcquisitionActivity extends WearableActivity implements MeasurementCompleteListener{
+
     private float[] singleMeasurement;
+    private float[][] dataStorage;
     private SensorReadout sensor;
+    private Timer timer;
     private TextView dataOutputTextACCX, dataOutputTextACCY, dataOutputTextACCZ;
     private TextView dataOutputTextGYRX, dataOutputTextGYRY, dataOutputTextGYRZ;
     private TextView dataOutputTextMAGX, dataOutputTextMAGY, dataOutputTextMAGZ;
+    private ToggleButton idleToggleButton;
+    private ToggleButton smokingToggleButton;
+    private Button storeDataButton;
+    private boolean labelIsSmoking;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +55,59 @@ public class dataAcquisitionActivity extends WearableActivity {
         dataOutputTextMAGY = (TextView) findViewById(R.id.textView9);
         dataOutputTextMAGZ = (TextView) findViewById(R.id.textView10);
 
+        idleToggleButton = findViewById(R.id.toggleButton);
+        smokingToggleButton = findViewById(R.id.toggleButton2);
+        storeDataButton = findViewById(R.id.button2);
+
+        labelIsSmoking = smokingToggleButton.isChecked();
+
         initDAQ();
+
+        /* Update Button for Measurement (Idle/Recording)*/
+        idleToggleButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (idleToggleButton.isChecked() == true){
+                    idleToggleButton.setTextOn("RECORDING");
+                    idleToggleButton.setChecked(true);
+                    sensor.triggerMeasurement(dataAcquisitionActivity.this);
+                }
+                else {
+                    /* Do nothing*/
+                }
+            }
+        });
+
+        /* Update Button for Smoking-Label:*/
+        smokingToggleButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                labelIsSmoking = smokingToggleButton.isChecked();
+            }
+        });
+
+        /* Operate store data button */
+        storeDataButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                float smokingValue = 0;
+
+                /* Get data*/
+                dataStorage = sensor.getDataStorage();
+                /* Mark data as smoking / non-smoking*/
+                if (labelIsSmoking){
+                    smokingValue = 1;
+                }
+                for (int i = 0; i<dataStorage.length;i++){
+                    dataStorage[i][0] = smokingValue;
+                }
+                /* Store data to file*/
+                storeDataToFile();
+                /* Reset recording button*/
+                idleToggleButton.setTextOn("RECORDING");
+                idleToggleButton.setChecked(false);
+            }
+        });
 
         /* Create 250ms refresh timer*/
         startDataRefreshTimerTask(250);
@@ -41,23 +116,34 @@ public class dataAcquisitionActivity extends WearableActivity {
         setAmbientEnabled();
     }
 
-    /* TODO on delete? -> unsubscribe sensor listener*/
+    /* Stop sensors and timers */
+    @Override
+    protected void onStop()
+    {
+        super.onStop();
+        stopDAQ();
+        timer.cancel();
+    }
+
 
     /* Initialize and start the acquisition of sensor data*/
-    /* TODO create separate function for starting the sensors?*/
     private void initDAQ (){
-        dataStorage = new float[10][3000];
         sensor = new SensorReadout(this);
         sensor.initSensors();
     }
 
-    /* Start a Timer Task to schedule the refresh of the data output text*/
+    private void stopDAQ()
+    {
+        sensor.stopSensors();
+    }
+
+    /* Start a Timer Task to schedule the refresh of the data output text */
     private void startDataRefreshTimerTask (int repeatDelay){
-        Timer timer = new Timer();
+        timer = new Timer();
         TimerTask refreshTimerTak = new TimerTask() {
             @Override
             public void run() {
-                sensor.getValues(singleMeasurement);
+                sensor.getSample(singleMeasurement);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -77,5 +163,58 @@ public class dataAcquisitionActivity extends WearableActivity {
 
         timer.scheduleAtFixedRate(refreshTimerTak, 100, repeatDelay);
     }
-    /* TODO cancel Timer?*/
+
+    private void storeDataToFile ()
+    {
+        /* Checks if external storage is available for read and write */
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            File baseDir = getExternalFilesDir(Environment.DIRECTORY_MUSIC);
+            File file = new File(baseDir,"AnalysisData.csv" );
+            CSVWriter writer;
+
+            /* Check for existing files*/
+            int fileCounter = 0;
+            while(file.exists()) {
+                fileCounter++;
+                String fileName = "AnalysisData"+fileCounter+".csv";
+                file = new File(baseDir,fileName );
+            }
+            try {
+                writer = new CSVWriter(new FileWriter(file),' ',NO_QUOTE_CHARACTER, NO_ESCAPE_CHARACTER,"\n");//filePath));
+                for (int i=0;i<dataStorage.length;i++){
+
+                    String smokeString;
+                    if (dataStorage[i][0] == 1) {
+                        smokeString = "smoking";
+                    }
+                    else{
+                        smokeString = "NULL";
+                    }
+
+                    String[] data = {smokeString,String.format("%.3f",dataStorage[i][1]),
+                            String.format("%.6f",dataStorage[i][2]),
+                            String.format("%.6f",dataStorage[i][3]),
+                            String.format("%.6f",dataStorage[i][4]),
+                            String.format("%.6f",dataStorage[i][5]),
+                            String.format("%.6f",dataStorage[i][6]),
+                            String.format("%.6f",dataStorage[i][7]),
+                            String.format("%.6f",dataStorage[i][8]),
+                            String.format("%.6f",dataStorage[i][9])};
+                    writer.writeNext(data);
+                }
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void measurementCompleted(){
+        /* The measurement is completed*/
+        idleToggleButton.setTextOn("RECORDED");
+        idleToggleButton.setChecked(true);
+
+    }
 }
