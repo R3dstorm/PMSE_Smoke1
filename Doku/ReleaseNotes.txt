@@ -4,16 +4,22 @@ Release Notes:
 Notes for feature branches:
 SMOK-7:
 Implements a feature "DATA ACQUSITION" to record data from the inertial sensors embedded in the "wear" smart watch.
+Display Layout:
+ACCX	GYRX	MAGX
+ACCY	GYRY	MAGY
+ACCZ	GYRZ	MAGZ
+
 Measure Data:
 1. Press "IDLE" to switch to "RECORDING"
 2. 3000 Samples are measured (approx. 1 minute of sample time) 
 3. "RECORDING" turns to "RECORDED"
 4. Choose whether the recorded data should be labeled "NONSMOKING" or "SMOKING"
 5. Press "STOREDATA" to store the Data to the smart watch memory.
+	- Data is stored in AnalysisDataX.csv with X={N} (1,2,3...)
 
 how to recover files from wear using adb:
 (The data will be stored in the same folder from which adb is started)
---> adb pull /storage/emulated/0/Android/data/de.uni_freiburg.iems.beatit/files/Music/AnalysisData.csv "... up to AnalysisDataX.csv with X={N} (1,2,3...)"
+--> adb pull /storage/emulated/0/Android/data/de.uni_freiburg.iems.beatit/files/Music
 
 browse through collected data:
 --> adb shell 
@@ -24,3 +30,6 @@ delete:
 --> adb shell 
 --> cd /storage/emulated/0/Android/data/de.uni_freiburg.iems.beatit/files/Music
 --> rm "..... .csv"
+
+exit shell:
+--> exit
