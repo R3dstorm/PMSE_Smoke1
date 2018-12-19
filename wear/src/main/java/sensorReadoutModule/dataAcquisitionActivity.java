@@ -1,5 +1,6 @@
 package sensorReadoutModule;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.wearable.activity.WearableActivity;
@@ -31,6 +32,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
     private float[][] dataStorage;
     private SensorReadout sensor;
     private Timer timer;
+    private TextView daqStatusText;
     private TextView dataOutputTextACCX, dataOutputTextACCY, dataOutputTextACCZ;
     private TextView dataOutputTextGYRX, dataOutputTextGYRY, dataOutputTextGYRZ;
     private TextView dataOutputTextMAGX, dataOutputTextMAGY, dataOutputTextMAGZ;
@@ -45,15 +47,17 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         setContentView(R.layout.activity_data_acquisition);
 
         singleMeasurement = new float[10];
-        dataOutputTextACCX = (TextView) findViewById(R.id.textView2);
-        dataOutputTextACCY = (TextView) findViewById(R.id.textView3);
-        dataOutputTextACCZ = (TextView) findViewById(R.id.textView4);
-        dataOutputTextGYRX = (TextView) findViewById(R.id.textView5);
-        dataOutputTextGYRY = (TextView) findViewById(R.id.textView6);
-        dataOutputTextGYRZ = (TextView) findViewById(R.id.textView7);
-        dataOutputTextMAGX = (TextView) findViewById(R.id.textView8);
-        dataOutputTextMAGY = (TextView) findViewById(R.id.textView9);
-        dataOutputTextMAGZ = (TextView) findViewById(R.id.textView10);
+
+        daqStatusText = findViewById(R.id.textView);
+        dataOutputTextACCX = findViewById(R.id.textView2);
+        dataOutputTextACCY = findViewById(R.id.textView3);
+        dataOutputTextACCZ = findViewById(R.id.textView4);
+        dataOutputTextGYRX = findViewById(R.id.textView5);
+        dataOutputTextGYRY = findViewById(R.id.textView6);
+        dataOutputTextGYRZ = findViewById(R.id.textView7);
+        dataOutputTextMAGX = findViewById(R.id.textView8);
+        dataOutputTextMAGY = findViewById(R.id.textView9);
+        dataOutputTextMAGZ = findViewById(R.id.textView10);
 
         idleToggleButton = findViewById(R.id.toggleButton);
         smokingToggleButton = findViewById(R.id.toggleButton2);
@@ -128,8 +132,14 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
 
     /* Initialize and start the acquisition of sensor data*/
     private void initDAQ (){
+        int error = 0;
         sensor = new SensorReadout(this);
-        sensor.initSensors();
+        error = sensor.initSensors();
+        if (error != 0){
+            daqStatusText.setText("sensors unsupported");
+            daqStatusText.setTextColor(Color.RED);
+        }
+
     }
 
     private void stopDAQ()

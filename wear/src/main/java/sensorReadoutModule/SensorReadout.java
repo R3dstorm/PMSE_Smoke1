@@ -22,7 +22,6 @@ public class SensorReadout {
     private SensorEventListener sensorListenerAcc, sensorListenerGyro, sensorListenerMagn;
     private boolean accCollected, gyrCollected, magCollected;
     private float ACCX, ACCY, ACCZ, GYRX, GYRY, GYRZ, MAGX, MAGY, MAGZ;
-    private float[] dataObject;
     private float[][] dataStorage;
     private int dataStoragePointer;
     private static final String TAG_ACC = "ACC";
@@ -40,35 +39,17 @@ public class SensorReadout {
         this.readOutConfig = new SensorReadoutConfig();
         measurementTriggered = false;
         accCollected = gyrCollected = magCollected = false;
+        sensorListenerAcc = sensorListenerGyro = sensorListenerMagn = null;
+        ACCX = ACCY = ACCZ = GYRX = GYRY = GYRZ = MAGX = MAGY = MAGZ = 0;
         dataStorage = new float[3000][10];
         dataStoragePointer = 0;
     }
 
-    public void initSensors()
+    public int initSensors()
     {
+        int error = 0;
         AccSensor = GyroSensor = MagneticSensor = null;
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
-
-        AccSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        if (AccSensor == null)
-        {
-            // No Sensor found on the device
-            /* TODO handle ERRORS */
-        }
-
-        GyroSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        if (GyroSensor == null)
-        {
-            // No Sensor found on the device
-            /* TODO handle ERRORS */
-        }
-
-        MagneticSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        if (MagneticSensor == null)
-        {
-            // No Sensor found on the device
-            /* TODO handle ERRORS */
-        }
 
         /* Init Event-Listeners:*/
         sensorListenerAcc = new SensorEventListener() {
@@ -80,9 +61,11 @@ public class SensorReadout {
                 if (readOutConfig.enableTerminalOutput == true){
                     Log.d(TAG_ACC, String.format("%f, %f, %f, %d", ACCX, ACCY, ACCZ, event.timestamp));
                 }
-                /* Make sure exactly one sample from each sensor is measured per data point */
-                if ((measurementTriggered == true) &&
-                        ((gyrCollected == true) && (magCollected == true))) {
+                /* Make sure exactly one sample from each sensor is measured per data point.
+                 * If there are unsupported sensors go on anyway.*/
+                if ((measurementTriggered == true)
+                        && ((gyrCollected == true) || (GyroSensor == null))
+                        && ((magCollected == true)|| (MagneticSensor == null))) {
                     accCollected = false;
                     gyrCollected = false;
                     magCollected = false;
@@ -153,16 +136,49 @@ public class SensorReadout {
 
             }
         };
-        mSensorManager.registerListener(sensorListenerAcc, AccSensor, 20000); /* FIXME sensor always outputs sampling period of 10ms ???*/
-        mSensorManager.registerListener(sensorListenerGyro, GyroSensor, 20000);
-        mSensorManager.registerListener(sensorListenerMagn, MagneticSensor, 20000);
+
+        AccSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        if (AccSensor == null){
+            // No Sensor found on the device
+            Log.e(TAG_ACC,"No accelerometer supported");
+            error = -1;
+        }
+        else{
+            mSensorManager.registerListener(sensorListenerAcc, AccSensor, 20000);} /* FIXME sensor always outputs sampling period of 10ms ???*/
+
+        GyroSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        if (GyroSensor == null){
+            // No Sensor found on the device
+            /* TODO handle ERRORS */
+            Log.e(TAG_GYR,"No gyroscope supported");
+            error = -1;
+        }
+        else{
+            mSensorManager.registerListener(sensorListenerGyro, GyroSensor, 20000);
+        }
+
+        MagneticSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        if (MagneticSensor == null){
+            // No Sensor found on the device
+            /* TODO handle ERRORS */
+            Log.e(TAG_MAG,"No magnetic field sensor supported");
+            error = -1;
+        }
+        else{
+            mSensorManager.registerListener(sensorListenerMagn, MagneticSensor, 20000);
+        }
+
+        return error;
     }
 
     public void stopSensors()
     {
-        mSensorManager.unregisterListener(sensorListenerAcc, AccSensor);
-        mSensorManager.unregisterListener(sensorListenerGyro, GyroSensor);
-        mSensorManager.unregisterListener(sensorListenerMagn, MagneticSensor);
+        if (sensorListenerAcc != null){
+            mSensorManager.unregisterListener(sensorListenerAcc, AccSensor);}
+        if (sensorListenerGyro != null){
+            mSensorManager.unregisterListener(sensorListenerGyro, GyroSensor);}
+        if (sensorListenerMagn != null){
+            mSensorManager.unregisterListener(sensorListenerMagn, MagneticSensor);}
     }
 
     public void triggerMeasurement(MeasurementCompleteListener _measurementCompleteListener){
