@@ -17,6 +17,9 @@ Measure Data:
 5. Press "STOREDATA" to store the Data to the smart watch memory.
 	- Data is stored in AnalysisDataX.csv with X={N} (1,2,3...)
 
+Format of stored Data (space separated .csv):
+[smoking(1)/nonSmoking(0)] [ACCX] [ACCY] [ACCZ] [GYRX] [GYRY] [GYRZ] [MAGX] [MAGY] [MAGZ]
+ 
 how to recover files from wear using adb:
 (The data will be stored in the same folder from which adb is started)
 --> adb pull /storage/emulated/0/Android/data/de.uni_freiburg.iems.beatit/files/Music

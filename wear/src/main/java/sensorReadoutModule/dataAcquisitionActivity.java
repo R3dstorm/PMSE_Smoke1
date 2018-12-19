@@ -194,15 +194,8 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
                 writer = new CSVWriter(new FileWriter(file),' ',NO_QUOTE_CHARACTER, NO_ESCAPE_CHARACTER,"\n");//filePath));
                 for (int i=0;i<dataStorage.length;i++){
 
-                    String smokeString;
-                    if (dataStorage[i][0] == 1) {
-                        smokeString = "smoking";
-                    }
-                    else{
-                        smokeString = "NULL";
-                    }
-
-                    String[] data = {smokeString,String.format("%.3f",dataStorage[i][1]),
+                    String[] data = {String.format("%.0f",dataStorage[i][0]),
+                            String.format("%.3f",dataStorage[i][1]),
                             String.format("%.6f",dataStorage[i][2]),
                             String.format("%.6f",dataStorage[i][3]),
                             String.format("%.6f",dataStorage[i][4]),
