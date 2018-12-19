@@ -41,7 +41,7 @@ public class SensorReadout {
         accCollected = gyrCollected = magCollected = false;
         sensorListenerAcc = sensorListenerGyro = sensorListenerMagn = null;
         ACCX = ACCY = ACCZ = GYRX = GYRY = GYRZ = MAGX = MAGY = MAGZ = 0;
-        dataStorage = new float[3000][10];
+        dataStorage = new float[30000][10];
         dataStoragePointer = 0;
     }
 
@@ -78,7 +78,6 @@ public class SensorReadout {
                     }
                     else
                     {
-                        dataStoragePointer = 0;
                         measurementTriggered = false;
                         measurementCompleteListener.measurementCompleted();
                     }
@@ -206,5 +205,10 @@ public class SensorReadout {
     public float[][] getDataStorage ()
     {
         return dataStorage;
+    }
+
+    public int getNumberOfSamples()
+    {
+        return (dataStoragePointer+1);
     }
 }

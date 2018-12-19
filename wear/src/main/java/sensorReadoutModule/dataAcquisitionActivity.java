@@ -95,18 +95,22 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
             @Override
             public void onClick(View v) {
                 float smokingValue = 0;
+                int numberOfSamples;
 
                 /* Get data*/
                 dataStorage = sensor.getDataStorage();
+                numberOfSamples = sensor.getNumberOfSamples();
+
                 /* Mark data as smoking / non-smoking*/
                 if (labelIsSmoking){
                     smokingValue = 1;
                 }
-                for (int i = 0; i<dataStorage.length;i++){
+                for (int i = 0; i<numberOfSamples; i++){
                     dataStorage[i][0] = smokingValue;
                 }
+
                 /* Store data to file*/
-                storeDataToFile();
+                storeDataToFile(numberOfSamples);
                 /* Reset recording button*/
                 idleToggleButton.setTextOn("RECORDING");
                 idleToggleButton.setChecked(false);
@@ -132,7 +136,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
 
     /* Initialize and start the acquisition of sensor data*/
     private void initDAQ (){
-        int error = 0;
+        int error;
         sensor = new SensorReadout(this);
         error = sensor.initSensors();
         if (error != 0){
@@ -174,7 +178,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         timer.scheduleAtFixedRate(refreshTimerTak, 100, repeatDelay);
     }
 
-    private void storeDataToFile ()
+    private void storeDataToFile (int numberOfSamples)
     {
         /* Checks if external storage is available for read and write */
         String state = Environment.getExternalStorageState();
@@ -192,7 +196,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
             }
             try {
                 writer = new CSVWriter(new FileWriter(file),' ',NO_QUOTE_CHARACTER, NO_ESCAPE_CHARACTER,"\n");//filePath));
-                for (int i=0;i<dataStorage.length;i++){
+                for (int i=0;i< numberOfSamples;i++){
 
                     String[] data = {String.format("%.0f",dataStorage[i][0]),
                             String.format("%.3f",dataStorage[i][1]),
