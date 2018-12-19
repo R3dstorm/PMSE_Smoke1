@@ -12,6 +12,8 @@ import android.widget.ToggleButton;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -40,6 +42,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
     private ToggleButton smokingToggleButton;
     private Button storeDataButton;
     private boolean labelIsSmoking;
+    private LocalDateTime startOfMeasurement;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +77,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
                 if (idleToggleButton.isChecked() == true){
                     idleToggleButton.setTextOn("RECORDING");
                     idleToggleButton.setChecked(true);
+                    startOfMeasurement = LocalDateTime.now();
                     sensor.triggerMeasurement(dataAcquisitionActivity.this);
                 }
                 else {
@@ -183,15 +187,20 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         /* Checks if external storage is available for read and write */
         String state = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state)) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss_");
+            String dateString;
+
+            /* Build file name */
             File baseDir = getExternalFilesDir(Environment.DIRECTORY_MUSIC);
-            File file = new File(baseDir,"AnalysisData.csv" );
+            dateString = startOfMeasurement.format(formatter);
+            File file = new File(baseDir,dateString + "AnalysisData.csv" );
             CSVWriter writer;
 
-            /* Check for existing files*/
+            /* Check for existing files */
             int fileCounter = 0;
             while(file.exists()) {
                 fileCounter++;
-                String fileName = "AnalysisData"+fileCounter+".csv";
+                String fileName = dateString + "AnalysisData" + fileCounter+".csv";
                 file = new File(baseDir,fileName );
             }
             try {
