@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import sensorReadoutModule.dataAcquisitionActivity;
+import sensorReadoutModule.SensorReadoutService;
 
 public class EcologicalMomentaryAssesmentActivity extends WearableActivity implements View.OnClickListener {
 

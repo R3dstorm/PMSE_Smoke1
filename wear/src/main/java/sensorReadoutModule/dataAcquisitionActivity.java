@@ -1,8 +1,16 @@
 package sensorReadoutModule;
 
+import android.app.IntentService;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.wearable.activity.WearableActivity;
 import android.view.View;
 import android.widget.Button;
@@ -22,6 +30,7 @@ import de.uni_freiburg.iems.beatit.R;
 import com.opencsv.CSVWriter;
 import static com.opencsv.ICSVWriter.NO_ESCAPE_CHARACTER;
 import static com.opencsv.ICSVWriter.NO_QUOTE_CHARACTER;
+import static java.security.AccessController.getContext;
 
 /* Callback interface for measurementCompleteEvent*/
 interface MeasurementCompleteListener {
@@ -29,6 +38,45 @@ interface MeasurementCompleteListener {
 }
 
 public class dataAcquisitionActivity extends WearableActivity implements MeasurementCompleteListener{
+
+    // Broadcast receiver for receiving status updates from the IntentService.
+    private class DownloadStateReceiver extends BroadcastReceiver
+    {
+        private int broadcastReceived = 0;
+        // Called when the BroadcastReceiver gets an Intent it's registered to receive
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            /*
+             * Handle Intents here.
+             */
+            broadcastReceived = 1;
+
+        }
+    }
+    // Class that displays photos
+    public class DisplayActivity extends FragmentActivity {
+
+        public void onCreate(Bundle stateBundle) {
+
+            super.onCreate(stateBundle);
+
+            // The filter's action is BROADCAST_ACTION
+            IntentFilter statusIntentFilter = new IntentFilter(
+                    "BROADCAST_ACTION");
+
+            // Adds a data filter for the HTTP scheme
+            statusIntentFilter.addDataScheme("http");
+
+            // Instantiates a new DownloadStateReceiver
+            DownloadStateReceiver mDownloadStateReceiver = new DownloadStateReceiver();
+            // Registers the DownloadStateReceiver and its intent filters
+            LocalBroadcastManager.getInstance(dataAcquisitionActivity.this).registerReceiver(
+                    mDownloadStateReceiver,
+                    statusIntentFilter);
+
+        }
+    }
+
 
     private float[] singleMeasurement;
     private float[][] dataStorage;
@@ -43,6 +91,9 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
     private Button storeDataButton;
     private boolean labelIsSmoking;
     private LocalDateTime startOfMeasurement;
+    private Intent mServiceIntent;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,7 +119,8 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
 
         labelIsSmoking = smokingToggleButton.isChecked();
 
-        initDAQ();
+        //initDAQ();
+        initSensorService();
 
         /* Update Button for Measurement (Idle/Recording)*/
         idleToggleButton.setOnClickListener(new View.OnClickListener() {
@@ -78,7 +130,18 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
                     idleToggleButton.setTextOn("RECORDING");
                     idleToggleButton.setChecked(true);
                     startOfMeasurement = LocalDateTime.now();
-                    sensor.triggerMeasurement(dataAcquisitionActivity.this);
+                    //sensor.triggerMeasurement(dataAcquisitionActivity.this);
+
+                    /*
+                     * Creates a new Intent to start the RSSPullService
+                     * JobIntentService. Passes a URI in the
+                     * Intent's "data" field.
+                     */
+                    mServiceIntent = new Intent(dataAcquisitionActivity.this, SensorReadoutService.class);
+                    mServiceIntent.putExtra("triggerMeasurement", 1);
+                    final int RSS_JOB_ID = 1000;
+                    SensorReadoutService.enqueueWork(dataAcquisitionActivity.this,SensorReadoutService.class, RSS_JOB_ID, mServiceIntent);
+
                 }
                 else {
                     /* Do nothing*/
@@ -122,7 +185,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         });
 
         /* Create 250ms refresh timer*/
-        startDataRefreshTimerTask(250);
+        //startDataRefreshTimerTask(250);
 
         // Enables Always-on
         setAmbientEnabled();
@@ -147,6 +210,33 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
             daqStatusText.setText("sensors unsupported");
             daqStatusText.setTextColor(Color.RED);
         }
+
+    }
+
+    private void initSensorService () {
+
+        /* Init receiver Object*/
+        DownloadStateReceiver receiver = new DownloadStateReceiver();
+
+        // The filter's action is BROADCAST_ACTION
+        IntentFilter statusIntentFilter = new IntentFilter(
+                "BROADCAST_ACTION");
+
+        // Adds a data filter for the HTTP scheme
+        //statusIntentFilter.addDataScheme("http");
+
+        // Instantiates a new DownloadStateReceiver
+        DownloadStateReceiver mDownloadStateReceiver = new DownloadStateReceiver();
+        // Registers the DownloadStateReceiver and its intent filters
+        LocalBroadcastManager.getInstance(dataAcquisitionActivity.this).registerReceiver(
+                mDownloadStateReceiver,
+                statusIntentFilter);
+
+        //mServiceIntent = new Intent(this, SensorReadoutService.class);
+        //final int SENSOR_JOB_ID = 100;
+        //startService(mServiceIntent);
+
+
 
     }
 
@@ -234,3 +324,4 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
 
     }
 }
+
