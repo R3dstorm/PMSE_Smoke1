@@ -1,12 +1,10 @@
 package sensorReadoutModule;
 
-import android.app.IntentService;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
-import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.FragmentActivity;
@@ -14,6 +12,8 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.wearable.activity.WearableActivity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
@@ -30,7 +30,6 @@ import de.uni_freiburg.iems.beatit.R;
 import com.opencsv.CSVWriter;
 import static com.opencsv.ICSVWriter.NO_ESCAPE_CHARACTER;
 import static com.opencsv.ICSVWriter.NO_QUOTE_CHARACTER;
-import static java.security.AccessController.getContext;
 
 /* Callback interface for measurementCompleteEvent*/
 interface MeasurementCompleteListener {
@@ -49,6 +48,14 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
             /*
              * Handle Intents here.
              */
+
+            singleMeasurement = intent.getFloatArrayExtra("SAMPLE");
+            dataOutputTextACCX.setText(String.format("%.3f",singleMeasurement[1]));
+            dataOutputTextACCY.setText(String.format("%.3f",singleMeasurement[2]));
+            dataOutputTextACCZ.setText(String.format("%.3f",singleMeasurement[3]));
+            dataOutputTextGYRX.setText(String.format("%.3f",singleMeasurement[4]));
+            dataOutputTextGYRY.setText(String.format("%.3f",singleMeasurement[5]));
+            dataOutputTextGYRZ.setText(String.format("%.3f",singleMeasurement[6]));
             broadcastReceived = 1;
 
         }
@@ -85,13 +92,13 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
     private TextView daqStatusText;
     private TextView dataOutputTextACCX, dataOutputTextACCY, dataOutputTextACCZ;
     private TextView dataOutputTextGYRX, dataOutputTextGYRY, dataOutputTextGYRZ;
-    private TextView dataOutputTextMAGX, dataOutputTextMAGY, dataOutputTextMAGZ;
     private ToggleButton idleToggleButton;
     private ToggleButton smokingToggleButton;
     private Button storeDataButton;
+    private Switch startStopSensorsSwitch;
     private boolean labelIsSmoking;
     private LocalDateTime startOfMeasurement;
-    private Intent mServiceIntent;
+    private Intent sensorServiceIntent;
 
 
 
@@ -106,21 +113,36 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         dataOutputTextACCX = findViewById(R.id.textView2);
         dataOutputTextACCY = findViewById(R.id.textView3);
         dataOutputTextACCZ = findViewById(R.id.textView4);
-        dataOutputTextGYRX = findViewById(R.id.textView5);
-        dataOutputTextGYRY = findViewById(R.id.textView6);
-        dataOutputTextGYRZ = findViewById(R.id.textView7);
-        dataOutputTextMAGX = findViewById(R.id.textView8);
-        dataOutputTextMAGY = findViewById(R.id.textView9);
-        dataOutputTextMAGZ = findViewById(R.id.textView10);
+        dataOutputTextGYRX = findViewById(R.id.textView8);
+        dataOutputTextGYRY = findViewById(R.id.textView9);
+        dataOutputTextGYRZ = findViewById(R.id.textView10);
 
         idleToggleButton = findViewById(R.id.toggleButton);
         smokingToggleButton = findViewById(R.id.toggleButton2);
         storeDataButton = findViewById(R.id.button2);
+        startStopSensorsSwitch = findViewById(R.id.switch1);
 
         labelIsSmoking = smokingToggleButton.isChecked();
 
         //initDAQ();
         initSensorService();
+
+        /* Start/Stop acquisition of data by sensors */
+        startStopSensorsSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked){
+                    sensorServiceIntent = new Intent(dataAcquisitionActivity.this, SensorReadoutService.class);
+                    sensorServiceIntent.putExtra("START_SENSOR_SERVICE", true);
+                    final int SS_JOB_ID = 1000;
+                    SensorReadoutService.enqueueWork(dataAcquisitionActivity.this,SensorReadoutService.class, SS_JOB_ID, sensorServiceIntent);
+                }
+                else{
+                    /* TODO implement Service method to stop sensors*/
+                    //stopSensorService
+                }
+            }
+        });
 
         /* Update Button for Measurement (Idle/Recording)*/
         idleToggleButton.setOnClickListener(new View.OnClickListener() {
@@ -137,10 +159,10 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
                      * JobIntentService. Passes a URI in the
                      * Intent's "data" field.
                      */
-                    mServiceIntent = new Intent(dataAcquisitionActivity.this, SensorReadoutService.class);
-                    mServiceIntent.putExtra("triggerMeasurement", 1);
+                    sensorServiceIntent = new Intent(dataAcquisitionActivity.this, SensorReadoutService.class);
+                    sensorServiceIntent.putExtra("triggerMeasurement", 1);
                     final int RSS_JOB_ID = 1000;
-                    SensorReadoutService.enqueueWork(dataAcquisitionActivity.this,SensorReadoutService.class, RSS_JOB_ID, mServiceIntent);
+                    SensorReadoutService.enqueueWork(dataAcquisitionActivity.this,SensorReadoutService.class, RSS_JOB_ID, sensorServiceIntent);
 
                 }
                 else {
@@ -185,7 +207,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         });
 
         /* Create 250ms refresh timer*/
-        //startDataRefreshTimerTask(250);
+        startDataRefreshTimerTask(250);
 
         // Enables Always-on
         setAmbientEnabled();
@@ -202,6 +224,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
 
 
     /* Initialize and start the acquisition of sensor data*/
+    /* TODO deprecated*/
     private void initDAQ (){
         int error;
         sensor = new SensorReadout(this);
@@ -232,9 +255,9 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
                 mDownloadStateReceiver,
                 statusIntentFilter);
 
-        //mServiceIntent = new Intent(this, SensorReadoutService.class);
+        //sensorServiceIntent = new Intent(this, SensorReadoutService.class);
         //final int SENSOR_JOB_ID = 100;
-        //startService(mServiceIntent);
+        //startService(sensorServiceIntent);
 
 
 
@@ -251,21 +274,26 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         TimerTask refreshTimerTak = new TimerTask() {
             @Override
             public void run() {
-                sensor.getSample(singleMeasurement);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        dataOutputTextACCX.setText(String.format("%.3f",singleMeasurement[1]));
-                        dataOutputTextACCY.setText(String.format("%.3f",singleMeasurement[2]));
-                        dataOutputTextACCZ.setText(String.format("%.3f",singleMeasurement[3]));
-                        dataOutputTextGYRX.setText(String.format("%.3f",singleMeasurement[4]));
-                        dataOutputTextGYRY.setText(String.format("%.3f",singleMeasurement[5]));
-                        dataOutputTextGYRZ.setText(String.format("%.3f",singleMeasurement[6]));
-                        dataOutputTextMAGX.setText(String.format("%.3f",singleMeasurement[7]));
-                        dataOutputTextMAGY.setText(String.format("%.3f",singleMeasurement[8]));
-                        dataOutputTextMAGZ.setText(String.format("%.3f",singleMeasurement[9]));
-                    }
-                });
+                if (startStopSensorsSwitch.isChecked()) {
+                    sensorServiceIntent = new Intent(dataAcquisitionActivity.this, SensorReadoutService.class);
+                    sensorServiceIntent.putExtra("GET_SINGLE_SAMPLE", true);
+                    final int SS_JOB_ID = 1000;
+                    SensorReadoutService.enqueueWork(dataAcquisitionActivity.this,SensorReadoutService.class, SS_JOB_ID, sensorServiceIntent);
+
+                    /* TODO Old Stuff... replace...*/
+                    //sensor.getSample(singleMeasurement);
+                }
+//                runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        dataOutputTextACCX.setText(String.format("%.3f",singleMeasurement[1]));
+//                        dataOutputTextACCY.setText(String.format("%.3f",singleMeasurement[2]));
+//                        dataOutputTextACCZ.setText(String.format("%.3f",singleMeasurement[3]));
+//                        dataOutputTextGYRX.setText(String.format("%.3f",singleMeasurement[4]));
+//                        dataOutputTextGYRY.setText(String.format("%.3f",singleMeasurement[5]));
+//                        dataOutputTextGYRZ.setText(String.format("%.3f",singleMeasurement[6]));
+//                    }
+//                });
             }
         };
 
@@ -303,10 +331,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
                             String.format("%.6f",dataStorage[i][3]),
                             String.format("%.6f",dataStorage[i][4]),
                             String.format("%.6f",dataStorage[i][5]),
-                            String.format("%.6f",dataStorage[i][6]),
-                            String.format("%.6f",dataStorage[i][7]),
-                            String.format("%.6f",dataStorage[i][8]),
-                            String.format("%.6f",dataStorage[i][9])};
+                            String.format("%.6f",dataStorage[i][6])};
                     writer.writeNext(data);
                 }
                 writer.close();
