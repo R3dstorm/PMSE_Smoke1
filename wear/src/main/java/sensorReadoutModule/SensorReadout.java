@@ -1,6 +1,7 @@
 package sensorReadoutModule;
 
 import android.content.Context;
+import android.os.Handler;
 import android.util.Log;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
@@ -16,6 +17,7 @@ public class SensorReadout {
             enableTerminalOutput = false;
         }
     }
+
     private SensorReadoutConfig readOutConfig;
     private SensorManager mSensorManager;
     private Sensor AccSensor, GyroSensor, MagneticSensor;
@@ -29,11 +31,11 @@ public class SensorReadout {
     private static final String TAG_MAG = "MAG";
     private boolean measurementTriggered;
     private MeasurementCompleteListener measurementCompleteListener;
+    private SensorReadoutStatus sensorStatus = SensorReadoutStatus.NOT_INITIALIZED;
 
     Context mContext;
 
-    public SensorReadout(Context mContext)
-    {
+    public SensorReadout(Context mContext, Handler handler) {
         /* Construct this class... */
         this.mContext = mContext;
         this.readOutConfig = new SensorReadoutConfig();
@@ -43,10 +45,11 @@ public class SensorReadout {
         ACCX = ACCY = ACCZ = GYRX = GYRY = GYRZ = MAGX = MAGY = MAGZ = 0;
         dataStorage = new float[30000][10];
         dataStoragePointer = 0;
+
+        initSensors(handler);
     }
 
-    public int initSensors()
-    {
+    public int initSensors(Handler handler) {
         int error = 0;
         AccSensor = GyroSensor = MagneticSensor = null;
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
@@ -76,8 +79,7 @@ public class SensorReadout {
                     if (dataStoragePointer < (dataStorage.length-1)) {
                         dataStoragePointer++;
                     }
-                    else
-                    {
+                    else {
                         measurementTriggered = false;
                         measurementCompleteListener.measurementCompleted();
                     }
@@ -143,7 +145,7 @@ public class SensorReadout {
             error = -1;
         }
         else{
-            mSensorManager.registerListener(sensorListenerAcc, AccSensor, 20000);} /* FIXME sensor always outputs sampling period of 10ms ???*/
+            mSensorManager.registerListener(sensorListenerAcc, AccSensor, 20000, handler);} /* FIXME sensor always outputs sampling period of 10ms ???*/
 
         GyroSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         if (GyroSensor == null){
@@ -153,7 +155,7 @@ public class SensorReadout {
             error = -1;
         }
         else{
-            mSensorManager.registerListener(sensorListenerGyro, GyroSensor, 20000);
+            mSensorManager.registerListener(sensorListenerGyro, GyroSensor, 20000, handler);
         }
 
         MagneticSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
@@ -164,14 +166,19 @@ public class SensorReadout {
             error = -1;
         }
         else{
-            mSensorManager.registerListener(sensorListenerMagn, MagneticSensor, 20000);
+            mSensorManager.registerListener(sensorListenerMagn, MagneticSensor, 20000, handler);
         }
 
+        if (error == 0) {
+            sensorStatus = SensorReadoutStatus.INITIALIZED;
+        }
+        else {
+            sensorStatus = SensorReadoutStatus.UNSUPPORTED_SENSORS;
+        }
         return error;
     }
 
-    public void stopSensors()
-    {
+    public void stopSensors() {
         if (sensorListenerAcc != null){
             mSensorManager.unregisterListener(sensorListenerAcc, AccSensor);}
         if (sensorListenerGyro != null){
@@ -180,14 +187,18 @@ public class SensorReadout {
             mSensorManager.unregisterListener(sensorListenerMagn, MagneticSensor);}
     }
 
-    public void triggerMeasurement(MeasurementCompleteListener _measurementCompleteListener){
+    public void triggerMeasurement(MeasurementCompleteListener _measurementCompleteListener) {
         measurementTriggered = true;
         dataStoragePointer = 0;
         measurementCompleteListener = _measurementCompleteListener;
     }
 
-    public void getSample(float[] dataObject)
-    {
+    public void stopMeasurement() {
+        measurementTriggered = false;
+        dataStoragePointer = 0;
+    }
+
+    public void getSample(float[] dataObject) {
         /* Format for captured data: LABEL ACCX ACCY ACCZ GYRX GYRY GYRZ MAGX MAGY MAGZ */
         /* Required sensors: Accelerometer; Gyroscope; Magnetic Field Sensor */
         /* TODO Check if synchronization between sensor data is correct. (Difference in timestamp < xy? */
@@ -210,5 +221,9 @@ public class SensorReadout {
     public int getNumberOfSamples()
     {
         return (dataStoragePointer+1);
+    }
+
+    public SensorReadoutStatus getSensorStatus() {
+        return sensorStatus;
     }
 }

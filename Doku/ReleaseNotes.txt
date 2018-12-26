@@ -2,7 +2,26 @@ Release Notes:
 
 
 Notes for feature branches:
-SMOK-7:
+************SMOK-22:*****************************************************************************************************
+- Service for sensor data acquisition runs in background -> data sampling while display turns off.
+- Data sampling for magnetic flow sensor disabled
+
+NEW Display Layout:
+ACCX		GYRX
+ACCY		GYRY
+ACCZ		GYRZ
+
+NEW Measure Data Workflow:
+1. Press Switch (Slider) to enable Sensors
+2. Press "IDLE" to switch to "RECORDING"
+3. 30.00 Samples are measured (approx. 1 minute of samplingtime)
+4. Choose whether the recorded data should be labeled "NONSMOKING" or "SMOKING"
+5. Press "STOREDATA" to store the Data to the smart watch memory.
+	- Data is stored in YYYY_MM_DD_HH_mm_ss_AnalysisDataAnalysisDataX.csv with X={N} ( ,1,2,3...)
+Format of stored Data (space separated .csv):
+[smoking(1)/nonSmoking(0)] [ACCX] [ACCY] [ACCZ] [GYRX] [GYRY] [GYRZ]
+
+************SMOK-7:******************************************************************************************************
 Implements a feature "DATA ACQUSITION" to record data from the inertial sensors embedded in the "wear" smart watch.
 Display Layout:
 ACCX	GYRX	MAGX
