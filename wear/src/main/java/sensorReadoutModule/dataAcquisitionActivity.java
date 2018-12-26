@@ -1,26 +1,26 @@
 package sensorReadoutModule;
 
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.content.LocalBroadcastManager;
+import android.os.PowerManager;
 import android.support.wearable.activity.WearableActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.opencsv.CSVWriter;
+import static com.opencsv.ICSVWriter.NO_ESCAPE_CHARACTER;
+import static com.opencsv.ICSVWriter.NO_QUOTE_CHARACTER;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -31,10 +31,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import de.uni_freiburg.iems.beatit.R;
-
-import static com.opencsv.ICSVWriter.NO_ESCAPE_CHARACTER;
-import static com.opencsv.ICSVWriter.NO_QUOTE_CHARACTER;
-
 import sensorReadoutModule.SensorReadoutService.SensorReadoutBinder;
 
 /* Callback interface for measurementCompleteEvent*/
@@ -42,59 +38,14 @@ interface MeasurementCompleteListener {
     void measurementCompleted();
 }
 
-public class dataAcquisitionActivity extends WearableActivity implements MeasurementCompleteListener{
-
-    // Broadcast receiver for receiving status updates from the IntentService.
-    private class DownloadStateReceiver extends BroadcastReceiver
-    {
-        private int broadcastReceived = 0;
-        // Called when the BroadcastReceiver gets an Intent it's registered to receive
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            /*
-             * Handle Intents here.
-             */
-
-            singleMeasurement = intent.getFloatArrayExtra("SAMPLE");
-            dataOutputTextACCX.setText(String.format("%.3f",singleMeasurement[1]));
-            dataOutputTextACCY.setText(String.format("%.3f",singleMeasurement[2]));
-            dataOutputTextACCZ.setText(String.format("%.3f",singleMeasurement[3]));
-            dataOutputTextGYRX.setText(String.format("%.3f",singleMeasurement[4]));
-            dataOutputTextGYRY.setText(String.format("%.3f",singleMeasurement[5]));
-            dataOutputTextGYRZ.setText(String.format("%.3f",singleMeasurement[6]));
-            broadcastReceived = 1;
-
-        }
-    }
-    // Class that displays photos
-    public class DisplayActivity extends FragmentActivity {
-
-        public void onCreate(Bundle stateBundle) {
-
-            super.onCreate(stateBundle);
-
-            // The filter's action is BROADCAST_ACTION
-            IntentFilter statusIntentFilter = new IntentFilter(
-                    "BROADCAST_ACTION");
-
-            // Adds a data filter for the HTTP scheme
-            statusIntentFilter.addDataScheme("http");
-
-            // Instantiates a new DownloadStateReceiver
-            DownloadStateReceiver mDownloadStateReceiver = new DownloadStateReceiver();
-            // Registers the DownloadStateReceiver and its intent filters
-            LocalBroadcastManager.getInstance(dataAcquisitionActivity.this).registerReceiver(
-                    mDownloadStateReceiver,
-                    statusIntentFilter);
-
-        }
-    }
-
+public class dataAcquisitionActivity extends WearableActivity implements MeasurementCompleteListener {
 
     private float[] singleMeasurement;
     private float[][] dataStorage;
     private SensorReadout sensor;
     private Timer timer;
+    private PowerManager powerManager;
+    private PowerManager.WakeLock wakeLock;
     private TextView daqStatusText;
     private TextView dataOutputTextACCX, dataOutputTextACCY, dataOutputTextACCZ;
     private TextView dataOutputTextGYRX, dataOutputTextGYRY, dataOutputTextGYRZ;
@@ -103,6 +54,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
     private Button storeDataButton;
     private Switch startStopSensorsSwitch;
     private boolean labelIsSmoking;
+    private boolean measurementStarted = false;
     private LocalDateTime startOfMeasurement;
 
     private Intent sensorServiceIntent;
@@ -119,6 +71,11 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
             SensorReadoutBinder binder = (SensorReadoutBinder) service;
             sensorService = binder.getService();
             sensorServiceBound = true;
+
+            if (SensorReadoutStatus.UNSUPPORTED_SENSORS.equals(sensorService.getSensorStatus())) {
+                daqStatusText.setText("sensors unsupported");
+                daqStatusText.setTextColor(Color.RED);
+            }
         }
 
         @Override
@@ -126,7 +83,6 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
             sensorServiceBound = false;
         }
     };
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -150,9 +106,6 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
 
         labelIsSmoking = smokingToggleButton.isChecked();
 
-        //initDAQ();
-        //initSensorService();
-
         /* Start/Stop acquisition of data by sensors */
         startStopSensorsSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -160,7 +113,6 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
                 if (isChecked){
                     sensorServiceIntent = new Intent(dataAcquisitionActivity.this, SensorReadoutService.class);
                     sensorServiceIntent.putExtra("START_SENSOR_SERVICE", true); /* TODO is this necessary? */
-                    final int SS_JOB_ID = 1000;
                     startService(sensorServiceIntent);
                     sensorServiceStarted = true;
                     bindService(sensorServiceIntent, sensorServiceConnection, Context.BIND_AUTO_CREATE);
@@ -171,26 +123,30 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
             }
         });
 
-        /* Update Button for Measurement (Idle/Recording)*/
+        /* Update Button for Measurement (Idle/Recording) */
         idleToggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (idleToggleButton.isChecked() == true){
-                    idleToggleButton.setTextOn("RECORDING");
-                    idleToggleButton.setChecked(true);
-                    startOfMeasurement = LocalDateTime.now();
-                    //sensor.triggerMeasurement(dataAcquisitionActivity.this);
-
-                    /*
-                     * Creates a new Intent to start the RSSPullService
-                     * JobIntentService. Passes a URI in the
-                     * Intent's "data" field.
-                     */
-                    sensorServiceIntent = new Intent(dataAcquisitionActivity.this, SensorReadoutService.class);
-                    sensorServiceIntent.putExtra("triggerMeasurement", 1);
-                    final int RSS_JOB_ID = 1000;
-                    //SensorReadoutService.enqueueWork(dataAcquisitionActivity.this,SensorReadoutService.class, RSS_JOB_ID, sensorServiceIntent);
-
+                    if (sensorServiceBound) {
+                        measurementStarted = true;
+                        idleToggleButton.setTextOn("RECORDING");
+                        idleToggleButton.setChecked(true);
+                        startOfMeasurement = LocalDateTime.now();
+                        if (wakeLock == null) {
+                            powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+                            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                                    "MyApp::MyWakelockTag");
+                        }
+                        if (!wakeLock.isHeld()) {
+                            wakeLock.acquire();
+                        }
+                        sensorService.startMeasurement(dataAcquisitionActivity.this);
+                    }
+                    else {
+                        outputSensorsDisabledMessage();
+                        idleToggleButton.setChecked(false);
+                    }
                 }
                 else {
                     /* Do nothing*/
@@ -213,23 +169,34 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
                 float smokingValue = 0;
                 int numberOfSamples;
 
-                /* Get data*/
-                dataStorage = sensor.getDataStorage();
-                numberOfSamples = sensor.getNumberOfSamples();
+                if ((sensorServiceBound) && (measurementStarted)) {
 
-                /* Mark data as smoking / non-smoking*/
-                if (labelIsSmoking){
-                    smokingValue = 1;
-                }
-                for (int i = 0; i<numberOfSamples; i++){
-                    dataStorage[i][0] = smokingValue;
-                }
+                    /* Get data*/
+                    dataStorage = sensorService.getFullSampleStorage();
+                    numberOfSamples = sensorService.getNumberOfSamples();
 
-                /* Store data to file*/
-                storeDataToFile(numberOfSamples);
-                /* Reset recording button*/
-                idleToggleButton.setTextOn("RECORDING");
-                idleToggleButton.setChecked(false);
+                    /* Mark data as smoking / non-smoking*/
+                    if (labelIsSmoking) {
+                        smokingValue = 1;
+                    }
+                    for (int i = 0; i < numberOfSamples; i++) {
+                        dataStorage[i][0] = smokingValue;
+                    }
+
+                    /* Store data to file*/
+                    storeDataToFile(numberOfSamples);
+                    /* Reset recording button*/
+                    idleToggleButton.setTextOn("RECORDING");
+                    idleToggleButton.setChecked(false);
+                    measurementStarted = false;
+                    sensorService.stopMeasurement();
+                    if (wakeLock.isHeld()) {
+                        wakeLock.release();
+                    }
+                }
+                else {
+                    outputSensorsDisabledMessage();
+                }
             }
         });
 
@@ -251,10 +218,8 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
 
     /* Stop sensors and timers */
     @Override
-    protected void onStop()
-    {
+    protected void onStop() {
         super.onStop();
-        //stopDAQ(); /* TODO Deprecated =*/
         timer.cancel();
         /* unbind sensorService*/
         if (sensorServiceBound) {
@@ -266,94 +231,42 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
     protected void onDestroy() {
         super.onDestroy();
         unbindStopSensorService(false);
-
-        /* TODO stop sensor service...*/
     }
 
-    /* Initialize and start the acquisition of sensor data*/
-    /* TODO deprecated*/
-    private void initDAQ (){
-        int error = 0;
-        sensor = new SensorReadout(this);
-        //error = sensor.initSensors();
-        if (error != 0){
-            daqStatusText.setText("sensors unsupported");
-            daqStatusText.setTextColor(Color.RED);
-        }
-
-    }
-
-    private void initSensorService () {
-
-        /* Init receiver Object*/
-        DownloadStateReceiver receiver = new DownloadStateReceiver();
-
-        // The filter's action is BROADCAST_ACTION
-        IntentFilter statusIntentFilter = new IntentFilter(
-                "BROADCAST_ACTION");
-
-        // Adds a data filter for the HTTP scheme
-        //statusIntentFilter.addDataScheme("http");
-
-        // Instantiates a new DownloadStateReceiver
-        DownloadStateReceiver mDownloadStateReceiver = new DownloadStateReceiver();
-        // Registers the DownloadStateReceiver and its intent filters
-        LocalBroadcastManager.getInstance(dataAcquisitionActivity.this).registerReceiver(
-                mDownloadStateReceiver,
-                statusIntentFilter);
-
-        //sensorServiceIntent = new Intent(this, SensorReadoutService.class);
-        //final int SENSOR_JOB_ID = 100;
-        //startService(sensorServiceIntent);
-
-
-
-    }
-
-    private void stopDAQ()
-    {
-        sensor.stopSensors();
+    protected void outputSensorsDisabledMessage() {
+        Toast.makeText(dataAcquisitionActivity.this, "Sensors not initialized", Toast.LENGTH_SHORT).show();
     }
 
     /* Start a Timer Task to schedule the refresh of the data output text */
-    private void startDataRefreshTimerTask (int repeatDelay){
+    private void startDataRefreshTimerTask(int repeatDelay) {
         timer = new Timer();
         TimerTask refreshTimerTak = new TimerTask() {
             @Override
             public void run() {
-                if (startStopSensorsSwitch.isChecked()) {
-                    sensorServiceIntent = new Intent(dataAcquisitionActivity.this, SensorReadoutService.class);
-                    sensorServiceIntent.putExtra("GET_SINGLE_SAMPLE", true);
-                    final int SS_JOB_ID = 1000;
-                    //SensorReadoutService.enqueueWork(dataAcquisitionActivity.this,SensorReadoutService.class, SS_JOB_ID, sensorServiceIntent);
+                if (sensorServiceBound) {
+                    sensorService.getSingleSample(singleMeasurement);
 
-                    /* TODO Old Stuff... replace...*/
-
-                    //sensor.getSample(singleMeasurement);
-                }
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (sensorServiceBound) {
-                            int blub = sensorService.getRandomNumber();
-                            daqStatusText.setText((String.format("%d", blub)));
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            dataOutputTextACCX.setText(String.format("%.3f",singleMeasurement[1]));
+                            dataOutputTextACCY.setText(String.format("%.3f",singleMeasurement[2]));
+                            dataOutputTextACCZ.setText(String.format("%.3f",singleMeasurement[3]));
+                            dataOutputTextGYRX.setText(String.format("%.3f",singleMeasurement[4]));
+                            dataOutputTextGYRY.setText(String.format("%.3f",singleMeasurement[5]));
+                            dataOutputTextGYRZ.setText(String.format("%.3f",singleMeasurement[6]));
+                            //TODO Debug output, dismiss in future release:
+                            int numbers = sensorService.getNumberOfSamples();
+                            daqStatusText.setText(String.format("%d",numbers));
                         }
-//                        dataOutputTextACCX.setText(String.format("%.3f",singleMeasurement[1]));
-//                        dataOutputTextACCY.setText(String.format("%.3f",singleMeasurement[2]));
-//                        dataOutputTextACCZ.setText(String.format("%.3f",singleMeasurement[3]));
-//                        dataOutputTextGYRX.setText(String.format("%.3f",singleMeasurement[4]));
-//                        dataOutputTextGYRY.setText(String.format("%.3f",singleMeasurement[5]));
-//                        dataOutputTextGYRZ.setText(String.format("%.3f",singleMeasurement[6]));
-                    }
-                });
+                    });
+                }
             }
         };
-
         timer.scheduleAtFixedRate(refreshTimerTak, 100, repeatDelay);
     }
 
-    private void storeDataToFile (int numberOfSamples)
-    {
+    private void storeDataToFile(int numberOfSamples) {
         /* Checks if external storage is available for read and write */
         String state = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state)) {
@@ -394,14 +307,20 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
     }
 
     @Override
-    public void measurementCompleted(){
+    public void measurementCompleted() {
         /* The measurement is completed*/
-        idleToggleButton.setTextOn("RECORDED");
-        idleToggleButton.setChecked(true);
+        wakeLock.release();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                idleToggleButton.setTextOn("RECORDED");
+                idleToggleButton.setChecked(true);
+            }
+        });
 
     }
 
-    private void unbindStopSensorService(boolean unbindOnly){
+    private void unbindStopSensorService(boolean unbindOnly) {
         if (sensorServiceBound) {
             unbindService(sensorServiceConnection);
             sensorServiceBound = false;
