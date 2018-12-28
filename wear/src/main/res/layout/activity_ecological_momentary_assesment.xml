@@ -9,20 +9,54 @@
     tools:context=".EcologicalMomentaryAssesmentActivity"
     tools:deviceIds="wear">
 
-    <LinearLayout
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/linearLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal">
+        android:layout_height="match_parent">
 
         <Button
-            android:id="@+id/button"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/screen_percentage_10"
-            android:layout_weight="1"
+            android:id="@+id/startPageButtonLable"
+            android:layout_width="212dp"
+            android:layout_height="51dp"
             android:gravity="center"
             android:onClick="startDAQ"
-            android:text="@string/DataAcquisition" />
-    </LinearLayout>
+            android:text="@string/startPageLable"
+            tools:layout_editor_absoluteX="0dp"
+            tools:layout_editor_absoluteY="0dp" />
+
+        <Button
+            android:id="@+id/startPageButtonLog"
+            android:layout_width="212dp"
+            android:layout_height="wrap_content"
+            android:paddingBottom="@dimen/screen_percentage_05"
+            android:text="@string/StartPageLog"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:layout_editor_absoluteY="171dp" />
+
+        <ImageButton
+            android:id="@+id/startPageButtonPlay"
+            android:layout_width="54dp"
+            android:layout_height="57dp"
+            android:src="@drawable/smoke"
+            tools:layout_editor_absoluteX="16dp"
+            tools:layout_editor_absoluteY="78dp" />
+
+        <ImageButton
+            android:id="@+id/startPageButtonAdd"
+            android:layout_width="54dp"
+            android:layout_height="57dp"
+            android:src="@drawable/ic_add_white_24dp"
+            tools:layout_editor_absoluteX="79dp"
+            tools:layout_editor_absoluteY="78dp" />
+
+        <ImageButton
+            android:id="@+id/startPageButtonSync"
+            android:layout_width="54dp"
+            android:layout_height="57dp"
+            android:src="@android:drawable/ic_popup_sync"
+            tools:layout_editor_absoluteX="143dp"
+            tools:layout_editor_absoluteY="78dp" />
+
+    </android.support.constraint.ConstraintLayout>
 
 </android.support.wear.widget.BoxInsetLayout>
