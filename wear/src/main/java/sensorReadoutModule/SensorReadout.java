@@ -32,6 +32,7 @@ public class SensorReadout {
     private boolean measurementTriggered;
     private MeasurementCompleteListener measurementCompleteListener;
     private SensorReadoutStatus sensorStatus = SensorReadoutStatus.NOT_INITIALIZED;
+    private boolean isSmokingLabel;
 
     Context mContext;
 
@@ -45,6 +46,7 @@ public class SensorReadout {
         ACCX = ACCY = ACCZ = GYRX = GYRY = GYRZ = MAGX = MAGY = MAGZ = 0;
         dataStorage = new float[30000][10];
         dataStoragePointer = 0;
+        isSmokingLabel = false;
 
         initSensors(handler);
     }
@@ -58,6 +60,10 @@ public class SensorReadout {
         sensorListenerAcc = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent event) {
+                float isSmokingLabelFloat = 0;
+                if (isSmokingLabel){
+                    isSmokingLabelFloat = 1;
+                }
                 ACCX = event.values[0];
                 ACCY = event.values[1];
                 ACCZ = event.values[2];
@@ -72,6 +78,8 @@ public class SensorReadout {
                     accCollected = false;
                     gyrCollected = false;
                     magCollected = false;
+                    /* TODO Create Class containing SesnorData (9x Float + Bool)*/
+                    dataStorage[dataStoragePointer][0] = isSmokingLabelFloat;
                     dataStorage[dataStoragePointer][1] = ACCX;
                     dataStorage[dataStoragePointer][2] = ACCY;
                     dataStorage[dataStoragePointer][3] = ACCZ;
@@ -221,6 +229,10 @@ public class SensorReadout {
     public int getNumberOfSamples()
     {
         return (dataStoragePointer+1);
+    }
+
+    public void setSmokingLabel (boolean isSmoking){
+        isSmokingLabel = isSmoking;
     }
 
     public SensorReadoutStatus getSensorStatus() {

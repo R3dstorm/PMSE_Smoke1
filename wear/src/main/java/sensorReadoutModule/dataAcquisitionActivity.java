@@ -53,7 +53,6 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
     private ToggleButton smokingToggleButton;
     private Button storeDataButton;
     private Switch startStopSensorsSwitch;
-    private boolean labelIsSmoking;
     private boolean measurementStarted = false;
     private LocalDateTime startOfMeasurement;
 
@@ -103,8 +102,6 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         smokingToggleButton = findViewById(R.id.toggleButton2);
         storeDataButton = findViewById(R.id.button2);
         startStopSensorsSwitch = findViewById(R.id.switch1);
-
-        labelIsSmoking = smokingToggleButton.isChecked();
 
         /* Start/Stop acquisition of data by sensors */
         startStopSensorsSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -158,7 +155,20 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         smokingToggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                labelIsSmoking = smokingToggleButton.isChecked();
+                if ((sensorServiceBound)){
+                    if(smokingToggleButton.isChecked()){
+                        sensorService.setSmokingLabel(true);
+                    }
+                    else{
+                        sensorService.setSmokingLabel(false);
+                    }
+
+                }
+                /* If service not active -> reset button status (invert) */
+                else{
+                    outputSensorsDisabledMessage();
+                    smokingToggleButton.setChecked(!smokingToggleButton.isChecked());
+                }
             }
         });
 
@@ -166,7 +176,6 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         storeDataButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                float smokingValue = 0;
                 int numberOfSamples;
 
                 if ((sensorServiceBound) && (measurementStarted)) {
@@ -174,14 +183,6 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
                     /* Get data*/
                     dataStorage = sensorService.getFullSampleStorage();
                     numberOfSamples = sensorService.getNumberOfSamples();
-
-                    /* Mark data as smoking / non-smoking*/
-                    if (labelIsSmoking) {
-                        smokingValue = 1;
-                    }
-                    for (int i = 0; i < numberOfSamples; i++) {
-                        dataStorage[i][0] = smokingValue;
-                    }
 
                     /* Store data to file*/
                     storeDataToFile(numberOfSamples);
