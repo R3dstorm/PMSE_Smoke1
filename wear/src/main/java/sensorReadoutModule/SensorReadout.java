@@ -89,7 +89,7 @@ public class SensorReadout {
                     }
                     else {
                         measurementTriggered = false;
-                        measurementCompleteListener.measurementCompleted();
+                        measurementCompleteListener.measurementCompletedCB();
                     }
                 }
             }
