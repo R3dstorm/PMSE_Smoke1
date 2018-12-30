@@ -35,14 +35,13 @@ import sensorReadoutModule.SensorReadoutService.SensorReadoutBinder;
 
 /* Callback interface for measurementCompleteEvent*/
 interface MeasurementCompleteListener {
-    void measurementCompleted();
+    void measurementCompletedCB();
 }
 
 public class dataAcquisitionActivity extends WearableActivity implements MeasurementCompleteListener {
 
     private float[] singleMeasurement;
     private float[][] dataStorage;
-    private SensorReadout sensor;
     private Timer timer;
     private PowerManager powerManager;
     private PowerManager.WakeLock wakeLock;
@@ -53,8 +52,8 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
     private ToggleButton smokingToggleButton;
     private Button storeDataButton;
     private Switch startStopSensorsSwitch;
-    private boolean labelIsSmoking;
     private boolean measurementStarted = false;
+    private boolean DataStorageRequested = false;
     private LocalDateTime startOfMeasurement;
 
     private Intent sensorServiceIntent;
@@ -103,8 +102,6 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         smokingToggleButton = findViewById(R.id.toggleButton2);
         storeDataButton = findViewById(R.id.button2);
         startStopSensorsSwitch = findViewById(R.id.switch1);
-
-        labelIsSmoking = smokingToggleButton.isChecked();
 
         /* Start/Stop acquisition of data by sensors */
         startStopSensorsSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -158,7 +155,20 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         smokingToggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                labelIsSmoking = smokingToggleButton.isChecked();
+                if ((sensorServiceBound)){
+                    if(smokingToggleButton.isChecked()){
+                        sensorService.setSmokingLabel(true);
+                    }
+                    else{
+                        sensorService.setSmokingLabel(false);
+                    }
+
+                }
+                /* If service not active -> reset button status (invert) */
+                else{
+                    outputSensorsDisabledMessage();
+                    smokingToggleButton.setChecked(!smokingToggleButton.isChecked());
+                }
             }
         });
 
@@ -166,33 +176,14 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         storeDataButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                float smokingValue = 0;
-                int numberOfSamples;
-
                 if ((sensorServiceBound) && (measurementStarted)) {
 
-                    /* Get data*/
-                    dataStorage = sensorService.getFullSampleStorage();
-                    numberOfSamples = sensorService.getNumberOfSamples();
+                    /* Store data to file -> Enable Storing -> Storing + button reset is executed by timer event*/
+                    /* TODO solve this solution by job intent*/
+                    DataStorageRequested = true;
+                    daqStatusText.setText("Storing data is active");
+                    daqStatusText.setTextColor((Color.RED));
 
-                    /* Mark data as smoking / non-smoking*/
-                    if (labelIsSmoking) {
-                        smokingValue = 1;
-                    }
-                    for (int i = 0; i < numberOfSamples; i++) {
-                        dataStorage[i][0] = smokingValue;
-                    }
-
-                    /* Store data to file*/
-                    storeDataToFile(numberOfSamples);
-                    /* Reset recording button*/
-                    idleToggleButton.setTextOn("RECORDING");
-                    idleToggleButton.setChecked(false);
-                    measurementStarted = false;
-                    sensorService.stopMeasurement();
-                    if (wakeLock.isHeld()) {
-                        wakeLock.release();
-                    }
                 }
                 else {
                     outputSensorsDisabledMessage();
@@ -255,9 +246,25 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
                             dataOutputTextGYRX.setText(String.format("%.3f",singleMeasurement[4]));
                             dataOutputTextGYRY.setText(String.format("%.3f",singleMeasurement[5]));
                             dataOutputTextGYRZ.setText(String.format("%.3f",singleMeasurement[6]));
-                            //TODO Debug output, dismiss in future release:
                             int numbers = sensorService.getNumberOfSamples();
-                            daqStatusText.setText(String.format("%d",numbers));
+
+                            if (!DataStorageRequested) {
+                                //TODO Debug output, dismiss in future release:
+                                daqStatusText.setText(String.format("%d", numbers));
+                                daqStatusText.setTextColor(Color.WHITE);
+                            }
+                            else{
+                                int numberOfSamples;
+
+                                /* Get data */
+                                dataStorage = sensorService.getFullSampleStorage();
+                                numberOfSamples = sensorService.getNumberOfSamples();
+                                /* Store data */
+                                storeDataToFile(numberOfSamples);
+                                DataStorageRequested = false;
+                                /* Reset recording button*/
+                                storingDataCompleted();
+                            }
                         }
                     });
                 }
@@ -307,7 +314,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
     }
 
     @Override
-    public void measurementCompleted() {
+    public void measurementCompletedCB() {
         /* The measurement is completed*/
         wakeLock.release();
         runOnUiThread(new Runnable() {
@@ -318,6 +325,16 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
             }
         });
 
+    }
+
+    private void storingDataCompleted() {
+        idleToggleButton.setTextOn("RECORDING");
+        idleToggleButton.setChecked(false);
+        measurementStarted = false;
+        sensorService.stopMeasurement();
+        if (wakeLock.isHeld()) {
+            wakeLock.release();
+        }
     }
 
     private void unbindStopSensorService(boolean unbindOnly) {

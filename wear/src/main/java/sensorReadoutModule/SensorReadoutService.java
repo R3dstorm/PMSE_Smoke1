@@ -95,6 +95,10 @@ public class SensorReadoutService extends Service {
         sensor.stopMeasurement();
     }
 
+    public void setSmokingLabel (boolean isSmoking){
+        sensor.setSmokingLabel(isSmoking);
+    }
+
     public void getSingleSample(float[] sample) {
         sensor.getSample(sample);
     }
