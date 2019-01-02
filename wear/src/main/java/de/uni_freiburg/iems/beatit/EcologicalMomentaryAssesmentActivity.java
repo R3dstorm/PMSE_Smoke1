@@ -22,7 +22,7 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
 
         // Enables Always-on
         setAmbientEnabled();
-        Button daqButton = findViewById(R.id.button);
+        Button daqButton = findViewById(R.id.startPageButtonLable);
         daqButton.setOnClickListener(this);
     }
 

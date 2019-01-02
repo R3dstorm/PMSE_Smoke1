@@ -122,15 +122,11 @@
         android:id="@+id/toggleButton2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="3dp"
-        android:layout_marginEnd="8dp"
         android:text="smokingLabel"
         android:textOff="NonSmoking"
         android:textOn="Smoking"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView10" />
+        tools:layout_editor_absoluteX="89dp"
+        tools:layout_editor_absoluteY="113dp" />
 
     <Switch
         android:id="@+id/switch1"
