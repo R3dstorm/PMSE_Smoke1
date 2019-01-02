@@ -16,46 +16,68 @@
 
         <Button
             android:id="@+id/startPageButtonLable"
-            android:layout_width="212dp"
-            android:layout_height="51dp"
+            android:layout_width="197dp"
+            android:layout_height="37dp"
+            android:background="@drawable/roundedbutton"
             android:gravity="center"
             android:onClick="startDAQ"
             android:text="@string/startPageLable"
-            tools:layout_editor_absoluteX="0dp"
-            tools:layout_editor_absoluteY="0dp" />
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0" />
 
         <Button
             android:id="@+id/startPageButtonLog"
             android:layout_width="212dp"
-            android:layout_height="wrap_content"
+            android:layout_height="40dp"
+            android:background="@drawable/roundedbutton"
             android:paddingBottom="@dimen/screen_percentage_05"
             android:text="@string/StartPageLog"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            tools:layout_editor_absoluteY="171dp" />
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1.0" />
 
         <ImageButton
             android:id="@+id/startPageButtonPlay"
-            android:layout_width="54dp"
-            android:layout_height="57dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/roundedbutton"
             android:src="@drawable/smoke"
-            tools:layout_editor_absoluteX="16dp"
-            tools:layout_editor_absoluteY="78dp" />
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageButton
             android:id="@+id/startPageButtonAdd"
-            android:layout_width="54dp"
-            android:layout_height="57dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/roundedbutton"
             android:src="@drawable/ic_add_white_24dp"
-            tools:layout_editor_absoluteX="79dp"
-            tools:layout_editor_absoluteY="78dp" />
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageButton
             android:id="@+id/startPageButtonSync"
-            android:layout_width="54dp"
-            android:layout_height="57dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/roundedbutton"
             android:src="@android:drawable/ic_popup_sync"
-            tools:layout_editor_absoluteX="143dp"
-            tools:layout_editor_absoluteY="78dp" />
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.899"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
     </android.support.constraint.ConstraintLayout>
 
