@@ -15,6 +15,7 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
 
     private TextView mTextView;
     private ToggleButton startButton;
+    private Intent sensorServiceIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +38,13 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
     }
 
     public void onPlayButtonClick(View v){
-
+        if(startButton.isChecked() == true) {
+            sensorServiceIntent = new Intent(EcologicalMomentaryAssesmentActivity.this, SensorReadoutService.class);
+            startService(sensorServiceIntent);
+        }
+        else
+        {
+            stopService(sensorServiceIntent);
+        }
     }
 }
