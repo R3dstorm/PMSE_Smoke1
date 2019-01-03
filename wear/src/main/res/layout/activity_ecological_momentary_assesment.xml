@@ -43,12 +43,14 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="1.0" />
 
-        <ImageButton
+        <ToggleButton
             android:id="@+id/startPageButtonPlay"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:background="@drawable/roundedbutton"
-            android:src="@drawable/smoke"
+            android:background="@drawable/playstopbutton"
+            android:onClick="onPlayButtonClick"
+            android:textOff=""
+            android:textOn=""
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.1"

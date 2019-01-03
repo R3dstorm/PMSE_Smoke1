@@ -6,12 +6,15 @@ import android.support.wearable.activity.WearableActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.ToggleButton;
+
 import sensorReadoutModule.dataAcquisitionActivity;
 import sensorReadoutModule.SensorReadoutService;
 
 public class EcologicalMomentaryAssesmentActivity extends WearableActivity implements View.OnClickListener {
 
     private TextView mTextView;
+    private ToggleButton startButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,6 +26,7 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
         // Enables Always-on
         setAmbientEnabled();
         Button daqButton = findViewById(R.id.startPageButtonLable);
+        startButton = findViewById(R.id.startPageButtonPlay);
         daqButton.setOnClickListener(this);
     }
 
@@ -30,5 +34,9 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
     public void onClick(View v) {
         Intent intent = new Intent(this, dataAcquisitionActivity.class);
         startActivity(intent);
+    }
+
+    public void onPlayButtonClick(View v){
+
     }
 }
