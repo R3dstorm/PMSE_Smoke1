@@ -16,9 +16,9 @@
 
         <Button
             android:id="@+id/startPageButtonLable"
-            android:layout_width="197dp"
+            android:layout_width="match_parent"
             android:layout_height="37dp"
-            android:background="@drawable/roundedbutton"
+            android:background="@drawable/rectanglebutton"
             android:gravity="center"
             android:onClick="startDAQ"
             android:text="@string/startPageLable"
@@ -31,9 +31,9 @@
 
         <Button
             android:id="@+id/startPageButtonLog"
-            android:layout_width="212dp"
+            android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:background="@drawable/roundedbutton"
+            android:background="@drawable/rectanglebutton"
             android:paddingBottom="@dimen/screen_percentage_05"
             android:text="@string/StartPageLog"
             app:layout_constraintBottom_toBottomOf="parent"
