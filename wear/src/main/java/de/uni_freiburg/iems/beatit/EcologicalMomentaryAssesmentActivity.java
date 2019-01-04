@@ -8,6 +8,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import MachineLearningModule.ModelHandler;
 import sensorReadoutModule.dataAcquisitionActivity;
 import sensorReadoutModule.SensorReadoutService;
 
@@ -29,6 +30,9 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
         Button daqButton = findViewById(R.id.startPageButtonLable);
         startButton = findViewById(R.id.startPageButtonPlay);
         daqButton.setOnClickListener(this);
+
+        ModelHandler m = new ModelHandler();
+        m.loadModel(getAssets());
     }
 
     @Override
