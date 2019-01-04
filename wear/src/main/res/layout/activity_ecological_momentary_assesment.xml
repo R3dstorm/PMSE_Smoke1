@@ -9,20 +9,79 @@
     tools:context=".EcologicalMomentaryAssesmentActivity"
     tools:deviceIds="wear">
 
-    <LinearLayout
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/linearLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal">
+        android:layout_height="match_parent">
 
         <Button
-            android:id="@+id/button"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/screen_percentage_10"
-            android:layout_weight="1"
+            android:id="@+id/startPageButtonLable"
+            android:layout_width="197dp"
+            android:layout_height="37dp"
+            android:background="@drawable/roundedbutton"
             android:gravity="center"
             android:onClick="startDAQ"
-            android:text="@string/DataAcquisition" />
-    </LinearLayout>
+            android:text="@string/startPageLable"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0" />
+
+        <Button
+            android:id="@+id/startPageButtonLog"
+            android:layout_width="212dp"
+            android:layout_height="40dp"
+            android:background="@drawable/roundedbutton"
+            android:paddingBottom="@dimen/screen_percentage_05"
+            android:text="@string/StartPageLog"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1.0" />
+
+        <ToggleButton
+            android:id="@+id/startPageButtonPlay"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/playstopbutton"
+            android:onClick="onPlayButtonClick"
+            android:textOff="start"
+            android:textSize="10dp"
+            android:textOn="stop"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageButton
+            android:id="@+id/startPageButtonAdd"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/roundedbutton"
+            android:src="@drawable/ic_add_white_24dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageButton
+            android:id="@+id/startPageButtonSync"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/roundedbutton"
+            android:src="@android:drawable/ic_popup_sync"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.899"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </android.support.constraint.ConstraintLayout>
 
 </android.support.wear.widget.BoxInsetLayout>

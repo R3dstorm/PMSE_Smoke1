@@ -6,11 +6,17 @@ import android.support.wearable.activity.WearableActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.ToggleButton;
+
+import MachineLearningModule.ModelHandler;
 import sensorReadoutModule.dataAcquisitionActivity;
+import sensorReadoutModule.SensorReadoutService;
 
 public class EcologicalMomentaryAssesmentActivity extends WearableActivity implements View.OnClickListener {
 
     private TextView mTextView;
+    private ToggleButton startButton;
+    private Intent sensorServiceIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,13 +27,28 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
 
         // Enables Always-on
         setAmbientEnabled();
-        Button daqButton = findViewById(R.id.button);
+        Button daqButton = findViewById(R.id.startPageButtonLable);
+        startButton = findViewById(R.id.startPageButtonPlay);
         daqButton.setOnClickListener(this);
+
+        ModelHandler m = new ModelHandler();
+        m.loadModel(getAssets());
     }
 
     @Override
     public void onClick(View v) {
         Intent intent = new Intent(this, dataAcquisitionActivity.class);
         startActivity(intent);
+    }
+
+    public void onPlayButtonClick(View v){
+        if(startButton.isChecked() == true) {
+            sensorServiceIntent = new Intent(EcologicalMomentaryAssesmentActivity.this, SensorReadoutService.class);
+            startService(sensorServiceIntent);
+        }
+        else
+        {
+            stopService(sensorServiceIntent);
+        }
     }
 }
