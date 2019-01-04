@@ -6,8 +6,9 @@ import android.support.wearable.activity.WearableActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+
+import MachineLearningModule.ModelHandler;
 import sensorReadoutModule.dataAcquisitionActivity;
-import sensorReadoutModule.SensorReadoutService;
 
 public class EcologicalMomentaryAssesmentActivity extends WearableActivity implements View.OnClickListener {
 
@@ -24,6 +25,9 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
         setAmbientEnabled();
         Button daqButton = findViewById(R.id.button);
         daqButton.setOnClickListener(this);
+
+        ModelHandler m = new ModelHandler();
+        m.loadModel(getAssets());
     }
 
     @Override
