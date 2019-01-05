@@ -40,6 +40,7 @@ public class SensorReadoutService extends Service {
     private IBinder mServiceBinder;
     private SensorReadout sensor;   /* Instance for operating the sensors (Acc, Gyr) */
     private static final String TAG = "SensorReadoutService";
+    private boolean sensorServiceRunning;
 
     @Override
     public void onCreate() {
@@ -52,6 +53,8 @@ public class SensorReadoutService extends Service {
         mServiceLooper = thread.getLooper();
         mServiceHandler = new ServiceHandler(mServiceLooper);
         mServiceBinder = new SensorReadoutBinder();
+
+        sensorServiceRunning = false;
     }
 
     @Override
@@ -65,6 +68,7 @@ public class SensorReadoutService extends Service {
 
         /* Initialize and start sensors */
         sensor = new SensorReadout(this, mServiceHandler);
+        sensorServiceRunning = true;
 
         /* If we get killed, after returning from here, restart */
         return START_STICKY;
@@ -79,8 +83,14 @@ public class SensorReadoutService extends Service {
     @Override
     public void onDestroy() {
         /* Send message to user on destroy */
-        sensor.stopSensors();
-        Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show();
+        if (sensorServiceRunning) {
+            sensor.stopSensors();
+            Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public boolean isSensorServiceRunning (){
+        return sensorServiceRunning;
     }
 
     public SensorReadoutStatus getSensorStatus() {
