@@ -3,4 +3,5 @@
     <string name="DataAcquisition">Data acquisition</string>
     <string name="startPageLable">Beat Smoking</string>
     <string name="StartPageLog">Log</string>
+    <string name="smokingDetected">Smoking Detected</string>
 </resources>

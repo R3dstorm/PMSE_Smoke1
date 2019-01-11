@@ -47,10 +47,7 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
     @Override
     protected void onStop() {
         super.onStop();
-        if(sensorServiceStarted)
-        {
-            stopService(sensorServiceIntent);
-        }
+
     }
 
 
@@ -71,5 +68,10 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
             stopService(sensorServiceIntent);
             sensorServiceStarted = false;
         }
+    }
+
+    public void onLogButtonClick(View v){
+        Intent intent = new Intent(this, SmokeDetectedPopUpActivity.class);
+        startActivity(intent);
     }
 }
