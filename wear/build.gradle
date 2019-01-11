@@ -15,6 +15,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    aaptOptions {
+        noCompress "csv"
+    }
 }
 
 dependencies {
@@ -30,4 +33,5 @@ dependencies {
     compileOnly 'com.google.android.wearable:wearable:2.4.0'
     implementation files('libs/opencsv-4.4.jar')
     implementation 'org.tensorflow:tensorflow-android:1.12.0'
+    implementation 'org.apache.commons:commons-math3:3.6.1'
 }
