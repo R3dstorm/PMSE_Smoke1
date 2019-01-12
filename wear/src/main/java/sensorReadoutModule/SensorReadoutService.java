@@ -18,7 +18,7 @@ public class SensorReadoutService extends Service {
 
     /* Binder to connect application to service */
     public class SensorReadoutBinder extends Binder {
-        SensorReadoutService getService() {
+        public SensorReadoutService getService() {
             /* Return this instance of local SensorReadoutService so clients can call public methods */
             return SensorReadoutService.this;
         }
@@ -98,11 +98,11 @@ public class SensorReadoutService extends Service {
     }
 
     public void startMeasurement (MeasurementCompleteListener _measurementCompleteListener){
-        sensor.triggerMeasurement(_measurementCompleteListener);
+        sensor.triggerSingleMeasurement(_measurementCompleteListener);
     }
 
     public void stopMeasurement () {
-        sensor.stopMeasurement();
+        sensor.stopSingleMeasurement();
     }
 
     public void setSmokingLabel (boolean isSmoking){

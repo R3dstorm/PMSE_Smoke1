@@ -2,6 +2,7 @@ package sensorReadoutModule;
 
 import android.content.Context;
 import android.os.Handler;
+import android.support.v4.util.CircularArray;
 import android.util.Log;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
@@ -18,6 +19,8 @@ public class SensorReadout {
         }
     }
 
+    private final int CIRCULAR_DATA_STORAGE_SIZE = 1000;
+
     private SensorReadoutConfig readOutConfig;
     private SensorManager mSensorManager;
     private Sensor AccSensor, GyroSensor, MagneticSensor;
@@ -25,11 +28,13 @@ public class SensorReadout {
     private boolean accCollected, gyrCollected, magCollected;
     private float ACCX, ACCY, ACCZ, GYRX, GYRY, GYRZ, MAGX, MAGY, MAGZ;
     private float[][] dataStorage;
+    private float[] sample;
+    private CircularArray circularDataStorage;
     private int dataStoragePointer;
     private static final String TAG_ACC = "ACC";
     private static final String TAG_GYR = "GYR";
     private static final String TAG_MAG = "MAG";
-    private boolean measurementTriggered;
+    private boolean singleMeasurementTriggered, continuousMeasurementTriggered;
     private MeasurementCompleteListener measurementCompleteListener;
     private SensorReadoutStatus sensorStatus = SensorReadoutStatus.NOT_INITIALIZED;
     private boolean isSmokingLabel;
@@ -40,11 +45,14 @@ public class SensorReadout {
         /* Construct this class... */
         this.mContext = mContext;
         this.readOutConfig = new SensorReadoutConfig();
-        measurementTriggered = false;
+        singleMeasurementTriggered = false;
+        continuousMeasurementTriggered = false;
         accCollected = gyrCollected = magCollected = false;
         sensorListenerAcc = sensorListenerGyro = sensorListenerMagn = null;
         ACCX = ACCY = ACCZ = GYRX = GYRY = GYRZ = MAGX = MAGY = MAGZ = 0;
         dataStorage = new float[30000][10];
+        float sample[] = new float[6];
+        circularDataStorage = new CircularArray(CIRCULAR_DATA_STORAGE_SIZE);
         dataStoragePointer = 0;
         isSmokingLabel = false;
 
@@ -72,24 +80,44 @@ public class SensorReadout {
                 }
                 /* Make sure exactly one sample from each sensor is measured per data point.
                  * If there are unsupported sensors go on anyway.*/
-                if ((measurementTriggered == true)
-                        && ((gyrCollected == true) || (GyroSensor == null))
+                if (((gyrCollected == true) || (GyroSensor == null))
                         && ((magCollected == true)|| (MagneticSensor == null))) {
-                    accCollected = false;
-                    gyrCollected = false;
-                    magCollected = false;
-                    /* TODO Create Class containing SesnorData (9x Float + Bool)*/
-                    dataStorage[dataStoragePointer][0] = isSmokingLabelFloat;
-                    dataStorage[dataStoragePointer][1] = ACCX;
-                    dataStorage[dataStoragePointer][2] = ACCY;
-                    dataStorage[dataStoragePointer][3] = ACCZ;
-                    accCollected = true;
-                    if (dataStoragePointer < (dataStorage.length-1)) {
-                        dataStoragePointer++;
+                    if (singleMeasurementTriggered || continuousMeasurementTriggered) {
+                        accCollected = false;
+                        gyrCollected = false;
+                        magCollected = false;
+                        /* TODO Create Class containing SesnorData (9x Float + Bool)*/
+                        accCollected = true;
                     }
-                    else {
-                        measurementTriggered = false;
-                        measurementCompleteListener.measurementCompletedCB();
+                    /* check for storing data for a single measurement */
+                    if (singleMeasurementTriggered) {
+                        dataStorage[dataStoragePointer][0] = isSmokingLabelFloat;
+                        dataStorage[dataStoragePointer][1] = ACCX;
+                        dataStorage[dataStoragePointer][2] = ACCY;
+                        dataStorage[dataStoragePointer][3] = ACCZ;
+
+                        if (dataStoragePointer < (dataStorage.length - 1)) {
+                            dataStoragePointer++;
+                        } else {
+                            singleMeasurementTriggered = false;
+                            measurementCompleteListener.measurementCompletedCB();
+                        }
+                    }
+                    /* check for storing data for continuous measurement */
+                    if (continuousMeasurementTriggered){
+                        sample[0] = ACCX;
+                        sample[1] = ACCY;
+                        sample[2] = ACCZ;
+                        /* Add data to circularArray */
+                        if (circularDataStorage.size() < CIRCULAR_DATA_STORAGE_SIZE) {
+                            /* Buffer is not full ... fill data*/
+                            circularDataStorage.addFirst(sample);
+                        }
+                        else { /* Buffer is full ... swap data */
+                            circularDataStorage.popLast();
+                            circularDataStorage.addFirst(sample);
+                        }
+
                     }
                 }
             }
@@ -109,11 +137,21 @@ public class SensorReadout {
                     Log.d(TAG_GYR, String.format("%f, %f, %f, %d", GYRX, GYRY, GYRZ, event.timestamp));
                 }
                 /* Make sure exactly one sample from each sensor is measured per data point */
-                if ((measurementTriggered == true) && (gyrCollected == false)) {
-                    dataStorage[dataStoragePointer][4] = GYRX;
-                    dataStorage[dataStoragePointer][5] = GYRY;
-                    dataStorage[dataStoragePointer][6] = GYRZ;
-                    gyrCollected = true;
+                if (gyrCollected == false) {
+
+                    if (singleMeasurementTriggered || continuousMeasurementTriggered) {
+                        gyrCollected = true;
+                    }
+                    if (singleMeasurementTriggered) {
+                        dataStorage[dataStoragePointer][4] = GYRX;
+                        dataStorage[dataStoragePointer][5] = GYRY;
+                        dataStorage[dataStoragePointer][6] = GYRZ;
+                    }
+                    if (continuousMeasurementTriggered) {
+                        sample[3] = GYRX;
+                        sample[4] = GYRY;
+                        sample[5] = GYRZ;
+                    }
                 }
             }
 
@@ -132,7 +170,7 @@ public class SensorReadout {
                     Log.d(TAG_MAG, String.format("%f, %f, %f, %d", MAGX, MAGY, MAGZ, event.timestamp));
                 }
                 /* Make sure exactly one sample from each sensor is measured per data point */
-                if ((measurementTriggered == true) && (magCollected == false)) {
+                if ((singleMeasurementTriggered == true) && (magCollected == false)) {
                     dataStorage[dataStoragePointer][7] = MAGX;
                     dataStorage[dataStoragePointer][8] = MAGY;
                     dataStorage[dataStoragePointer][9] = MAGZ;
@@ -195,15 +233,23 @@ public class SensorReadout {
             mSensorManager.unregisterListener(sensorListenerMagn, MagneticSensor);}
     }
 
-    public void triggerMeasurement(MeasurementCompleteListener _measurementCompleteListener) {
-        measurementTriggered = true;
+    public void triggerSingleMeasurement(MeasurementCompleteListener _measurementCompleteListener) {
+        singleMeasurementTriggered = true;
         dataStoragePointer = 0;
         measurementCompleteListener = _measurementCompleteListener;
     }
 
-    public void stopMeasurement() {
-        measurementTriggered = false;
+    public void stopSingleMeasurement() {
+        singleMeasurementTriggered = false;
         dataStoragePointer = 0;
+    }
+
+    public void triggerContinuousMeasurement() {
+        continuousMeasurementTriggered = true;
+    }
+
+    public void stopContinuousMeasurement() {
+        continuousMeasurementTriggered = false;
     }
 
     public void getSample(float[] dataObject) {
@@ -224,6 +270,13 @@ public class SensorReadout {
     public float[][] getDataStorage ()
     {
         return dataStorage;
+    }
+
+    public double[][] makeDouble (float[][] input){
+
+        /* TODO */
+
+        return null;
     }
 
     public int getNumberOfSamples()

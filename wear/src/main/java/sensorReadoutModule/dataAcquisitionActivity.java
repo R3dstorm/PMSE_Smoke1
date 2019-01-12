@@ -218,7 +218,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
     /* Start a Timer Task to schedule the refresh of the data output text */
     private void startDataRefreshTimerTask(int repeatDelay) {
         timer = new Timer();
-        TimerTask refreshTimerTak = new TimerTask() {
+        TimerTask refreshTimerTask = new TimerTask() {
             @Override
             public void run() {
                 if (sensorServiceRunning) {
@@ -257,7 +257,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
                 }
             }
         };
-        timer.scheduleAtFixedRate(refreshTimerTak, 100, repeatDelay);
+        timer.scheduleAtFixedRate(refreshTimerTask, 100, repeatDelay);
     }
 
     private void storeDataToFile(int numberOfSamples) {
