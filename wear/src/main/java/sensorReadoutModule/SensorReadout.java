@@ -20,12 +20,13 @@ public class SensorReadout {
     }
 
     private final int CIRCULAR_DATA_STORAGE_SIZE = 1000;
+    private final int NUMBER_SENSOR_ELEMENTS = 6;
 
     private SensorReadoutConfig readOutConfig;
     private SensorManager mSensorManager;
-    private Sensor AccSensor, GyroSensor, MagneticSensor;
-    private SensorEventListener sensorListenerAcc, sensorListenerGyro, sensorListenerMagn;
-    private boolean accCollected, gyrCollected, magCollected;
+    private Sensor AccSensor, GyroSensor;
+    private SensorEventListener sensorListenerAcc, sensorListenerGyro;
+    private boolean accCollected, gyrCollected;
     private float ACCX, ACCY, ACCZ, GYRX, GYRY, GYRZ, MAGX, MAGY, MAGZ;
     private float[][] dataStorage;
     private float[] sample;
@@ -33,7 +34,7 @@ public class SensorReadout {
     private int dataStoragePointer;
     private static final String TAG_ACC = "ACC";
     private static final String TAG_GYR = "GYR";
-    private static final String TAG_MAG = "MAG";
+    private static final String TAG_CIRC = "CIRCULAR_ARRAY";
     private boolean singleMeasurementTriggered, continuousMeasurementTriggered;
     private MeasurementCompleteListener measurementCompleteListener;
     private SensorReadoutStatus sensorStatus = SensorReadoutStatus.NOT_INITIALIZED;
@@ -47,11 +48,11 @@ public class SensorReadout {
         this.readOutConfig = new SensorReadoutConfig();
         singleMeasurementTriggered = false;
         continuousMeasurementTriggered = false;
-        accCollected = gyrCollected = magCollected = false;
-        sensorListenerAcc = sensorListenerGyro = sensorListenerMagn = null;
+        accCollected = gyrCollected = false;
+        sensorListenerAcc = sensorListenerGyro = null;
         ACCX = ACCY = ACCZ = GYRX = GYRY = GYRZ = MAGX = MAGY = MAGZ = 0;
         dataStorage = new float[30000][10];
-        float sample[] = new float[6];
+        sample = new float[6];
         circularDataStorage = new CircularArray(CIRCULAR_DATA_STORAGE_SIZE);
         dataStoragePointer = 0;
         isSmokingLabel = false;
@@ -61,7 +62,7 @@ public class SensorReadout {
 
     public int initSensors(Handler handler) {
         int error = 0;
-        AccSensor = GyroSensor = MagneticSensor = null;
+        AccSensor = GyroSensor = null;
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
 
         /* Init Event-Listeners:*/
@@ -80,12 +81,10 @@ public class SensorReadout {
                 }
                 /* Make sure exactly one sample from each sensor is measured per data point.
                  * If there are unsupported sensors go on anyway.*/
-                if (((gyrCollected == true) || (GyroSensor == null))
-                        && ((magCollected == true)|| (MagneticSensor == null))) {
+                if (((gyrCollected == true) || (GyroSensor == null))) {
                     if (singleMeasurementTriggered || continuousMeasurementTriggered) {
                         accCollected = false;
                         gyrCollected = false;
-                        magCollected = false;
                         /* TODO Create Class containing SesnorData (9x Float + Bool)*/
                         accCollected = true;
                     }
@@ -108,14 +107,16 @@ public class SensorReadout {
                         sample[0] = ACCX;
                         sample[1] = ACCY;
                         sample[2] = ACCZ;
-                        /* Add data to circularArray */
+                        /* Add data to circularArray (using clone because addLast seams to store only data identical references?*/
+                        float localClone[];
+                        localClone = sample.clone();
                         if (circularDataStorage.size() < CIRCULAR_DATA_STORAGE_SIZE) {
                             /* Buffer is not full ... fill data*/
-                            circularDataStorage.addFirst(sample);
+                            circularDataStorage.addLast(localClone);
                         }
                         else { /* Buffer is full ... swap data */
-                            circularDataStorage.popLast();
-                            circularDataStorage.addFirst(sample);
+                            circularDataStorage.popFirst();
+                            circularDataStorage.addLast(localClone);
                         }
 
                     }
@@ -160,29 +161,6 @@ public class SensorReadout {
 
             }
         };
-        sensorListenerMagn = new SensorEventListener() {
-            @Override
-            public void onSensorChanged(SensorEvent event) {
-                MAGX = event.values[0];
-                MAGY = event.values[1];
-                MAGZ = event.values[2];
-                if (readOutConfig.enableTerminalOutput == true){
-                    Log.d(TAG_MAG, String.format("%f, %f, %f, %d", MAGX, MAGY, MAGZ, event.timestamp));
-                }
-                /* Make sure exactly one sample from each sensor is measured per data point */
-                if ((singleMeasurementTriggered == true) && (magCollected == false)) {
-                    dataStorage[dataStoragePointer][7] = MAGX;
-                    dataStorage[dataStoragePointer][8] = MAGY;
-                    dataStorage[dataStoragePointer][9] = MAGZ;
-                    magCollected = true;
-                }
-            }
-
-            @Override
-            public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-            }
-        };
 
         AccSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         if (AccSensor == null){
@@ -204,17 +182,6 @@ public class SensorReadout {
             mSensorManager.registerListener(sensorListenerGyro, GyroSensor, 20000, handler);
         }
 
-        MagneticSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        if (MagneticSensor == null){
-            // No Sensor found on the device
-            /* TODO handle ERRORS */
-            Log.e(TAG_MAG,"No magnetic field sensor supported");
-            error = -1;
-        }
-        else{
-            mSensorManager.registerListener(sensorListenerMagn, MagneticSensor, 20000, handler);
-        }
-
         if (error == 0) {
             sensorStatus = SensorReadoutStatus.INITIALIZED;
         }
@@ -229,8 +196,6 @@ public class SensorReadout {
             mSensorManager.unregisterListener(sensorListenerAcc, AccSensor);}
         if (sensorListenerGyro != null){
             mSensorManager.unregisterListener(sensorListenerGyro, GyroSensor);}
-        if (sensorListenerMagn != null){
-            mSensorManager.unregisterListener(sensorListenerMagn, MagneticSensor);}
     }
 
     public void triggerSingleMeasurement(MeasurementCompleteListener _measurementCompleteListener) {
@@ -267,16 +232,28 @@ public class SensorReadout {
         dataObject[9] = MAGZ;
     }
 
-    public float[][] getDataStorage ()
+    public float[][] getSingleMeasurementDataStorage()
     {
         return dataStorage;
     }
 
-    public double[][] makeDouble (float[][] input){
+    public boolean isContMeasDataAvailable() {
+        return (circularDataStorage.size() == CIRCULAR_DATA_STORAGE_SIZE) ? true : false;
+    }
 
-        /* TODO */
-
-        return null;
+    /* Get Continuous Measurement Data from Buffer and convert to double */
+    public double[][] getContinuousMeasurementDataStorage() {
+        double[][] data = new double[NUMBER_SENSOR_ELEMENTS][CIRCULAR_DATA_STORAGE_SIZE];
+        float[] dataElement;
+        synchronized (this) {
+            for (int i = 0; i < CIRCULAR_DATA_STORAGE_SIZE; i++) {
+                dataElement = (float[]) circularDataStorage.get(i);
+                for (int j = 0; j < NUMBER_SENSOR_ELEMENTS; j++) {
+                    data[j][i] = dataElement[j];
+                }
+            }
+        }
+        return data;
     }
 
     public int getNumberOfSamples()

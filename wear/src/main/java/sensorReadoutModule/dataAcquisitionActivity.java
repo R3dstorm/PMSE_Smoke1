@@ -12,8 +12,6 @@ import android.os.PowerManager;
 import android.support.wearable.activity.WearableActivity;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CompoundButton;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -122,7 +120,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
                         if (!wakeLock.isHeld()) {
                             wakeLock.acquire();
                         }
-                        sensorService.startMeasurement(dataAcquisitionActivity.this);
+                        sensorService.triggerSingleMeasurement(dataAcquisitionActivity.this);
                     }
                     else {
                         outputSensorsDisabledMessage();
@@ -318,7 +316,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         idleToggleButton.setTextOn("RECORDING");
         idleToggleButton.setChecked(false);
         measurementStarted = false;
-        sensorService.stopMeasurement();
+        sensorService.stopSingleMeasurement();
         if (wakeLock.isHeld()) {
             wakeLock.release();
         }

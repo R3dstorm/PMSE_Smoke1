@@ -97,12 +97,20 @@ public class SensorReadoutService extends Service {
         return sensor.getSensorStatus();
     }
 
-    public void startMeasurement (MeasurementCompleteListener _measurementCompleteListener){
+    public void triggerSingleMeasurement(MeasurementCompleteListener _measurementCompleteListener){
         sensor.triggerSingleMeasurement(_measurementCompleteListener);
     }
 
-    public void stopMeasurement () {
+    public void stopSingleMeasurement() {
         sensor.stopSingleMeasurement();
+    }
+
+    public void triggerContinuousMeasurement() {
+        sensor.triggerContinuousMeasurement();
+    }
+
+    public void stopContinuousMeasurement() {
+        sensor.stopContinuousMeasurement();
     }
 
     public void setSmokingLabel (boolean isSmoking){
@@ -114,7 +122,15 @@ public class SensorReadoutService extends Service {
     }
 
     public float[][] getFullSampleStorage() {
-        return sensor.getDataStorage();
+        return sensor.getSingleMeasurementDataStorage();
+    }
+
+    public double[][] getContinuousMeasurementDataStorage(){
+        return sensor.getContinuousMeasurementDataStorage();
+    }
+
+    public boolean isContMeasDataAvailable(){
+        return sensor.isContMeasDataAvailable();
     }
 
     public int getNumberOfSamples() {

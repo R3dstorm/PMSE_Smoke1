@@ -9,6 +9,7 @@ import android.os.IBinder;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import MachineLearningModule.ModelHandler;
 import sensorReadoutModule.SensorReadoutService;
 import sensorReadoutModule.SensorReadoutService.SensorReadoutBinder;
 
@@ -17,12 +18,13 @@ public class Mediator {
     private Timer timer;
 
     final private int SLIDING_STEP_MS = 1000;
-    final private int START_DELAY_MS = 21000;
+    final private int START_DELAY_MS = 100;
 
     private Intent sensorServiceIntent;
     private SensorReadoutService sensorService;
     private boolean sensorServiceBound = false;
     private boolean sensorServiceRunning = false;
+    private ModelHandler m;
 
     private ServiceConnection sensorServiceConnection = new ServiceConnection() {
 
@@ -52,6 +54,8 @@ public class Mediator {
             context.bindService(sensorServiceIntent, sensorServiceConnection, Context.BIND_AUTO_CREATE);
         }
 
+        m = new ModelHandler();
+        m.loadModel(context.getAssets());
     }
 
     private void startModelCalcCycleTimerTask(int startDelay, int repeatDelay) {
@@ -63,8 +67,17 @@ public class Mediator {
                 if (sensorServiceBound){
                     sensorServiceRunning = sensorService.isSensorServiceRunning();
                 }
-                //sensorService.
+                if (sensorServiceRunning){
+                    /* Start continuous measurement */
+                    sensorService.triggerContinuousMeasurement();
 
+                    /* Try to read out and process data*/
+                    if (sensorService.isContMeasDataAvailable()){
+                        /* Hand continuous data to ML-Module*/
+                        m.predict(sensorService.getContinuousMeasurementDataStorage());
+                    }
+                    /* TODO Connect to GUI?*/
+                }
             }
         };
         timer.scheduleAtFixedRate(modelCalcCycle, startDelay, repeatDelay);

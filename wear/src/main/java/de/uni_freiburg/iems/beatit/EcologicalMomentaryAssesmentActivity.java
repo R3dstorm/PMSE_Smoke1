@@ -18,6 +18,7 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
     private ToggleButton startButton;
     private Intent sensorServiceIntent;
     private Boolean sensorServiceStarted = false;
+    private Mediator sensorAiMediator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,9 +32,6 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
         Button daqButton = findViewById(R.id.startPageButtonLable);
         startButton = findViewById(R.id.startPageButtonPlay);
         daqButton.setOnClickListener(this);
-
-        ModelHandler m = new ModelHandler();
-        m.loadModel(getAssets());
     }
     @Override
     protected void onDestroy() {
@@ -65,6 +63,8 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
             sensorServiceIntent = new Intent(EcologicalMomentaryAssesmentActivity.this, SensorReadoutService.class);
             startService(sensorServiceIntent);
             sensorServiceStarted = true;
+
+            sensorAiMediator = new Mediator(this);
         }
         else
         {
