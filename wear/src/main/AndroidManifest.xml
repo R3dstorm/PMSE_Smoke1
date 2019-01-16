@@ -6,7 +6,6 @@
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="true"
@@ -39,10 +38,6 @@
             android:label="@string/DataAcquisition"
             android:parentActivityName=".EcologicalMomentaryAssesmentActivity">
         </activity>
-        <activity
-            android:name=".SmokeDetectedPopUpActivity">
-        </activity>
-
         <service
             android:name="sensorReadoutModule.SensorReadoutService"
             android:permission="android.permission.BIND_JOB_SERVICE"
