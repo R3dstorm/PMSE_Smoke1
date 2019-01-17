@@ -20,8 +20,8 @@ public class ModelHandler {
     private final int featureCount = 12;
     private final int windowLength = 1000;
     private final int windowColumns = 6;
-    private final String inputTensor = "import/dense_1_input:0";
-    private final String outputTensor = "import/dense_3/Sigmoid:0";
+    private final String inputTensor = "dense_1_input:0";
+    private final String outputTensor = "dense_3/Sigmoid:0";
     private final String[] outputNodes = { outputTensor };
     private AssetManager Assets;
 
@@ -29,7 +29,7 @@ public class ModelHandler {
 
     public void loadModel(AssetManager assets) {
         try {
-//            inferenceInterface = new TensorFlowInferenceInterface(assets, "file:///android_asset/model.pb");
+            inferenceInterface = new TensorFlowInferenceInterface(assets, "file:///android_asset/model.pb");
             Log.i("ML","model successfully loaded");
         }
         catch(Exception e) {
@@ -51,17 +51,22 @@ public class ModelHandler {
     }
 
     private float classify(float[] features) {
-       float[] result = new float[1];
-       inferenceInterface.feed(inputTensor, features, 1, featureCount);
-       inferenceInterface.run(outputNodes);
-       inferenceInterface.fetch(outputTensor, result);
-       Log.i("ML", "predict: " + result[0]);
-       return result[0];
+        try {
+            float[] result = new float[1];
+            inferenceInterface.feed(inputTensor, features, 1, featureCount);
+            inferenceInterface.run(outputNodes);
+            inferenceInterface.fetch(outputTensor, result);
+            return result[0];
+        }
+        catch(Exception e) {
+            Log.i("ML","classify failed: " + e.getMessage());
+        }
+        return 0;
     }
 
     private void convertToFeatures(double[][] input, float[] output) {
        // in: windowColumns x windowLength (6 x 1000)
-       // out: featureCount x windowLength (12 x 1000)
+       // out: featureCount (12)
        for(int column = 0; column < windowColumns; column++) {
            DescriptiveStatistics ds = new DescriptiveStatistics(input[column]);
            for(int row = 0; row < windowLength; row++) {
@@ -78,7 +83,26 @@ public class ModelHandler {
         float[][] features = new float[lineCount][featureCount];
         float[] labels = new float[lineCount];
         readData(featureFile, features, labels);
-        Log.i("ML", "features [" + labels[0] + "] [" + features[0][0] + "]");
+        Log.i("ML", "features [" + labels[0] + "] [" + features[0][0] + ", " + features[0][1] + ", ...]");
+        int tp = 0, tn = 0, fp = 0, fn = 0;
+        for(int i = 0; i < lineCount; i++) {
+            if(classify(features[i]) > 0.5)
+                if(labels[i] == 0) fp++; else tp++;
+            else
+                if(labels[i] == 0) tn++; else fn++;
+        }
+        evaluateClassification(tp, tn, fp, fn);
+    }
+
+    private void evaluateClassification(int tp, int tn, int fp, int fn) {
+        Log.i("ML", "tp: " + tp + "  tn: " + tn + "  fp: " + fp + "  fn: " + fn);
+        float precision = (float) tp / (tp + fp);
+        float recall = (float) tp / (tp + fn);
+        float accuracy = ((float) tp + tn) / (tp + fn + tn + fp);
+        Log.i("ML", "precision: " + precision);
+        Log.i("ML", "recall   : " + recall);
+        Log.i("ML", "accuracy : " + accuracy);
+        Log.i("ML", "f1-score : " + 2 * ((precision * recall) / (precision + recall)));
     }
 
     private void testConvertToFeatures() {
