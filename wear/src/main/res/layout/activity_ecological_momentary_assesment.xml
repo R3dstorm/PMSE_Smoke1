@@ -34,6 +34,7 @@
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:background="@drawable/rectanglebutton"
+            android:onClick="onLogButtonClick"
             android:paddingBottom="@dimen/screen_percentage_05"
             android:text="@string/StartPageLog"
             app:layout_constraintBottom_toBottomOf="parent"
