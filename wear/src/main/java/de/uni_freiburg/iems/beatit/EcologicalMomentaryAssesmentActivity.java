@@ -5,18 +5,26 @@ import android.os.Bundle;
 import android.support.wearable.activity.WearableActivity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
-import MachineLearningModule.ModelHandler;
 import sensorReadoutModule.dataAcquisitionActivity;
 import sensorReadoutModule.SensorReadoutService;
 
-public class EcologicalMomentaryAssesmentActivity extends WearableActivity implements View.OnClickListener {
+/* Callback interface for measurementCompleteEvent*/
+interface ModelEvaluatedListener {
+    void modelEvaluatedCB(boolean smoking);
+}
+
+public class EcologicalMomentaryAssesmentActivity extends WearableActivity implements View.OnClickListener, ModelEvaluatedListener {
 
     private TextView mTextView;
     private ToggleButton startButton;
     private Intent sensorServiceIntent;
+    private Boolean sensorServiceStarted = false;
+    private Mediator sensorAiMediator;
+    private CheckBox smokingDetected;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,11 +37,24 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
         setAmbientEnabled();
         Button daqButton = findViewById(R.id.startPageButtonLable);
         startButton = findViewById(R.id.startPageButtonPlay);
+        smokingDetected = findViewById(R.id.checkBox);
         daqButton.setOnClickListener(this);
-
-        ModelHandler m = new ModelHandler();
-        m.loadModel(getAssets());
     }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(sensorServiceStarted)
+        {
+            stopService(sensorServiceIntent);
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+    }
+
 
     @Override
     public void onClick(View v) {
@@ -45,10 +66,28 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
         if(startButton.isChecked() == true) {
             sensorServiceIntent = new Intent(EcologicalMomentaryAssesmentActivity.this, SensorReadoutService.class);
             startService(sensorServiceIntent);
+            sensorServiceStarted = true;
+
+            sensorAiMediator = new Mediator(this, EcologicalMomentaryAssesmentActivity.this);
         }
         else
         {
             stopService(sensorServiceIntent);
+            sensorServiceStarted = false;
         }
+    }
+
+    @Override
+    public void modelEvaluatedCB(boolean smoking) {
+        /* The measurement is completed*/
+        if (smoking) {
+            smokingDetected.setChecked(true);
+        } else {
+            smokingDetected.setChecked(false);
+        }
+    }
+    public void onLogButtonClick(View v){
+        Intent intent = new Intent(this, SmokeDetectedPopUpActivity.class);
+        startActivity(intent);
     }
 }

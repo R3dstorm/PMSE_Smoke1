@@ -12,8 +12,6 @@ import android.os.PowerManager;
 import android.support.wearable.activity.WearableActivity;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CompoundButton;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -51,7 +49,6 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
     private ToggleButton idleToggleButton;
     private ToggleButton smokingToggleButton;
     private Button storeDataButton;
-    private Switch startStopSensorsSwitch;
     private boolean measurementStarted = false;
     private boolean DataStorageRequested = false;
     private LocalDateTime startOfMeasurement;
@@ -59,7 +56,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
     private Intent sensorServiceIntent;
     private SensorReadoutService sensorService;
     private boolean sensorServiceBound = false;
-    private boolean sensorServiceStarted = false;
+    private boolean sensorServiceRunning = false;
 
     private ServiceConnection sensorServiceConnection = new ServiceConnection() {
 
@@ -70,16 +67,19 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
             SensorReadoutBinder binder = (SensorReadoutBinder) service;
             sensorService = binder.getService();
             sensorServiceBound = true;
-
-            if (SensorReadoutStatus.UNSUPPORTED_SENSORS.equals(sensorService.getSensorStatus())) {
-                daqStatusText.setText("sensors unsupported");
-                daqStatusText.setTextColor(Color.RED);
+            sensorServiceRunning = sensorService.isSensorServiceRunning();
+            if (sensorServiceRunning) {
+                if (SensorReadoutStatus.UNSUPPORTED_SENSORS.equals(sensorService.getSensorStatus())) {
+                    daqStatusText.setText("sensors unsupported");
+                    daqStatusText.setTextColor(Color.RED);
+                }
             }
         }
 
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
             sensorServiceBound = false;
+            sensorServiceRunning = false;
         }
     };
 
@@ -101,31 +101,13 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         idleToggleButton = findViewById(R.id.toggleButton);
         smokingToggleButton = findViewById(R.id.toggleButton2);
         storeDataButton = findViewById(R.id.button2);
-        startStopSensorsSwitch = findViewById(R.id.switch1);
-
-        /* Start/Stop acquisition of data by sensors */
-        startStopSensorsSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked){
-                    sensorServiceIntent = new Intent(dataAcquisitionActivity.this, SensorReadoutService.class);
-                    sensorServiceIntent.putExtra("START_SENSOR_SERVICE", true); /* TODO is this necessary? */
-                    startService(sensorServiceIntent);
-                    sensorServiceStarted = true;
-                    bindService(sensorServiceIntent, sensorServiceConnection, Context.BIND_AUTO_CREATE);
-                }
-                else{
-                    unbindStopSensorService(false);
-                }
-            }
-        });
 
         /* Update Button for Measurement (Idle/Recording) */
         idleToggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (idleToggleButton.isChecked() == true){
-                    if (sensorServiceBound) {
+                    if (sensorServiceRunning) {
                         measurementStarted = true;
                         idleToggleButton.setTextOn("RECORDING");
                         idleToggleButton.setChecked(true);
@@ -138,7 +120,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
                         if (!wakeLock.isHeld()) {
                             wakeLock.acquire();
                         }
-                        sensorService.startMeasurement(dataAcquisitionActivity.this);
+                        sensorService.triggerSingleMeasurement(dataAcquisitionActivity.this);
                     }
                     else {
                         outputSensorsDisabledMessage();
@@ -155,7 +137,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         smokingToggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if ((sensorServiceBound)){
+                if ((sensorServiceRunning)){
                     if(smokingToggleButton.isChecked()){
                         sensorService.setSmokingLabel(true);
                     }
@@ -176,7 +158,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         storeDataButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if ((sensorServiceBound) && (measurementStarted)) {
+                if ((sensorServiceRunning) && (measurementStarted)) {
 
                     /* Store data to file -> Enable Storing -> Storing + button reset is executed by timer event*/
                     /* TODO solve this solution by job intent*/
@@ -198,11 +180,14 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
     @Override
     protected void onStart() {
         super.onStart();
-        // Bind to LocalService
-        Intent intent = new Intent(this, SensorReadoutService.class);
-        if ((!sensorServiceBound) && (sensorServiceStarted)) {
-            bindService(intent, sensorServiceConnection, Context.BIND_AUTO_CREATE);
+
+        /* Try to bind to server -> when bound, check if server is running */
+        if (!sensorServiceBound) {
+            sensorServiceIntent = new Intent(this, SensorReadoutService.class);
+            sensorServiceIntent.putExtra("BIND_SENSOR_SERVICE", true); /* TODO is this necessary? */
+            bindService(sensorServiceIntent, sensorServiceConnection, Context.BIND_AUTO_CREATE);
         }
+
         /* Create 250ms refresh timer*/
         startDataRefreshTimerTask(250);
     }
@@ -214,14 +199,14 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         timer.cancel();
         /* unbind sensorService*/
         if (sensorServiceBound) {
-            unbindStopSensorService(true);
+            unbindStopSensorService();
         }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unbindStopSensorService(false);
+        unbindStopSensorService();
     }
 
     protected void outputSensorsDisabledMessage() {
@@ -231,10 +216,10 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
     /* Start a Timer Task to schedule the refresh of the data output text */
     private void startDataRefreshTimerTask(int repeatDelay) {
         timer = new Timer();
-        TimerTask refreshTimerTak = new TimerTask() {
+        TimerTask refreshTimerTask = new TimerTask() {
             @Override
             public void run() {
-                if (sensorServiceBound) {
+                if (sensorServiceRunning) {
                     sensorService.getSingleSample(singleMeasurement);
 
                     runOnUiThread(new Runnable() {
@@ -270,7 +255,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
                 }
             }
         };
-        timer.scheduleAtFixedRate(refreshTimerTak, 100, repeatDelay);
+        timer.scheduleAtFixedRate(refreshTimerTask, 100, repeatDelay);
     }
 
     private void storeDataToFile(int numberOfSamples) {
@@ -331,20 +316,16 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         idleToggleButton.setTextOn("RECORDING");
         idleToggleButton.setChecked(false);
         measurementStarted = false;
-        sensorService.stopMeasurement();
+        sensorService.stopSingleMeasurement();
         if (wakeLock.isHeld()) {
             wakeLock.release();
         }
     }
 
-    private void unbindStopSensorService(boolean unbindOnly) {
+    private void unbindStopSensorService() {
         if (sensorServiceBound) {
             unbindService(sensorServiceConnection);
             sensorServiceBound = false;
-        }
-        if ((!unbindOnly) && (sensorServiceStarted)){
-            stopService(sensorServiceIntent);
-            sensorServiceStarted = false;
         }
     }
 }

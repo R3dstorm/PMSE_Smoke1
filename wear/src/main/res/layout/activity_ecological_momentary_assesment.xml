@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/dark_grey"
+    android:background="#1f2020"
     android:padding="@dimen/box_inset_layout_padding"
     tools:context=".EcologicalMomentaryAssesmentActivity"
     tools:deviceIds="wear">
@@ -16,9 +16,9 @@
 
         <Button
             android:id="@+id/startPageButtonLable"
-            android:layout_width="197dp"
-            android:layout_height="37dp"
-            android:background="@drawable/roundedbutton"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:background="@drawable/rectanglebutton"
             android:gravity="center"
             android:onClick="startDAQ"
             android:text="@string/startPageLable"
@@ -31,9 +31,10 @@
 
         <Button
             android:id="@+id/startPageButtonLog"
-            android:layout_width="212dp"
+            android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:background="@drawable/roundedbutton"
+            android:background="@drawable/rectanglebutton"
+            android:onClick="onLogButtonClick"
             android:paddingBottom="@dimen/screen_percentage_05"
             android:text="@string/StartPageLog"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -48,10 +49,11 @@
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:background="@drawable/playstopbutton"
+            android:foreground="@drawable/smoke"
             android:onClick="onPlayButtonClick"
-            android:textOff="start"
-            android:textSize="10dp"
-            android:textOn="stop"
+            android:textOff=""
+            android:textOn=""
+            android:textSize="0dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.1"
@@ -63,7 +65,7 @@
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:background="@drawable/roundedbutton"
-            android:src="@drawable/ic_add_white_24dp"
+            android:foreground="@drawable/ic_add_white_24dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
@@ -75,10 +77,22 @@
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:background="@drawable/roundedbutton"
-            android:src="@android:drawable/ic_popup_sync"
+            android:foreground="@android:drawable/ic_popup_sync"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.899"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <CheckBox
+            android:id="@+id/checkBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="48dp"
+            android:layout_marginEnd="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.496"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 

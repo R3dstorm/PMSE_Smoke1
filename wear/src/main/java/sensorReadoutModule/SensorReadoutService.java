@@ -18,7 +18,7 @@ public class SensorReadoutService extends Service {
 
     /* Binder to connect application to service */
     public class SensorReadoutBinder extends Binder {
-        SensorReadoutService getService() {
+        public SensorReadoutService getService() {
             /* Return this instance of local SensorReadoutService so clients can call public methods */
             return SensorReadoutService.this;
         }
@@ -40,6 +40,7 @@ public class SensorReadoutService extends Service {
     private IBinder mServiceBinder;
     private SensorReadout sensor;   /* Instance for operating the sensors (Acc, Gyr) */
     private static final String TAG = "SensorReadoutService";
+    private boolean sensorServiceRunning;
 
     @Override
     public void onCreate() {
@@ -52,6 +53,8 @@ public class SensorReadoutService extends Service {
         mServiceLooper = thread.getLooper();
         mServiceHandler = new ServiceHandler(mServiceLooper);
         mServiceBinder = new SensorReadoutBinder();
+
+        sensorServiceRunning = false;
     }
 
     @Override
@@ -65,6 +68,7 @@ public class SensorReadoutService extends Service {
 
         /* Initialize and start sensors */
         sensor = new SensorReadout(this, mServiceHandler);
+        sensorServiceRunning = true;
 
         /* If we get killed, after returning from here, restart */
         return START_STICKY;
@@ -79,20 +83,34 @@ public class SensorReadoutService extends Service {
     @Override
     public void onDestroy() {
         /* Send message to user on destroy */
-        sensor.stopSensors();
-        Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show();
+        if (sensorServiceRunning) {
+            sensor.stopSensors();
+            Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public boolean isSensorServiceRunning (){
+        return sensorServiceRunning;
     }
 
     public SensorReadoutStatus getSensorStatus() {
         return sensor.getSensorStatus();
     }
 
-    public void startMeasurement (MeasurementCompleteListener _measurementCompleteListener){
-        sensor.triggerMeasurement(_measurementCompleteListener);
+    public void triggerSingleMeasurement(MeasurementCompleteListener _measurementCompleteListener){
+        sensor.triggerSingleMeasurement(_measurementCompleteListener);
     }
 
-    public void stopMeasurement () {
-        sensor.stopMeasurement();
+    public void stopSingleMeasurement() {
+        sensor.stopSingleMeasurement();
+    }
+
+    public void triggerContinuousMeasurement() {
+        sensor.triggerContinuousMeasurement();
+    }
+
+    public void stopContinuousMeasurement() {
+        sensor.stopContinuousMeasurement();
     }
 
     public void setSmokingLabel (boolean isSmoking){
@@ -104,7 +122,15 @@ public class SensorReadoutService extends Service {
     }
 
     public float[][] getFullSampleStorage() {
-        return sensor.getDataStorage();
+        return sensor.getSingleMeasurementDataStorage();
+    }
+
+    public double[][] getContinuousMeasurementDataStorage(){
+        return sensor.getContinuousMeasurementDataStorage();
+    }
+
+    public boolean isContMeasDataAvailable(){
+        return sensor.isContMeasDataAvailable();
     }
 
     public int getNumberOfSamples() {
