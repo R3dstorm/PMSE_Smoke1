@@ -73,6 +73,9 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
         else
         {
             stopService(sensorServiceIntent);
+            /* tell connected modules to unbind */
+            sensorAiMediator.unbindFromServices();
+
             sensorServiceStarted = false;
         }
     }

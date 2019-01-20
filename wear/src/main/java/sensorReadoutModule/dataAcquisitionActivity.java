@@ -199,14 +199,14 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         timer.cancel();
         /* unbind sensorService*/
         if (sensorServiceBound) {
-            unbindStopSensorService();
+            unbindFromServices();
         }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unbindStopSensorService();
+        unbindFromServices();
     }
 
     protected void outputSensorsDisabledMessage() {
@@ -322,7 +322,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         }
     }
 
-    private void unbindStopSensorService() {
+    public void unbindFromServices() {
         if (sensorServiceBound) {
             unbindService(sensorServiceConnection);
             sensorServiceBound = false;
