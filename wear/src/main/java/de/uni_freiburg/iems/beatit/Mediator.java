@@ -86,4 +86,11 @@ public class Mediator {
     private void startModelCalcCycleTimerTask(int startDelay, int repeatDelay) {
         mainHandler.postDelayed(runnable, repeatDelay);
     }
+
+    public void unbindFromServices (){
+        if (sensorServiceBound) {
+            myContext.unbindService(sensorServiceConnection);
+            sensorServiceBound = false;
+        }
+    }
 }
