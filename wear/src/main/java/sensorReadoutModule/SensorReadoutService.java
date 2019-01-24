@@ -59,7 +59,7 @@ public class SensorReadoutService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Toast.makeText(this, "service starting", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Detection started", Toast.LENGTH_SHORT).show();
 
         /* For each start request, send a message to start a job and deliver the start ID */
         Message msg = mServiceHandler.obtainMessage();
@@ -85,7 +85,7 @@ public class SensorReadoutService extends Service {
         /* Send message to user on destroy */
         if (sensorServiceRunning) {
             sensor.stopSensors();
-            Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Detection stopped", Toast.LENGTH_SHORT).show();
         }
     }
 
