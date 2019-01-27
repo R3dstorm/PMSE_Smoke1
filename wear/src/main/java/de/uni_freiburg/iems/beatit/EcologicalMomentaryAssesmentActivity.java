@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.wearable.activity.WearableActivity;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
@@ -39,6 +40,9 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
         startButton = findViewById(R.id.startPageButtonPlay);
         smokingDetected = findViewById(R.id.checkBox);
         daqButton.setOnClickListener(this);
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
     }
     @Override
     protected void onDestroy() {
