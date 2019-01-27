@@ -88,12 +88,18 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
     public void modelEvaluatedCB(boolean smoking) {
         /* The measurement is completed*/
         if (smoking) {
-            smokingDetected.setChecked(true);
+            //smokingDetected.setChecked(true);
+            showSmokingDetectedPopUp();
         } else {
-            smokingDetected.setChecked(false);
+            //smokingDetected.setChecked(false);
         }
     }
-    public void onLogButtonClick(View v){
+
+    public void onLogButtonClick(View v) {
+        showSmokingDetectedPopUp();
+    }
+
+    private void showSmokingDetectedPopUp() {
         Intent intent = new Intent(this, SmokeDetectedPopUpActivity.class);
         startActivity(intent);
     }

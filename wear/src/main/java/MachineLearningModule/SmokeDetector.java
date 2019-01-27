@@ -9,18 +9,28 @@ public class SmokeDetector implements AsyncResponse {
     private static final int stopFrameThreshold = 8;
 
     private ModelHandler modelHandler;
+    private boolean wasSmokingReported;
     private boolean isSmokingPhase;
     private int frameCounter;
     private int startFrames;
     private int stopFrames;
 
     public SmokeDetector(AssetManager assets) {
+        wasSmokingReported = false;
         isSmokingPhase = false;
         frameCounter = 0;
         startFrames = 0;
         stopFrames = 0;
         modelHandler = new ModelHandler();
         modelHandler.loadModel(assets);
+    }
+
+    public boolean isSmokingDetected() {
+        if(isSmokingPhase && !wasSmokingReported) {
+            wasSmokingReported = true;
+            return true;
+        }
+        return false;
     }
 
     public void feedSensorData(final double[][] window) {
@@ -48,7 +58,7 @@ public class SmokeDetector implements AsyncResponse {
             }
         }
 
-        Log.i("ML","<" + frameCounter + ", " + isSmoking + "> smoking phase: " + isSmokingPhase +
-                " (start: " + startFrames + ", stop: " + stopFrames + ") ");
+//        Log.i("ML","<" + frameCounter + ", " + isSmoking + "> smoking phase: " + isSmokingPhase +
+//                " (start: " + startFrames + ", stop: " + stopFrames + ") ");
     }
 }
