@@ -2,6 +2,10 @@ package de.uni_freiburg.iems.beatit;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.wear.ambient.AmbientModeSupport;
 import android.support.wearable.activity.WearableActivity;
 import android.view.View;
 import android.widget.Button;
@@ -17,7 +21,7 @@ interface ModelEvaluatedListener {
     void modelEvaluatedCB(boolean smoking);
 }
 
-public class EcologicalMomentaryAssesmentActivity extends WearableActivity implements View.OnClickListener, ModelEvaluatedListener {
+public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity implements View.OnClickListener, ModelEvaluatedListener, AmbientModeSupport.AmbientCallbackProvider {
 
     private TextView mTextView;
     private ToggleButton startButton;
@@ -25,6 +29,29 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
     private Boolean sensorServiceStarted = false;
     private Mediator sensorAiMediator;
     private CheckBox smokingDetected;
+    private AmbientModeSupport.AmbientController mAmbientController;
+
+    @Override
+    public AmbientModeSupport.AmbientCallback getAmbientCallback() {
+        return new MyAmbientCallback();
+    }
+
+    private class MyAmbientCallback extends AmbientModeSupport.AmbientCallback {
+        @Override
+        public void onEnterAmbient(Bundle ambientDetails) {
+            // Handle entering ambient mode
+        }
+
+        @Override
+        public void onExitAmbient() {
+            // Handle exiting ambient mode
+        }
+
+        @Override
+        public void onUpdateAmbient() {
+            // Update the content
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,8 +60,15 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
 
         mTextView = (TextView) findViewById(R.id.text);
 
+        /* recyclerview */
+//        RecyclerView recyclerView = findViewById(R.id.recyclerview);
+//        final SmokingEventListAdapter adapter = new SmokingEventListAdapter(this);
+//        recyclerView.setAdapter(adapter);
+//        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
         // Enables Always-on
-        setAmbientEnabled();
+        mAmbientController = AmbientModeSupport.attach(this);
+        //setAmbientEnabled();
         Button daqButton = findViewById(R.id.startPageButtonLable);
         startButton = findViewById(R.id.startPageButtonPlay);
         smokingDetected = findViewById(R.id.checkBox);
@@ -60,6 +94,14 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
     public void onClick(View v) {
         Intent intent = new Intent(this, dataAcquisitionActivity.class);
         startActivity(intent);
+    }
+
+    public void onAddEventButtonClick(View v){
+        if (sensorAiMediator != null) {
+            SmokingEvent event = new SmokingEvent("blub", "20190101",
+                    "1125", "20190102", "1200", true);
+            sensorAiMediator.storeSmokingEvent(event);
+        }
     }
 
     public void onPlayButtonClick(View v){
@@ -90,7 +132,7 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
         }
     }
     public void onLogButtonClick(View v){
-        Intent intent = new Intent(this, SmokeDetectedPopUpActivity.class);
+        Intent intent = new Intent(this, SmokingLogActivity.class);
         startActivity(intent);
     }
 }

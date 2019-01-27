@@ -66,6 +66,7 @@
             android:layout_height="50dp"
             android:background="@drawable/roundedbutton"
             android:foreground="@drawable/ic_add_white_24dp"
+            android:onClick="onAddEventButtonClick"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
