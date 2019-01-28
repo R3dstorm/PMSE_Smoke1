@@ -16,23 +16,23 @@ public class SmokingEvent {
     private String mTest;
 
     @NonNull
-    @ColumnInfo(name = "Start Date")
+    @ColumnInfo(name = "Start_Date")
     private String startDate;
 
     @NonNull
-    @ColumnInfo(name = "Start Time")
+    @ColumnInfo(name = "Start_Time")
     private String startTime;
 
     @NonNull
-    @ColumnInfo(name = "Stop Date")
+    @ColumnInfo(name = "Stop_Date")
     private String stopDate;
 
     @NonNull
-    @ColumnInfo(name = "Stop Time")
+    @ColumnInfo(name = "Stop_Time")
     private String stopTime;
 
     @NonNull
-    @ColumnInfo(name = "Event Confirmed")
+    @ColumnInfo(name = "Event_Confirmed")
     private boolean eventConfirmed;
 
     public SmokingEvent(@NonNull String test, @NonNull String startDate, @NonNull String startTime,

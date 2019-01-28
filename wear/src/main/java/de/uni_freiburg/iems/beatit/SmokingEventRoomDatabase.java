@@ -1,6 +1,6 @@
-package de.uni_freiburg.iems.beatit;
+/* Credits: Major parts of sources from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
 
-/* Credits: Sources from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
+package de.uni_freiburg.iems.beatit;
 
 import android.arch.persistence.db.SupportSQLiteDatabase;
 import android.arch.persistence.room.Database;
@@ -10,7 +10,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 
-@Database(entities = {SmokingEvent.class}, version = 1)
+@Database(entities = {SmokingEvent.class}, version = 2)
 public abstract class SmokingEventRoomDatabase extends RoomDatabase {
 
     public abstract SmokingEventDao smokingEventDao();
@@ -42,12 +42,11 @@ public abstract class SmokingEventRoomDatabase extends RoomDatabase {
      * If you want to populate the database only when the database is created for the 1st time,
      * override RoomDatabase.Callback()#onCreate
      */
-    /* TODO umstellen auf .callback()#onCreate*/
     private static RoomDatabase.Callback sRoomDatabaseCallback = new RoomDatabase.Callback() {
 
         @Override
-        public void onOpen(@NonNull SupportSQLiteDatabase db) {
-            super.onOpen(db);
+        public void onCreate(@NonNull SupportSQLiteDatabase db) {
+            super.onCreate(db);
             // If you want to keep the data through app restarts,
             // comment out the following line.
             new PopulateDbAsync(INSTANCE).execute();
@@ -72,8 +71,8 @@ public abstract class SmokingEventRoomDatabase extends RoomDatabase {
             // Not needed if you only populate on creation.
             mDao.deleteAll();
 
-            SmokingEvent event = new SmokingEvent("blub", "20190101",
-                    "1125", "20190102", "1200", true);
+            SmokingEvent event = new SmokingEvent("firstEvent", "20190101",
+                    "1125", "20190102", "1200", false);
             mDao.insert(event);
             return null;
         }

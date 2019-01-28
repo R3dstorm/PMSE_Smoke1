@@ -1,3 +1,5 @@
+/* Credits: Major parts of sources from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
+
 package de.uni_freiburg.iems.beatit;
 
 import android.arch.lifecycle.LiveData;
@@ -15,6 +17,6 @@ public interface SmokingEventDao {
     @Query("DELETE FROM smoking_event_table")
     void deleteAll();
 
-    @Query("SELECT * from smoking_event_table ORDER BY word ASC")
+    @Query("SELECT * from smoking_event_table ORDER BY Start_Date, Start_Time ASC")
     LiveData<List<SmokingEvent>> getAllEvents();
 }

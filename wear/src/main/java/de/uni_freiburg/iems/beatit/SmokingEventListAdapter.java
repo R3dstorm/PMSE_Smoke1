@@ -1,3 +1,5 @@
+/* Credits: Major parts of sources from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
+
 package de.uni_freiburg.iems.beatit;
 
 import android.content.Context;
@@ -35,15 +37,15 @@ public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventLi
     public void onBindViewHolder(SmokingEventViewHolder holder, int position) {
         if (mSmokingEvents != null) {
             SmokingEvent current = mSmokingEvents.get(position);
-            /* TODO was soll hier angezeigt werden?*/
-            holder.smokingEventItemView.setText(current.getStartDate());
+            /* Write display data to view */
+            holder.smokingEventItemView.setText(current.getStartTime());
         } else {
             // Covers the case of data not being ready yet.
-            holder.smokingEventItemView.setText("No Word");
+            holder.smokingEventItemView.setText("No Smoke Event");
         }
     }
 
-    void setWords(List<SmokingEvent> events){
+    void setEvents(List<SmokingEvent> events){
         mSmokingEvents = events;
         notifyDataSetChanged();
     }

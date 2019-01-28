@@ -1,6 +1,6 @@
-package de.uni_freiburg.iems.beatit;
+/* Credits: Major parts of sources from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
 
-/* Credits: Sources from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
+package de.uni_freiburg.iems.beatit;
 
 import android.app.Application;
 import android.arch.lifecycle.LiveData;
@@ -42,4 +42,21 @@ public class SmokingEventRepository {
             return null;
         }
     }
+
+    /* TODO parameters are not necessary -> remove*/
+    public void deleteAll() {new deleteAsyncTask(mEventDao).execute();}
+
+    private static class deleteAsyncTask extends AsyncTask<SmokingEvent, Void, Void> {
+
+        private SmokingEventDao mAsyncTaskDao;
+
+        deleteAsyncTask(SmokingEventDao dao) { mAsyncTaskDao = dao;}
+
+        @Override
+        protected  Void doInBackground(final SmokingEvent... params){
+            mAsyncTaskDao.deleteAll();
+            return null;
+        }
+    }
+
 }

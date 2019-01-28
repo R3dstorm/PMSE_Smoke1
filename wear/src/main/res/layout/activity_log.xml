@@ -14,14 +14,16 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
-        android:onClick="addNewEvent"
-        android:text="ADD"
+        android:background="@android:color/holo_orange_light"
+        android:elevation="@dimen/action_drawer_item_top_padding"
+        android:onClick="delAllEvents"
+        android:text="DEL"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.495"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.053" />
+        app:layout_constraintVertical_bias="1.0" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recyclerview"
@@ -29,6 +31,8 @@
         android:layout_height="match_parent"
         android:background="@android:color/darker_gray"
         android:scrollbars="vertical"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="51dp"
         tools:listitem="@layout/recyclerview_item">
 
     </android.support.v7.widget.RecyclerView>

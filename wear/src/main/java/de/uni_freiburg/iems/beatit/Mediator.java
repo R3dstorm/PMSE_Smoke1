@@ -1,7 +1,6 @@
 package de.uni_freiburg.iems.beatit;
 
-import android.app.Activity;
-import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.LifecycleOwner;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.ComponentName;
@@ -28,7 +27,7 @@ public class Mediator {
     private SensorReadoutService sensorService;
     private boolean sensorServiceBound = false;
     private boolean sensorServiceRunning = false;
-    private ModelHandler m;
+    private ModelHandler mAiModel;
     private ModelEvaluatedListener modelEvaluatedListener;
     private Context myContext;
     private Handler mainHandler;
@@ -52,37 +51,37 @@ public class Mediator {
         }
     };
 
-    Mediator(Context context, ModelEvaluatedListener _modelEvaluatedListener) {
+    Mediator(Context context, boolean bindSensorService, ModelEvaluatedListener _modelEvaluatedListener) {
         myContext = context;
-        Activity myActivity = (Activity)context;
         mainHandler = new Handler(myContext.getMainLooper());
         /* Access Database: Get a new or existing viewModel from viewModelProvider */
+        final SmokingEventListAdapter adapter = new SmokingEventListAdapter(myContext);
         mSEViewModel = ViewModelProviders.of((FragmentActivity) myContext).get(SmokingEventViewModel.class); /* TODO geht daS?*/
 
         // Add an observer on the LiveData returned by getAlphabetizedWords.
         // The onChanged() method fires when the observed data changes and the activity is
         // in the foreground.
-        /* TODO ....*/
-//        mWordViewModel.getAllWords().observe(this, new Observer<List<Word>>() {
-//            @Override
-//            public void onChanged(@Nullable final List<Word> words) {
-//                // Update the cached copy of the words in the adapter.
-//                adapter.setWords(words);
-//            }
-//        });
+        mSEViewModel.getAllEvents().observe((LifecycleOwner) myContext, new Observer<List<SmokingEvent>>() {
+            @Override
+            public void onChanged(@Nullable final List<SmokingEvent> events) {
+                // Update the cached copy of the words in the adapter.
+                adapter.setEvents(events);
+            }
+        });
 
-        /* Start ModelCalcCycleTimerTask */
-        startModelCalcCycleTimerTask(START_DELAY_MS, SLIDING_STEP_MS);
-        /* Binding to Service*/
-        if (!sensorServiceBound) {
-            sensorServiceIntent = new Intent(context, SensorReadoutService.class);
-            sensorServiceIntent.putExtra("BIND_SENSOR_SERVICE", true); /* TODO is this necessary? */
-            context.bindService(sensorServiceIntent, sensorServiceConnection, Context.BIND_AUTO_CREATE);
+        if (bindSensorService) {
+            /* Start ModelCalcCycleTimerTask */
+            startModelCalcCycleTimerTask(START_DELAY_MS, SLIDING_STEP_MS);
+            /* Binding to Service*/
+            if (!sensorServiceBound) {
+                sensorServiceIntent = new Intent(context, SensorReadoutService.class);
+                sensorServiceIntent.putExtra("BIND_SENSOR_SERVICE", true); /* TODO is this necessary? */
+                context.bindService(sensorServiceIntent, sensorServiceConnection, Context.BIND_AUTO_CREATE);
+            }
+            modelEvaluatedListener = _modelEvaluatedListener;
+            mAiModel = new ModelHandler();
+            mAiModel.loadModel(context.getAssets());
         }
-        modelEvaluatedListener = _modelEvaluatedListener;
-        m = new ModelHandler();
-        m.loadModel(context.getAssets());
-
     }
 
     private Runnable runnable = new Runnable() {
@@ -99,7 +98,7 @@ public class Mediator {
                 /* Try to read out and process data*/
                 if (sensorService.isContMeasDataAvailable()) {
                     /* Hand continuous data to ML-Module*/
-                    boolean smokingLabel = m.predict(sensorService.getContinuousMeasurementDataStorage());
+                    boolean smokingLabel = mAiModel.predict(sensorService.getContinuousMeasurementDataStorage());
                     modelEvaluatedListener.modelEvaluatedCB(smokingLabel);
                 }
                 /* TODO Connect to GUI?*/
@@ -122,14 +121,6 @@ public class Mediator {
 
     public void storeSmokingEvent (SmokingEvent smokingEvent) {
         mSEViewModel.insert(smokingEvent);
-        LiveData<List<SmokingEvent>> blub = mSEViewModel.getAllEvents();
-        List dub = blub.getValue();
-        if (dub != null) {
-            if (dub.size() > 0) {
-                String cub = ((SmokingEvent) dub.get(0)).getStartDate();
-                /* TODO zugriff nur über Observer möglich?*/
-            }
-        }
     }
 
 //    private void fetchData() {

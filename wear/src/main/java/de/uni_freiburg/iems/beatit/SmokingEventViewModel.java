@@ -1,6 +1,6 @@
-package de.uni_freiburg.iems.beatit;
+/* Credits: Major part of sources from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
 
-/* Credits: Sources from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
+package de.uni_freiburg.iems.beatit;
 
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
@@ -23,5 +23,7 @@ public class SmokingEventViewModel extends AndroidViewModel {
     LiveData<List<SmokingEvent>> getAllEvents() { return mAllEvents; }
 
     public void insert(SmokingEvent event) { mRepository.insert(event); }
+
+    public void deleteAll () {mRepository.deleteAll();}
 
 }
