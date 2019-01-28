@@ -11,6 +11,10 @@ import android.view.View;
 
 import java.util.List;
 
+import SQLiteDatabaseModule.SmokingEvent;
+import SQLiteDatabaseModule.SmokingEventListAdapter;
+import SQLiteDatabaseModule.SmokingEventViewModel;
+
 public class SmokingLogActivity extends AppCompatActivity {
 
     private SmokingEventViewModel mSEViewModel;

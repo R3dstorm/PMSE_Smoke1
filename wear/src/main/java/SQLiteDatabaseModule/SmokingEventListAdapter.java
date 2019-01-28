@@ -1,6 +1,6 @@
 /* Credits: Major parts of sources from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
 
-package de.uni_freiburg.iems.beatit;
+package SQLiteDatabaseModule;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
@@ -10,6 +10,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.util.List;
+
+import de.uni_freiburg.iems.beatit.R;
 
 public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventListAdapter.SmokingEventViewHolder> {
 
@@ -25,7 +27,7 @@ public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventLi
     private final LayoutInflater mInflater;
     private List<SmokingEvent> mSmokingEvents; // Cached copy of smoking events
 
-    SmokingEventListAdapter(Context context) { mInflater = LayoutInflater.from(context); }
+    public SmokingEventListAdapter(Context context) { mInflater = LayoutInflater.from(context); }
 
     @Override
     public SmokingEventViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -45,7 +47,7 @@ public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventLi
         }
     }
 
-    void setEvents(List<SmokingEvent> events){
+    public void setEvents(List<SmokingEvent> events){
         mSmokingEvents = events;
         notifyDataSetChanged();
     }

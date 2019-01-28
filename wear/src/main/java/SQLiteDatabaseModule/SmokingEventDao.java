@@ -1,6 +1,6 @@
 /* Credits: Major parts of sources from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
 
-package de.uni_freiburg.iems.beatit;
+package SQLiteDatabaseModule;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;

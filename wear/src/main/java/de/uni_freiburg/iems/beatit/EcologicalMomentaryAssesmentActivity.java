@@ -12,8 +12,9 @@ import android.widget.ToggleButton;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import sensorReadoutModule.dataAcquisitionActivity;
-import sensorReadoutModule.SensorReadoutService;
+import SQLiteDatabaseModule.SmokingEvent;
+import SensorReadoutModule.dataAcquisitionActivity;
+import SensorReadoutModule.SensorReadoutService;
 
 /* Callback interface for measurementCompleteEvent*/
 interface ModelEvaluatedListener {

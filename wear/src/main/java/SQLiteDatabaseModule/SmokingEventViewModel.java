@@ -1,6 +1,6 @@
 /* Credits: Major part of sources from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
 
-package de.uni_freiburg.iems.beatit;
+package SQLiteDatabaseModule;
 
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
@@ -20,7 +20,7 @@ public class SmokingEventViewModel extends AndroidViewModel {
         mAllEvents = mRepository.getAllEvents();
     }
 
-    LiveData<List<SmokingEvent>> getAllEvents() { return mAllEvents; }
+    public LiveData<List<SmokingEvent>> getAllEvents() { return mAllEvents; }
 
     public void insert(SmokingEvent event) { mRepository.insert(event); }
 

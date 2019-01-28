@@ -15,8 +15,11 @@ import android.support.v4.app.FragmentActivity;
 import java.util.List;
 
 import MachineLearningModule.ModelHandler;
-import sensorReadoutModule.SensorReadoutService;
-import sensorReadoutModule.SensorReadoutService.SensorReadoutBinder;
+import SQLiteDatabaseModule.SmokingEvent;
+import SQLiteDatabaseModule.SmokingEventListAdapter;
+import SQLiteDatabaseModule.SmokingEventViewModel;
+import SensorReadoutModule.SensorReadoutService;
+import SensorReadoutModule.SensorReadoutService.SensorReadoutBinder;
 
 public class Mediator {
 
