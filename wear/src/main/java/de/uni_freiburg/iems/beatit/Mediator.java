@@ -7,7 +7,7 @@ import android.content.ServiceConnection;
 import android.os.Handler;
 import android.os.IBinder;
 
-import MachineLearningModule.ModelHandler;
+import MachineLearningModule.SmokeDetector;
 import sensorReadoutModule.SensorReadoutService;
 import sensorReadoutModule.SensorReadoutService.SensorReadoutBinder;
 
@@ -20,7 +20,7 @@ public class Mediator {
     private SensorReadoutService sensorService;
     private boolean sensorServiceBound = false;
     private boolean sensorServiceRunning = false;
-    private ModelHandler m;
+    private SmokeDetector smokeDetector;
     private ModelEvaluatedListener modelEvaluatedListener;
     private Context myContext;
     private Handler mainHandler;
@@ -55,8 +55,7 @@ public class Mediator {
             context.bindService(sensorServiceIntent, sensorServiceConnection, Context.BIND_AUTO_CREATE);
         }
         modelEvaluatedListener = _modelEvaluatedListener;
-        m = new ModelHandler();
-        m.loadModel(context.getAssets());
+        smokeDetector = new SmokeDetector(context.getAssets());
     }
 
     private Runnable runnable = new Runnable() {
@@ -73,8 +72,8 @@ public class Mediator {
                 /* Try to read out and process data*/
                 if (sensorService.isContMeasDataAvailable()) {
                     /* Hand continuous data to ML-Module*/
-                    boolean smokingLabel = m.predict(sensorService.getContinuousMeasurementDataStorage());
-                    modelEvaluatedListener.modelEvaluatedCB(smokingLabel);
+                    smokeDetector.feedSensorData(sensorService.getContinuousMeasurementDataStorage());
+                    modelEvaluatedListener.modelEvaluatedCB(smokeDetector.isSmokingDetected());
                 }
                 /* TODO Connect to GUI?*/
             }
@@ -82,6 +81,9 @@ public class Mediator {
         }
     };
 
+    public SmokeDetector getSmokeDetector() {
+        return smokeDetector;
+    }
 
     private void startModelCalcCycleTimerTask(int startDelay, int repeatDelay) {
         mainHandler.postDelayed(runnable, repeatDelay);
