@@ -10,6 +10,7 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import MachineLearningModule.SmokeDetector;
 import sensorReadoutModule.dataAcquisitionActivity;
 import sensorReadoutModule.SensorReadoutService;
 
@@ -26,6 +27,8 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
     private Boolean sensorServiceStarted = false;
     private Mediator sensorAiMediator;
     private CheckBox smokingDetected;
+    private TextView detectorText;
+    private TextView timingText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +42,8 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
         Button daqButton = findViewById(R.id.startPageButtonLable);
         startButton = findViewById(R.id.startPageButtonPlay);
         smokingDetected = findViewById(R.id.checkBox);
+        detectorText = findViewById(R.id.detectorText);
+        timingText = findViewById(R.id.timingText);
         daqButton.setOnClickListener(this);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -87,6 +92,9 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
     @Override
     public void modelEvaluatedCB(boolean smoking) {
         /* The measurement is completed*/
+        SmokeDetector sd = sensorAiMediator.getSmokeDetector();
+        detectorText.setText(sd.getCurrentProbability() + " (" + sd.getCurrentStartFrames() + ")");
+        timingText.setText(sd.getCurrentTiming() + " ms");
         if (smoking) {
             //smokingDetected.setChecked(true);
             showSmokingDetectedPopUp();

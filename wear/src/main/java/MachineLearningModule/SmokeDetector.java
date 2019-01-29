@@ -11,6 +11,7 @@ public class SmokeDetector implements AsyncResponse {
     private ModelHandler modelHandler;
     private boolean wasSmokingReported;
     private boolean isSmokingPhase;
+    private long currentTiming;
     private int frameCounter;
     private int startFrames;
     private int stopFrames;
@@ -23,6 +24,18 @@ public class SmokeDetector implements AsyncResponse {
         stopFrames = 0;
         modelHandler = new ModelHandler();
         modelHandler.loadModel(assets);
+    }
+
+    public int getCurrentProbability() {
+        return modelHandler.getCurrentProbability();
+    }
+
+    public int getCurrentStartFrames() {
+        return startFrames;
+    }
+
+    public long getCurrentTiming() {
+        return currentTiming;
     }
 
     public boolean isSmokingDetected() {
@@ -39,7 +52,8 @@ public class SmokeDetector implements AsyncResponse {
     }
 
     @Override
-    public void predictionResult(boolean isSmoking) {
+    public void predictionResult(boolean isSmoking, long requiredTime) {
+        currentTiming = requiredTime;
         if(isSmoking) {
             stopFrames = 0;
             if(!isSmokingPhase) {

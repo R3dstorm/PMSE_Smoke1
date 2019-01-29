@@ -17,10 +17,11 @@ import static java.lang.Float.parseFloat;
 
 public class ModelHandler {
 
-    private final double SigmoidThreshold = 0.9;
+    private final double SigmoidThreshold = 0.85;
     private final int featureCount = 24;
     private final int windowLength = 1000;
     private final int windowColumns = 6;
+    private int currentProbability;
     private final String inputTensor = "dense_1_input:0";
     private final String outputTensor = "dense_3/Sigmoid:0";
     private final String[] outputNodes = { outputTensor };
@@ -41,6 +42,10 @@ public class ModelHandler {
 //        testClassify();
     }
 
+    public int getCurrentProbability() {
+        return currentProbability;
+    }
+
     public boolean predict(double[][] window) {
        // in: 2D-array with 6 columns x 1000 samples
        // out: true (smoking) or false (non-smoking)
@@ -48,7 +53,7 @@ public class ModelHandler {
        assert(window[0].length == windowLength);
        assert(window.length == windowColumns);
        convertToFeatures(window, features);
-       return (classify(features) > SigmoidThreshold);
+       return (classify(features) >= SigmoidThreshold);
     }
 
     private float classify(float[] features) {
@@ -57,6 +62,7 @@ public class ModelHandler {
             inferenceInterface.feed(inputTensor, features, 1, featureCount);
             inferenceInterface.run(outputNodes);
             inferenceInterface.fetch(outputTensor, result);
+            currentProbability = (int)(result[0] * 100);
 //            Log.i("ML", "" + (int)(result[0] * 100));
             return result[0];
         }

@@ -13,7 +13,7 @@ import sensorReadoutModule.SensorReadoutService.SensorReadoutBinder;
 
 public class Mediator {
 
-    final private int SLIDING_STEP_MS = 2000;
+    final private int SLIDING_STEP_MS = 1000;
     final private int START_DELAY_MS = 100;
 
     private Intent sensorServiceIntent;
@@ -81,6 +81,9 @@ public class Mediator {
         }
     };
 
+    public SmokeDetector getSmokeDetector() {
+        return smokeDetector;
+    }
 
     private void startModelCalcCycleTimerTask(int startDelay, int repeatDelay) {
         mainHandler.postDelayed(runnable, repeatDelay);
