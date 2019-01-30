@@ -25,10 +25,11 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
     private ToggleButton startButton;
     private Intent sensorServiceIntent;
     private Boolean sensorServiceStarted = false;
-    private Mediator sensorAiMediator;
+    private Mediator sensorAiMediator = null;
     private CheckBox smokingDetected;
     private TextView detectorText;
     private TextView timingText;
+    private TextView framesText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +45,7 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
         smokingDetected = findViewById(R.id.checkBox);
         detectorText = findViewById(R.id.detectorText);
         timingText = findViewById(R.id.timingText);
+        framesText = findViewById(R.id.framesText);
         daqButton.setOnClickListener(this);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -77,6 +79,11 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
             startService(sensorServiceIntent);
             sensorServiceStarted = true;
 
+            if(sensorAiMediator != null)
+            {
+                sensorAiMediator = null;
+                Log.i("ML", "previous sensorAiMediator instance deleted");
+            }
             sensorAiMediator = new Mediator(this, EcologicalMomentaryAssesmentActivity.this);
         }
         else
@@ -95,11 +102,14 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
         SmokeDetector sd = sensorAiMediator.getSmokeDetector();
         detectorText.setText(sd.getCurrentProbability() + " (" + sd.getCurrentStartFrames() + ")");
         timingText.setText(sd.getCurrentTiming() + " ms");
+        framesText.setText("" + sd.getCurrentFrame());
+        if (sd.isSmokingPhase() && !smokingDetected.isChecked()) {
+            smokingDetected.setChecked(true);
+        } else if(!sd.isSmokingPhase() && smokingDetected.isChecked()) {
+            smokingDetected.setChecked(false);
+        }
         if (smoking) {
-            //smokingDetected.setChecked(true);
             showSmokingDetectedPopUp();
-        } else {
-            //smokingDetected.setChecked(false);
         }
     }
 

@@ -20,7 +20,7 @@ public class Mediator {
     private SensorReadoutService sensorService;
     private boolean sensorServiceBound = false;
     private boolean sensorServiceRunning = false;
-    private SmokeDetector smokeDetector;
+    private SmokeDetector smokeDetector = null;
     private ModelEvaluatedListener modelEvaluatedListener;
     private Context myContext;
     private Handler mainHandler;
