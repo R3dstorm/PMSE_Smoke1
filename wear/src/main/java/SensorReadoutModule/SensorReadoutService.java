@@ -1,4 +1,4 @@
-package sensorReadoutModule;
+package SensorReadoutModule;
 
 import android.app.Service;
 import android.content.Intent;

@@ -1,4 +1,4 @@
-package sensorReadoutModule;
+package SensorReadoutModule;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -29,7 +29,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import de.uni_freiburg.iems.beatit.R;
-import sensorReadoutModule.SensorReadoutService.SensorReadoutBinder;
+import SensorReadoutModule.SensorReadoutService.SensorReadoutBinder;
 
 /* Callback interface for measurementCompleteEvent*/
 interface MeasurementCompleteListener {

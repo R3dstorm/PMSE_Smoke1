@@ -2,8 +2,9 @@ package de.uni_freiburg.iems.beatit;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.wearable.activity.WearableActivity;
 import android.util.Log;
+import android.support.v7.app.AppCompatActivity;
+import android.support.wear.ambient.AmbientModeSupport;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -12,42 +13,72 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import MachineLearningModule.SmokeDetector;
-import sensorReadoutModule.dataAcquisitionActivity;
-import sensorReadoutModule.SensorReadoutService;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+import SQLiteDatabaseModule.SmokingEvent;
+import SensorReadoutModule.dataAcquisitionActivity;
+import SensorReadoutModule.SensorReadoutService;
 
 /* Callback interface for measurementCompleteEvent*/
 interface ModelEvaluatedListener {
     void modelEvaluatedCB(boolean smoking);
 }
 
-public class EcologicalMomentaryAssesmentActivity extends WearableActivity implements View.OnClickListener, ModelEvaluatedListener {
+public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity implements View.OnClickListener, ModelEvaluatedListener, AmbientModeSupport.AmbientCallbackProvider {
 
-    private TextView mTextView;
-    private ToggleButton startButton;
+    private ToggleButton playButton;
     private Intent sensorServiceIntent;
     private Boolean sensorServiceStarted = false;
     private Mediator sensorAiMediator = null;
+    private LocalDateTime timeOfEvent;
+    private AmbientModeSupport.AmbientController mAmbientController;
+
+    /* TODO remove this as soon smoking notification exists*/
     private CheckBox smokingDetected;
     private TextView detectorText;
     private TextView timingText;
     private TextView framesText;
 
     @Override
+    public AmbientModeSupport.AmbientCallback getAmbientCallback() {
+        return new MyAmbientCallback();
+    }
+
+    private class MyAmbientCallback extends AmbientModeSupport.AmbientCallback {
+        @Override
+        public void onEnterAmbient(Bundle ambientDetails) {
+            // Handle entering ambient mode
+        }
+
+        @Override
+        public void onExitAmbient() {
+            // Handle exiting ambient mode
+        }
+
+        @Override
+        public void onUpdateAmbient() {
+            // Update the content
+        }
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ecological_momentary_assesment);
 
-        mTextView = (TextView) findViewById(R.id.text);
-
         // Enables Always-on
-        setAmbientEnabled();
+        mAmbientController = AmbientModeSupport.attach(this);
+
         Button daqButton = findViewById(R.id.startPageButtonLable);
-        startButton = findViewById(R.id.startPageButtonPlay);
+        playButton = findViewById(R.id.startPageButtonPlay);
+        daqButton.setOnClickListener(this);
+
+        /* TODO remove this as soon smoking notification exists*/
         smokingDetected = findViewById(R.id.checkBox);
         detectorText = findViewById(R.id.detectorText);
         timingText = findViewById(R.id.timingText);
         framesText = findViewById(R.id.framesText);
-        daqButton.setOnClickListener(this);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -74,8 +105,30 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
         startActivity(intent);
     }
 
+    /* TODO Put some more useful content here */
+    public void onAddEventButtonClick(View v){
+        if (sensorAiMediator == null) {
+            /* sensorAiMediator not initialized */
+            sensorAiMediator = new Mediator(this, false,EcologicalMomentaryAssesmentActivity.this);
+        }
+        else{
+            /* sensorAiMediator initialized*/
+        }
+        timeOfEvent = LocalDateTime.now();
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
+        String startDate = timeOfEvent.format(dateFormatter);
+        String startTime = timeOfEvent.format(timeFormatter);
+        String stopDate = timeOfEvent.format(dateFormatter);
+        String stopTime = timeOfEvent.format(timeFormatter);
+
+        SmokingEvent event = new SmokingEvent("manualEvent", startDate,
+                startTime, stopDate, stopTime, true);
+        sensorAiMediator.storeSmokingEvent(event);
+    }
+
     public void onPlayButtonClick(View v){
-        if(startButton.isChecked() == true) {
+        if(playButton.isChecked() == true) {
             sensorServiceIntent = new Intent(EcologicalMomentaryAssesmentActivity.this, SensorReadoutService.class);
             startService(sensorServiceIntent);
             sensorServiceStarted = true;
@@ -85,7 +138,7 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
                 sensorAiMediator = null;
                 Log.i("ML", "previous sensorAiMediator instance deleted");
             }
-            sensorAiMediator = new Mediator(this, EcologicalMomentaryAssesmentActivity.this);
+            sensorAiMediator = new Mediator(this, true,EcologicalMomentaryAssesmentActivity.this);
         }
         else
         {
@@ -95,6 +148,11 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
 
             sensorServiceStarted = false;
         }
+    }
+
+    public void onLogButtonClick(View v){
+        Intent intent = new Intent(this, SmokingLogActivity.class);
+        startActivity(intent);
     }
 
     @Override
@@ -113,11 +171,6 @@ public class EcologicalMomentaryAssesmentActivity extends WearableActivity imple
             showSmokingDetectedPopUp();
         }
     }
-
-    public void onLogButtonClick(View v) {
-        showSmokingDetectedPopUp();
-    }
-
     private void showSmokingDetectedPopUp() {
         Intent intent = new Intent(this, SmokeDetectedPopUpActivity.class);
         startActivity(intent);
