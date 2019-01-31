@@ -1,5 +1,5 @@
 package MachineLearningModule;
 
 public interface AsyncResponse {
-    void predictionResult(boolean isSmoking, long requiredTime);
+    void predictionResult(int currentProbability, long requiredTime);
 }
