@@ -8,8 +8,8 @@ import java.time.LocalDateTime;
 public class SmokeDetector implements AsyncResponse {
 
     private static final int gestureProbability = 80; // min probability to recognize a smoking gesture
-    private static final int gestureThreshold = 6; // consecutive times above sigmoid threshold to recognize smoking gesture
-    private static final int smokingThreshold = 5; // consecutive gesture occurences to enter smoking phase
+    private static final int gestureThreshold = 8; // consecutive times above sigmoid threshold to recognize smoking gesture
+    private static final int smokingThreshold = 8; // consecutive gesture occurences to enter smoking phase
     private static final int smokingTimeout = 45; // max frames between two gestures to abort entering smoking phase
     private static final int stopProbability = 70; // max probability to count as stop frame
     private static final int stopThreshold = 30; // consecutive times below stop probability to leave smoking phase
