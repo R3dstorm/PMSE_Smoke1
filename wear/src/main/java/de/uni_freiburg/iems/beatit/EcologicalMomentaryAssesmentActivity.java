@@ -38,6 +38,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     private CheckBox smokingDetected;
     private TextView detectorText;
     private TextView timingText;
+    private TextView stateText;
     private TextView framesText;
 
     @Override
@@ -78,6 +79,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         smokingDetected = findViewById(R.id.checkBox);
         detectorText = findViewById(R.id.detectorText);
         timingText = findViewById(R.id.timingText);
+        stateText = findViewById(R.id.stateText);
         framesText = findViewById(R.id.framesText);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -159,7 +161,9 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     public void modelEvaluatedCB(boolean smoking) {
         /* The measurement is completed*/
         SmokeDetector sd = sensorAiMediator.getSmokeDetector();
-        detectorText.setText(sd.getCurrentProbability() + " (" + sd.getCurrentStartFrames() + ")");
+
+        // debug stuff --->
+        detectorText.setText(sd.getCurrentProbability() + " (" + sd.getCurrentStartStopFrames() + ")");
         timingText.setText(sd.getCurrentTiming() + " ms");
         framesText.setText("" + sd.getCurrentFrame());
         if (sd.isSmokingPhase() && !smokingDetected.isChecked()) {
@@ -167,11 +171,18 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         } else if(!sd.isSmokingPhase() && smokingDetected.isChecked()) {
             smokingDetected.setChecked(false);
         }
-        if (smoking) {
-            showSmokingDetectedPopUp();
+        String currentState = sd.getCurrentState();
+        if(currentState == "Start") {
+            currentState += " (" + sd.getGestureCounter() + ")";
         }
+        if(stateText.getText() != currentState) {
+            stateText.setText(currentState);
+        } // <---
+
+        if (smoking) { showSmokingDetectedPopUp(sd.getStartTime(), sd.getStopTime()); }
     }
-    private void showSmokingDetectedPopUp() {
+    private void showSmokingDetectedPopUp(LocalDateTime start, LocalDateTime stop) {
+        Log.i("ML", "started: " + start.toString() + "  stopped: " + stop.toString());
         Intent intent = new Intent(this, SmokeDetectedPopUpActivity.class);
         startActivity(intent);
     }
