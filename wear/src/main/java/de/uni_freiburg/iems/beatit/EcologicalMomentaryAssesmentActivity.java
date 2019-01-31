@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
@@ -33,6 +34,8 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     private Mediator sensorAiMediator = null;
     private LocalDateTime timeOfEvent;
     private AmbientModeSupport.AmbientController mAmbientController;
+    private LocalDateTime smokingStartTime;
+    private LocalDateTime smokingEndTime;
 
     /* TODO remove this as soon smoking notification exists*/
     private CheckBox smokingDetected;
@@ -40,6 +43,9 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     private TextView timingText;
     private TextView stateText;
     private TextView framesText;
+
+    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
 
     @Override
     public AmbientModeSupport.AmbientCallback getAmbientCallback() {
@@ -117,8 +123,6 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
             /* sensorAiMediator initialized*/
         }
         timeOfEvent = LocalDateTime.now();
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
         String startDate = timeOfEvent.format(dateFormatter);
         String startTime = timeOfEvent.format(timeFormatter);
         String stopDate = timeOfEvent.format(dateFormatter);
@@ -179,11 +183,40 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
             stateText.setText(currentState);
         } // <---
 
-        if (smoking) { showSmokingDetectedPopUp(sd.getStartTime(), sd.getStopTime()); }
+        if (smoking) {
+            showSmokingDetectedPopUp(sd.getStartTime(), sd.getStopTime());
+        }
     }
-    private void showSmokingDetectedPopUp(LocalDateTime start, LocalDateTime stop) {
-        Log.i("ML", "started: " + start.toString() + "  stopped: " + stop.toString());
+
+    private void showSmokingDetectedPopUp(LocalDateTime startTime, LocalDateTime stopTime) {
+        Log.i("ML", "started: " + startTime.toString() + "  stopped: " + stopTime.toString());
         Intent intent = new Intent(this, SmokeDetectedPopUpActivity.class);
+        smokingStartTime = startTime;
+        smokingEndTime = stopTime;
         startActivity(intent);
+    }
+
+    public void setSmokingIsDetectedCorrectly()
+    {
+        String startDate = smokingStartTime.format(dateFormatter);
+        String startTime = smokingStartTime.format(timeFormatter);
+        String stopDate = smokingEndTime.format(dateFormatter);
+        String stopTime = smokingEndTime.format(timeFormatter);
+
+        SmokingEvent event = new SmokingEvent("Smoking", startDate,
+                startTime, stopDate, stopTime, true);
+
+    }
+
+    public void setSmokingDetectionNoUserAction()
+    {
+        String startDate = smokingStartTime.format(dateFormatter);
+        String startTime = smokingStartTime.format(timeFormatter);
+        String stopDate = smokingEndTime.format(dateFormatter);
+        String stopTime = smokingEndTime.format(timeFormatter);
+
+        SmokingEvent event = new SmokingEvent("Smoking", startDate,
+                startTime, stopDate, stopTime, false);
+
     }
 }
