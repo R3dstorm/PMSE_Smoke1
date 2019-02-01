@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.PopupWindow;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import MachineLearningModule.SmokeDetector;
@@ -46,6 +47,8 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
 
     DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
     DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
+
+    private int requestCode = 11;
 
     @Override
     public AmbientModeSupport.AmbientCallback getAmbientCallback() {
@@ -193,7 +196,24 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         Intent intent = new Intent(this, SmokeDetectedPopUpActivity.class);
         smokingStartTime = startTime;
         smokingEndTime = stopTime;
-        startActivity(intent);
+        startActivityForResult(intent, requestCode);
+    }
+
+    @Override
+    protected void onActivityResult(int requestedCode, int resultCode, Intent intent) {
+        if(requestedCode == requestCode) {
+            if(resultCode == 0) {
+                // user timeout
+                setSmokingDetectionNoUserAction();
+            } else if (resultCode == 1) {
+                // accepted event
+                setSmokingIsDetectedCorrectly();
+            } else if (resultCode == 2) {
+                // declined event
+                Toast.makeText(this, "Event declined", Toast.LENGTH_SHORT).show();
+                // no action needed. Event is not saved
+            }
+        }
     }
 
     public void setSmokingIsDetectedCorrectly()
@@ -202,6 +222,8 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         String startTime = smokingStartTime.format(timeFormatter);
         String stopDate = smokingEndTime.format(dateFormatter);
         String stopTime = smokingEndTime.format(timeFormatter);
+
+        Toast.makeText(this, "Event accepted", Toast.LENGTH_SHORT).show();
 
         SmokingEvent event = new SmokingEvent("Smoking", startDate,
                 startTime, stopDate, stopTime, true);
@@ -214,6 +236,8 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         String startTime = smokingStartTime.format(timeFormatter);
         String stopDate = smokingEndTime.format(dateFormatter);
         String stopTime = smokingEndTime.format(timeFormatter);
+
+        Toast.makeText(this, "No User Interaction", Toast.LENGTH_SHORT).show();
 
         SmokingEvent event = new SmokingEvent("Smoking", startDate,
                 startTime, stopDate, stopTime, false);
