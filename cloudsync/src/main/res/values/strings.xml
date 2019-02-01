@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">senseable cloudsync</string>
+    <string name="preference_file_key">cloudsync.conf</string>
+</resources>

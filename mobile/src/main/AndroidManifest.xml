@@ -1,17 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="de.uni_freiburg.iems.beatit">
-
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    package="eu.senseable.cigarettetracker">
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/beatsmoking"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".EventDiary"
+            android:name="eu.senseable.cigarettetracker.Activity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -20,6 +18,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <receiver android:name="eu.senseable.cigarettetracker.CigBroadcastReceiver" />
+
+        <provider
+            android:name="eu.senseable.cigarettetracker.Provider"
+            android:authorities="de.senseable.manual"
+            android:exported="true"
+            android:syncable="true"/>
     </application>
 
 </manifest>

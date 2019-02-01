@@ -17,7 +17,7 @@ import static java.lang.Float.parseFloat;
 
 public class ModelHandler {
 
-    private final int featureCount = 12;
+    private final int featureCount = 24;
     private final int windowLength = 1000;
     private final int windowColumns = 6;
     private final String inputTensor = "dense_1_input:0";
@@ -40,14 +40,14 @@ public class ModelHandler {
 //        testClassify();
     }
 
-    public boolean predict(double[][] window) {
+    public int predict(double[][] window) {
        // in: 2D-array with 6 columns x 1000 samples
        // out: true (smoking) or false (non-smoking)
        float[] features = new float[featureCount];
        assert(window[0].length == windowLength);
        assert(window.length == windowColumns);
        convertToFeatures(window, features);
-       return (classify(features) > 0.5);
+       return ((int)(classify(features) * 100));
     }
 
     private float classify(float[] features) {
@@ -65,15 +65,19 @@ public class ModelHandler {
     }
 
     private void convertToFeatures(double[][] input, float[] output) {
-       // in: windowColumns x windowLength (6 x 1000)
-       // out: featureCount (12)
-       for(int column = 0; column < windowColumns; column++) {
-           DescriptiveStatistics ds = new DescriptiveStatistics(input[column]);
-           for(int row = 0; row < windowLength; row++) {
-               output[column] = (float)(ds.getMean());
-               output[column + windowColumns] = (float)(ds.getStandardDeviation());
-           }
-       }
+        // in: windowColumns x windowLength (6 x 1000)
+        // out: featureCount (12)
+        //long start = System.nanoTime();
+        for(int column = 0; column < windowColumns; column++) {
+            DescriptiveStatistics ds = new DescriptiveStatistics(input[column]);
+            for(int row = 0; row < windowLength; row++) {
+                output[column] = (float)(ds.getMean()); // 1500: max 586 ms, avg 430 ms
+                output[column + windowColumns] = (float)(ds.getStandardDeviation()); // 1500: max 1061 ms, avg 810 ms
+                output[column + windowColumns * 2] = (float)(ds.getMin());  // 1500: max 522 ms, avg 355 ms
+                output[column + windowColumns * 3] = (float)(ds.getMax());  // 1500: max 502 ms, avg 355 ms
+            }
+        }
+        //Log.i("ML", "" + (System.nanoTime() - start) / 1000000 + " ms");
     }
 
     private void testClassify() {

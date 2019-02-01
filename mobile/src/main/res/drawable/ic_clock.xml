@@ -1,0 +1,27 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+        android:width="24dp"
+        android:height="24dp"
+        android:viewportWidth="24.0"
+        android:viewportHeight="24.0">
+    <path
+        android:pathData="M12,12m-9.712,0a9.712,9.712 0,1 1,19.423 0a9.712,9.712 0,1 1,-19.423 0"
+        android:strokeLineCap="round"
+        android:fillAlpha="1"
+        android:fillType="evenOdd"
+        android:strokeColor="#000000"
+        android:fillColor="#00000000"
+        android:strokeWidth="0.57652557"
+        android:strokeLineJoin="round"
+        android:strokeAlpha="1"/>
+
+    <path
+        android:name="hand"
+        android:pathData="m12,12v-8"
+        android:strokeLineCap="butt"
+        android:fillType="evenOdd"
+        android:strokeColor="#000000"
+        android:fillColor="#00000000"
+        android:strokeWidth="0.5"
+        android:strokeLineJoin="miter"
+        android:strokeAlpha="1"/>
+</vector>
