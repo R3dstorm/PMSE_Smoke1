@@ -228,6 +228,8 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         SmokingEvent event = new SmokingEvent("Smoking", startDate,
                 startTime, stopDate, stopTime, true);
 
+        sensorAiMediator.storeSmokingEvent(event);
+
     }
 
     public void setSmokingDetectionNoUserAction()
@@ -241,6 +243,8 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
 
         SmokingEvent event = new SmokingEvent("Smoking", startDate,
                 startTime, stopDate, stopTime, false);
+
+        sensorAiMediator.storeSmokingEvent(event);
 
     }
 }
