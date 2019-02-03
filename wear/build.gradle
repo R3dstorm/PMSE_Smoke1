@@ -3,6 +3,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 27
     defaultConfig {
+        /* Don't change the id */
         applicationId "de.uni_freiburg.iems.beatit"
         minSdkVersion 26
         targetSdkVersion 27

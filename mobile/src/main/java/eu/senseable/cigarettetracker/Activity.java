@@ -33,6 +33,7 @@ public class Activity extends AppCompatActivity {
     private static final String CHANNEL_ID = Activity.class.getSimpleName();
     private CigaretteEventAdapter mAdapter;
     private Account mAccount;
+    private Synchronize dbSyncHandler;
 
     private ContentObserver mSync = new ContentObserver(new Handler()) {
         Bundle mExtras = null;
@@ -84,6 +85,7 @@ public class Activity extends AppCompatActivity {
         setContentView(R.layout.activity_counter);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        dbSyncHandler = new Synchronize(this);
 
         /** build a Notification for quick logging */
         NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);

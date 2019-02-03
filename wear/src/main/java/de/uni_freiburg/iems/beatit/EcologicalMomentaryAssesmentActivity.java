@@ -136,6 +136,17 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         sensorAiMediator.storeSmokingEvent(event);
     }
 
+    public void onSyncButtonClick(View v){
+        if (sensorAiMediator == null) {
+            /* sensorAiMediator not initialized */
+            sensorAiMediator = new Mediator(this, false,EcologicalMomentaryAssesmentActivity.this);
+        }
+        else{
+            /* sensorAiMediator initialized*/
+        }
+        sensorAiMediator.synchronizeEvents();
+    }
+
     public void onPlayButtonClick(View v){
         if(playButton.isChecked() == true) {
             sensorServiceIntent = new Intent(EcologicalMomentaryAssesmentActivity.this, SensorReadoutService.class);

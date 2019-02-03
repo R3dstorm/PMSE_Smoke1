@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="eu.senseable.cigarettetracker">
 
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/beatsmoking"
@@ -9,7 +11,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name="eu.senseable.cigarettetracker.Activity"
+            android:name=".Activity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -25,6 +27,22 @@
             android:authorities="de.senseable.manual"
             android:exported="true"
             android:syncable="true"/>
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+
+        <service
+            android:name=".SyncMessageService"
+            android:enabled="true"
+            android:exported="true">
+            //Add the gms.wearable.MESSAGE_RECEIVED intent filter//
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                //Specify your path, and a host for the filter.//
+                <data
+                    android:host="*" android:scheme="wear" android:pathPrefix="/smokeSync" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

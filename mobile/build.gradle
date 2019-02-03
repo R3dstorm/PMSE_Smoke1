@@ -3,7 +3,8 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 27
     defaultConfig {
-        applicationId "eu.senseable.cigarettetracker"
+        /* Don't change the id */
+        applicationId "de.uni_freiburg.iems.beatit"
         minSdkVersion 19
         targetSdkVersion 26
         versionCode 8
@@ -24,6 +25,8 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    wearApp project(':wear')
+    implementation 'com.google.android.gms:play-services-wearable:+'
     implementation 'com.android.support:appcompat-v7:27.1.1'
     implementation 'com.android.support:design:27.1.1'
     implementation 'joda-time:joda-time:2.9.9'
