@@ -15,7 +15,7 @@ import eu.senseable.cigarettetracker.R;
 
 public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventListAdapter.SmokingEventViewHolder> {
 
-    class SmokingEventViewHolder extends RecyclerView.ViewHolder {
+    public class SmokingEventViewHolder extends RecyclerView.ViewHolder {
         private final TextView smokingEventItemView;
 
         private SmokingEventViewHolder(View itemView) {

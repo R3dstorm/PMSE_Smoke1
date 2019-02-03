@@ -10,7 +10,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 
-@Database(entities = {SmokingEvent.class}, version = 2)
+@Database(entities = {SmokingEvent.class}, version = 2, exportSchema = false)
 public abstract class SmokingEventRoomDatabase extends RoomDatabase {
 
     public abstract SmokingEventDao smokingEventDao();
