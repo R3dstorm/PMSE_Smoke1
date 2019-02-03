@@ -2,6 +2,7 @@ package eu.senseable.cigarettetracker;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.Dialog;
 import android.arch.lifecycle.LifecycleOwner;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
@@ -168,6 +169,10 @@ public class Activity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 // Dialog für das hinzufügen muss geöffnet werden.
+                Dialog dia = new Dialog(Activity.this);
+                dia.setContentView(R.layout.add_smoke_event);
+                dia.show();
+
                 /*
                 CigaretteEvent ev = new CigaretteEvent();
                 getContentResolver().insert(Contract.EVENTSURI, ev.toContentValue());
@@ -189,6 +194,10 @@ public class Activity extends AppCompatActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_counter, menu);
         return true;
+    }
+
+    public void onOkSmokeEventButtonClick(View v) {
+
     }
 
 }

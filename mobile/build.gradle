@@ -4,7 +4,7 @@ android {
     compileSdkVersion 27
     defaultConfig {
         applicationId "eu.senseable.cigarettetracker"
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 26
         versionCode 8
         versionName "1.3.0"
