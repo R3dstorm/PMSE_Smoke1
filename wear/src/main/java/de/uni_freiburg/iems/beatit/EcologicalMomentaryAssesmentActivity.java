@@ -37,6 +37,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     private AmbientModeSupport.AmbientController mAmbientController;
     private LocalDateTime smokingStartTime;
     private LocalDateTime smokingEndTime;
+    private boolean isFirstStart = true;
 
     /* TODO remove this as soon smoking notification exists*/
     private CheckBox smokingDetected;
@@ -92,8 +93,14 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         framesText = findViewById(R.id.framesText);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
     }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        toggleDetection();
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -106,9 +113,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     @Override
     protected void onStop() {
         super.onStop();
-
     }
-
 
     @Override
     public void onClick(View v) {
@@ -137,25 +142,33 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     }
 
     public void onPlayButtonClick(View v){
-        if(playButton.isChecked() == true) {
+        toggleDetection();
+    }
+
+    private void toggleDetection() {
+        if(isFirstStart)
+        {
+            isFirstStart = false;
+            playButton.setChecked(true);
+        }
+        if (playButton.isChecked() == true) {
             sensorServiceIntent = new Intent(EcologicalMomentaryAssesmentActivity.this, SensorReadoutService.class);
             startService(sensorServiceIntent);
             sensorServiceStarted = true;
 
-            if(sensorAiMediator != null)
-            {
+            if (sensorAiMediator != null) {
                 sensorAiMediator = null;
                 Log.i("ML", "previous sensorAiMediator instance deleted");
             }
-            sensorAiMediator = new Mediator(this, true,EcologicalMomentaryAssesmentActivity.this);
-        }
-        else
-        {
+            sensorAiMediator = new Mediator(this, true, EcologicalMomentaryAssesmentActivity.this);
+        } else {
+            Log.i("ML", "stop service");
             stopService(sensorServiceIntent);
+            sensorServiceIntent = null;
             /* tell connected modules to unbind */
             sensorAiMediator.unbindFromServices();
-
             sensorServiceStarted = false;
+            sensorAiMediator = null;
         }
     }
 
@@ -167,27 +180,29 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     @Override
     public void modelEvaluatedCB(boolean smoking) {
         /* The measurement is completed*/
-        SmokeDetector sd = sensorAiMediator.getSmokeDetector();
+        if(sensorAiMediator != null) {
+            SmokeDetector sd = sensorAiMediator.getSmokeDetector();
 
-        // debug stuff --->
-        detectorText.setText(sd.getCurrentProbability() + " (" + sd.getCurrentStartStopFrames() + ")");
-        timingText.setText(sd.getCurrentTiming() + " ms");
-        framesText.setText("" + sd.getCurrentFrame());
-        if (sd.isSmokingPhase() && !smokingDetected.isChecked()) {
-            smokingDetected.setChecked(true);
-        } else if(!sd.isSmokingPhase() && smokingDetected.isChecked()) {
-            smokingDetected.setChecked(false);
-        }
-        String currentState = sd.getCurrentState();
-        if(currentState == "Start") {
-            currentState += " (" + sd.getGestureCounter() + ")";
-        }
-        if(stateText.getText() != currentState) {
-            stateText.setText(currentState);
-        } // <---
+            // debug stuff --->
+            detectorText.setText(sd.getCurrentProbability() + " (" + sd.getCurrentStartStopFrames() + ")");
+            timingText.setText(sd.getCurrentTiming() + " ms");
+            framesText.setText("" + sd.getCurrentFrame());
+            if (sd.isSmokingPhase() && !smokingDetected.isChecked()) {
+                smokingDetected.setChecked(true);
+            } else if (!sd.isSmokingPhase() && smokingDetected.isChecked()) {
+                smokingDetected.setChecked(false);
+            }
+            String currentState = sd.getCurrentState();
+            if (currentState == "Start") {
+                currentState += " (" + sd.getGestureCounter() + ")";
+            }
+            if (stateText.getText() != currentState) {
+                stateText.setText(currentState);
+            } // <---
 
-        if (smoking) {
-            showSmokingDetectedPopUp(sd.getStartTime(), sd.getStopTime());
+            if (smoking) {
+                showSmokingDetectedPopUp(sd.getStartTime(), sd.getStopTime());
+            }
         }
     }
 
