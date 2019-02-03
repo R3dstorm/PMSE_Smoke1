@@ -41,16 +41,17 @@ public class SensorReadoutService extends Service {
     private SensorReadout sensor;   /* Instance for operating the sensors (Acc, Gyr) */
     private static final String TAG = "SensorReadoutService";
     private boolean sensorServiceRunning;
+    private HandlerThread handlerThread;
 
     @Override
     public void onCreate() {
         /* Start up the thread running the service using background priority. */
-        HandlerThread thread = new HandlerThread("ServiceStartArguments",
+        handlerThread = new HandlerThread("ServiceStartArguments",
                 Process.THREAD_PRIORITY_BACKGROUND);
-        thread.start();
+        handlerThread.start();
 
         /* Get the HandlerThread's Looper and use it for our Handler */
-        mServiceLooper = thread.getLooper();
+        mServiceLooper = handlerThread.getLooper();
         mServiceHandler = new ServiceHandler(mServiceLooper);
         mServiceBinder = new SensorReadoutBinder();
 
@@ -82,9 +83,17 @@ public class SensorReadoutService extends Service {
 
     @Override
     public void onDestroy() {
+        super.onDestroy();
         /* Send message to user on destroy */
         if (sensorServiceRunning) {
+            sensorServiceRunning = false;
+            stopContinuousMeasurement();
             sensor.stopSensors();
+            mServiceHandler = null;
+            mServiceBinder = null;
+            handlerThread.quit();
+            handlerThread = null;
+            sensor = null;
             Toast.makeText(this, "Detection stopped", Toast.LENGTH_SHORT).show();
         }
     }
