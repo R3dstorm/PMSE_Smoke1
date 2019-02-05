@@ -72,7 +72,7 @@ public abstract class SmokingEventRoomDatabase extends RoomDatabase {
             mDao.deleteAll();
 
             SmokingEvent event = new SmokingEvent("firstEvent", "20190101",
-                    "1125", "20190102", "1200", false);
+                    "1125", "20190102", "1200", false, false,false);
             mDao.insert(event);
             return null;
         }

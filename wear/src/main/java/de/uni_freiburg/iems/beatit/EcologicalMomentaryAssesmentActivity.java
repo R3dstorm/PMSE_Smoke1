@@ -132,7 +132,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         String stopTime = timeOfEvent.format(timeFormatter);
 
         SmokingEvent event = new SmokingEvent("manualEvent", startDate,
-                startTime, stopDate, stopTime, true);
+                startTime, stopDate, stopTime, true, false, false);
         sensorAiMediator.storeSmokingEvent(event);
     }
 
@@ -144,6 +144,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         else{
             /* sensorAiMediator initialized*/
         }
+        /* TODO stop ai/sensor activity before syncing */
         sensorAiMediator.synchronizeEvents();
     }
 
@@ -237,7 +238,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         Toast.makeText(this, "Event accepted", Toast.LENGTH_SHORT).show();
 
         SmokingEvent event = new SmokingEvent("Smoking", startDate,
-                startTime, stopDate, stopTime, true);
+                startTime, stopDate, stopTime, true, false, false);
 
         sensorAiMediator.storeSmokingEvent(event);
 
@@ -253,7 +254,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         Toast.makeText(this, "No User Interaction", Toast.LENGTH_SHORT).show();
 
         SmokingEvent event = new SmokingEvent("Smoking", startDate,
-                startTime, stopDate, stopTime, false);
+                startTime, stopDate, stopTime, false, false, false);
 
         sensorAiMediator.storeSmokingEvent(event);
 

@@ -12,17 +12,42 @@ public class SmokingEventRepository {
 
     private SmokingEventDao mEventDao;
     private LiveData<List<SmokingEvent>> mAllEvents;
+    private LiveData<List<SmokingEvent>> mAllValidEvents;
+    private int mLatestSyncLabelID;
+    private int mLatestEventId;
+
 
     SmokingEventRepository(Application application) {
         SmokingEventRoomDatabase db = SmokingEventRoomDatabase.getDatabase(application);
         mEventDao = db.smokingEventDao();
         mAllEvents = mEventDao.getAllEvents();
+        mAllValidEvents = mEventDao.getAllValidEvents();
+        /* TODO might be an issue -> latest sync label might be out of date*/
+        mLatestSyncLabelID = mEventDao.getLatestSyncLabelId();  /* TODO causes System crash */
+        mLatestEventId = mEventDao.getLatestEventId();          /* TODO causes System crash */
     }
 
     LiveData<List<SmokingEvent>> getAllEvents() {
         return mAllEvents;
     }
 
+    LiveData<List<SmokingEvent>> getAllValidEvents(){
+        return mAllValidEvents;
+    }
+
+    int getLatestSyncLabelId(){
+        return mLatestSyncLabelID;
+    }
+
+    int getLatestEventId(){ return mLatestEventId; }
+
+    LiveData<List<SmokingEvent>> getNewSyncEvents(int lastSyncLabelId){
+        return mEventDao.getNewSyncEvents(lastSyncLabelId);
+    }
+
+    int setSyncLabel(int tid){
+        return mEventDao.setSyncLabel(tid);
+    }
 
     public void insert (SmokingEvent event) {
         new insertAsyncTask(mEventDao).execute(event);

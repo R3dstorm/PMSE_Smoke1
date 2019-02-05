@@ -1,6 +1,7 @@
 package de.uni_freiburg.iems.beatit;
 
 import android.arch.lifecycle.LifecycleOwner;
+import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.ComponentName;
@@ -26,6 +27,8 @@ public class Mediator {
     final private int SLIDING_STEP_MS = 1000;
     final private int START_DELAY_MS = 100;
 
+    enum State { IDLE, SYNC_SENT, SYNC_RECEIVED }
+
     private Intent sensorServiceIntent;
     private SensorReadoutService sensorService;
     private boolean sensorServiceBound = false;
@@ -36,6 +39,7 @@ public class Mediator {
     private Handler mainHandler;
     private SmokingEventViewModel mSEViewModel;
     private Synchronize dBsyncHandler; /* Sync handler for data base */
+    private State syncState;
 
     private ServiceConnection sensorServiceConnection = new ServiceConnection() {
 
@@ -59,6 +63,7 @@ public class Mediator {
         myContext = context;
         mainHandler = new Handler(myContext.getMainLooper());
         dBsyncHandler = new Synchronize(myContext);
+        syncState = State.IDLE;
 
         /* Access Database: Get a new or existing viewModel from viewModelProvider */
         final SmokingEventListAdapter adapter = new SmokingEventListAdapter(myContext);
@@ -133,9 +138,52 @@ public class Mediator {
 
     /* Synchronize object is created at every start of mediator;
         but only active within this function*/
-    public void synchronizeEvents (){
+    public boolean synchronizeEvents (){
+
+        int eventSyncLabelId; /* Holds the id of the latest sync label*/
+        int latestEventId;
+        boolean syncDone = false;
+        LiveData<List<SmokingEvent>> unsynchronizedEvents;
         /* TODO put content here... */
-        dBsyncHandler.buildSendMessage();
+        /* Search data base for the sync label and send all later events to phone*/
+
+        if (syncState.equals(State.IDLE)) {
+            /* Find Sync label:*/
+            eventSyncLabelId = mSEViewModel.getLatestSyncLabelId();
+            if (eventSyncLabelId == 0) {
+                /* No Sync label has been set yet -> need to synchronize all elements */
+                unsynchronizedEvents = mSEViewModel.getAllEvents();
+            } else {
+                /* only get not synchronized events */
+                unsynchronizedEvents = mSEViewModel.getNewSyncEvents(eventSyncLabelId);
+            }
+
+            /* Send data to phone */
+            dBsyncHandler.sendSyncMessage(unsynchronizedEvents);
+            syncState = State.SYNC_SENT;
+        }
+        else if (syncState.equals(State.SYNC_SENT)){
+
+            /* TODO wait for message with return data received from phone  */
+            /* ... set next state */
+
+        }
+        else if (syncState.equals(State.SYNC_RECEIVED)){
+            /* Data received -> import new received elements to database */
+            /* TODO ... */
+            /* set synchronization label */
+            latestEventId = mSEViewModel.getLatestEventId();
+            mSEViewModel.setSyncLabel(latestEventId);
+            syncState = State.IDLE;
+            syncDone = true;
+        }
+
+        //dBsyncHandler.buildSendMessage();
+
+//        byte[] blub = {1,2,3};
+//        dBsyncHandler.sendDataToPhone(blub);
+
+        return syncDone;
     }
 
 //    private void fetchData() {
