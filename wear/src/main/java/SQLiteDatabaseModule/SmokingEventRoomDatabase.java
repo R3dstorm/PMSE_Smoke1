@@ -10,7 +10,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 
-@Database(entities = {SmokingEvent.class}, version = 2)
+@Database(entities = {SmokingEvent.class}, version = 3)
 public abstract class SmokingEventRoomDatabase extends RoomDatabase {
 
     public abstract SmokingEventDao smokingEventDao();
@@ -26,6 +26,8 @@ public abstract class SmokingEventRoomDatabase extends RoomDatabase {
                             SmokingEventRoomDatabase.class, "event_database")
                             // Wipes and rebuilds instead of migrating if no Migration object.
                             // Migration is not part of this codelab.
+                            /* TODO add Migration feature
+                             -> App crashes in case of incompatible databases */
                             .fallbackToDestructiveMigration()
                             .addCallback(sRoomDatabaseCallback)
                             .build();

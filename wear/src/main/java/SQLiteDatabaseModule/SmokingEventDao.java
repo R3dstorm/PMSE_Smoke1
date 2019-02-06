@@ -27,12 +27,12 @@ public interface SmokingEventDao {
     LiveData<List<SmokingEvent>> getAllValidEvents();
 
     /* Query to get latest syncLabel */
-    @Query("SELECT id from smoking_event_table WHERE Is_Sync_Label = 1 ORDER BY id DESC LIMIT 1")
-    int getLatestSyncLabelId();
+    @Query("SELECT * from smoking_event_table WHERE Is_Sync_Label = 1 ORDER BY id DESC LIMIT 1")
+    LiveData<List<SmokingEvent>>  getLatestSyncLabelId();
 
     /* Query to get latest element id */
-    @Query("SELECT id from smoking_event_table ORDER BY id DESC LIMIT 1")
-    int getLatestEventId();
+    @Query("SELECT * from smoking_event_table ORDER BY id DESC LIMIT 1")
+    LiveData<List<SmokingEvent>>  getLatestEventId();
 
     /* Query to get all elements created after last syncLabel */
     @Query("SELECT * from smoking_event_table WHERE id > :lastSyncLabelId ORDER BY id DESC")

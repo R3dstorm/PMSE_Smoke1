@@ -13,8 +13,8 @@ public class SmokingEventRepository {
     private SmokingEventDao mEventDao;
     private LiveData<List<SmokingEvent>> mAllEvents;
     private LiveData<List<SmokingEvent>> mAllValidEvents;
-    private int mLatestSyncLabelID;
-    private int mLatestEventId;
+    private LiveData<List<SmokingEvent>> mLatestSyncLabelID;
+    private LiveData<List<SmokingEvent>> mLatestEventId;
 
 
     SmokingEventRepository(Application application) {
@@ -35,11 +35,11 @@ public class SmokingEventRepository {
         return mAllValidEvents;
     }
 
-    int getLatestSyncLabelId(){
+    LiveData<List<SmokingEvent>> getLatestSyncLabelId(){
         return mLatestSyncLabelID;
     }
 
-    int getLatestEventId(){ return mLatestEventId; }
+    LiveData<List<SmokingEvent>> getLatestEventId(){ return mLatestEventId; }
 
     LiveData<List<SmokingEvent>> getNewSyncEvents(int lastSyncLabelId){
         return mEventDao.getNewSyncEvents(lastSyncLabelId);

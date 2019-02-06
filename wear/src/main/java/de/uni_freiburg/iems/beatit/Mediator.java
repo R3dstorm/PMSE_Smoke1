@@ -38,8 +38,11 @@ public class Mediator {
     private Context myContext;
     private Handler mainHandler;
     private SmokingEventViewModel mSEViewModel;
+
     private Synchronize dBsyncHandler; /* Sync handler for data base */
     private State syncState;
+    int eventSyncLabelId; /* Holds the id of the latest sync label*/
+    int latestEventId;
 
     private ServiceConnection sensorServiceConnection = new ServiceConnection() {
 
@@ -77,6 +80,18 @@ public class Mediator {
             public void onChanged(@Nullable final List<SmokingEvent> events) {
                 // Update the cached copy of the words in the adapter.
                 adapter.setEvents(events);
+            }
+        });
+
+        mSEViewModel.getLatestSyncLabelId().observe((LifecycleOwner) myContext, new Observer<List<SmokingEvent>>() {
+            @Override
+            public void onChanged(@Nullable List<SmokingEvent> smokingEvents) {
+                /* update */
+                /* TODO check for empty element*/
+                if (!smokingEvents.isEmpty()) {
+                    eventSyncLabelId = smokingEvents.get(0).getId();
+                }
+                /* TODO call callback to get events and send to phone?*/
             }
         });
 
@@ -140,8 +155,6 @@ public class Mediator {
         but only active within this function*/
     public boolean synchronizeEvents (){
 
-        int eventSyncLabelId; /* Holds the id of the latest sync label*/
-        int latestEventId;
         boolean syncDone = false;
         LiveData<List<SmokingEvent>> unsynchronizedEvents;
         /* TODO put content here... */
@@ -149,7 +162,8 @@ public class Mediator {
 
         if (syncState.equals(State.IDLE)) {
             /* Find Sync label:*/
-            eventSyncLabelId = mSEViewModel.getLatestSyncLabelId();
+            //eventSyncLabelId = mSEViewModel.getLatestSyncLabelId();
+            /* TODO needs a callback to be called as soon as LifeData has been evaluated and eventSyncLabelId is available?*/
             if (eventSyncLabelId == 0) {
                 /* No Sync label has been set yet -> need to synchronize all elements */
                 unsynchronizedEvents = mSEViewModel.getAllEvents();
@@ -157,6 +171,8 @@ public class Mediator {
                 /* only get not synchronized events */
                 unsynchronizedEvents = mSEViewModel.getNewSyncEvents(eventSyncLabelId);
             }
+            /* TODO unsynchronizedEvents also needs an observer and a callback
+             -> get the data-Elements, and send the dataElements....*/
 
             /* Send data to phone */
             dBsyncHandler.sendSyncMessage(unsynchronizedEvents);
@@ -172,7 +188,7 @@ public class Mediator {
             /* Data received -> import new received elements to database */
             /* TODO ... */
             /* set synchronization label */
-            latestEventId = mSEViewModel.getLatestEventId();
+            //latestEventId = mSEViewModel.getLatestEventId();
             mSEViewModel.setSyncLabel(latestEventId);
             syncState = State.IDLE;
             syncDone = true;

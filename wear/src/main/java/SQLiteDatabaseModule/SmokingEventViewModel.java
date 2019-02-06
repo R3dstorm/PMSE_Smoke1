@@ -13,8 +13,8 @@ public class SmokingEventViewModel extends AndroidViewModel {
     private SmokingEventRepository mRepository;
     private LiveData<List<SmokingEvent>> mAllEvents;
     private LiveData<List<SmokingEvent>> mAllValidEvents;
-    private int mLatestSyncLabelId;
-    private int mLatestEventId;
+    private LiveData<List<SmokingEvent>> mLatestSyncLabelId;
+    private LiveData<List<SmokingEvent>> mLatestEventId;
 
     public SmokingEventViewModel (Application application) {
         super(application);
@@ -29,9 +29,9 @@ public class SmokingEventViewModel extends AndroidViewModel {
 
     public LiveData<List<SmokingEvent>> getAllValidEvents() { return mAllValidEvents; }
 
-    public  int getLatestSyncLabelId() { return mLatestSyncLabelId ;}
+    public  LiveData<List<SmokingEvent>> getLatestSyncLabelId() { return mLatestSyncLabelId ;}
 
-    public int getLatestEventId() { return mLatestEventId;}
+    public LiveData<List<SmokingEvent>> getLatestEventId() { return mLatestEventId;}
 
     public void insert(SmokingEvent event) { mRepository.insert(event); }
 
