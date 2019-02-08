@@ -19,8 +19,11 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import java.util.List;
 
@@ -197,7 +200,10 @@ public class Activity extends AppCompatActivity {
     }
 
     public void onOkSmokeEventButtonClick(View v) {
-
+        EditText text;
+        //text = (EditText) addSmokeEventDiagView.findViewById(R.id.editText);
+        //String test = text.getText().toString();
+        //Toast.makeText(this, test, Toast.LENGTH_SHORT).show();
     }
 
 }
