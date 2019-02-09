@@ -193,9 +193,13 @@ public class SensorReadout {
 
     public void stopSensors() {
         if (sensorListenerAcc != null){
-            mSensorManager.unregisterListener(sensorListenerAcc, AccSensor);}
+            mSensorManager.unregisterListener(sensorListenerAcc, AccSensor);
+            sensorListenerAcc = null;
+        }
         if (sensorListenerGyro != null){
-            mSensorManager.unregisterListener(sensorListenerGyro, GyroSensor);}
+            mSensorManager.unregisterListener(sensorListenerGyro, GyroSensor);
+            sensorListenerGyro = null;
+        }
     }
 
     public void triggerSingleMeasurement(MeasurementCompleteListener _measurementCompleteListener) {

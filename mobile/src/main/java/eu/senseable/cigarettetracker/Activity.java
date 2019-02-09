@@ -2,37 +2,42 @@ package eu.senseable.cigarettetracker;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
+import android.app.Dialog;
+import android.arch.lifecycle.LifecycleOwner;
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.ContentResolver;
-import android.content.Context;
-import android.content.Intent;
 import android.database.ContentObserver;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.view.View;
+import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.Toast;
 
-import de.senseable.cloudsync.CigaretteEvent;
+import java.util.List;
+
 import de.senseable.cloudsync.Contract;
+import eu.senseable.SQLiteDatabaseModule.SmokingEvent;
+import eu.senseable.SQLiteDatabaseModule.SmokingEventListAdapter;
+import eu.senseable.SQLiteDatabaseModule.SmokingEventViewModel;
 
 public class Activity extends AppCompatActivity {
 
     private static final String CHANNEL_ID = Activity.class.getSimpleName();
-    private CigaretteEventAdapter mAdapter;
+    private SmokingEventListAdapter mAdapter;
     private Account mAccount;
+    private SmokingEventViewModel mSEViewModel;
     private Synchronize dbSyncHandler;
 
     private ContentObserver mSync = new ContentObserver(new Handler()) {
@@ -87,7 +92,22 @@ public class Activity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         dbSyncHandler = new Synchronize(this);
 
-        /** build a Notification for quick logging */
+        /* Access Database: Get a new or existing viewModel from viewModelProvider */
+        final SmokingEventListAdapter adapter = new SmokingEventListAdapter(this);
+        mSEViewModel = ViewModelProviders.of((FragmentActivity) this).get(SmokingEventViewModel.class); /* TODO geht daS?*/
+
+        // Add an observer on the LiveData returned by getAlphabetizedWords.
+        // The onChanged() method fires when the observed data changes and the activity is
+        // in the foreground.
+        mSEViewModel.getAllEvents().observe((LifecycleOwner) this, new Observer<List<SmokingEvent>>() {
+            @Override
+            public void onChanged(@Nullable final List<SmokingEvent> events) {
+                // Update the cached copy of the words in the adapter.
+                adapter.setEvents(events);
+            }
+        });
+/*
+        /** build a Notification for quick logging
         NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
         Intent intent = new Intent(this, CigBroadcastReceiver.class);
         PendingIntent pintent = PendingIntent.getBroadcast(this, 0, intent, 0);
@@ -106,7 +126,7 @@ public class Activity extends AppCompatActivity {
                 .build();
 
         notificationManager.notify(007, n);
-
+*/
         /** register a contentobserver to run a sync when data changes, and trigger a sync */
         ContentResolver.setSyncAutomatically(getAccount(), Contract.AUTHORITY, true);
         getContentResolver().registerContentObserver(Contract.EVENTSURI, true, mSync);
@@ -119,7 +139,7 @@ public class Activity extends AppCompatActivity {
         super.onResume();
 
         RecyclerView view = findViewById(R.id.my_recycler_view);
-        mAdapter = new CigaretteEventAdapter(this);
+        mAdapter = new SmokingEventListAdapter(this);
 
         view.setLayoutManager(new LinearLayoutManager(this));
         view.setAdapter(mAdapter);
@@ -131,7 +151,8 @@ public class Activity extends AppCompatActivity {
         swipe.setOnSwipedListener(new SwipeController.Listener() {
             @Override
             public void onSwiped(RecyclerView.ViewHolder vh, int direction) {
-                final CigaretteEvent ev = ((CigaretteEventAdapter.ViewHolder) vh).getItem();
+/*
+                final CigaretteEvent ev = ((SmokingEventListAdapter.SmokingEventViewHolder) vh).getItem();
                 getContentResolver().delete(Contract.EVENTURI(ev.mID),null,null);
 
                 Snackbar.make(findViewById(R.id.layout),
@@ -144,6 +165,7 @@ public class Activity extends AppCompatActivity {
                             }
                         })
                         .show();
+*/
             }
         });
 
@@ -151,17 +173,25 @@ public class Activity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // Dialog für das hinzufügen muss geöffnet werden.
+                Dialog dia = new Dialog(Activity.this);
+                dia.setContentView(R.layout.add_smoke_event);
+                dia.show();
+
+                /*
                 CigaretteEvent ev = new CigaretteEvent();
                 getContentResolver().insert(Contract.EVENTSURI, ev.toContentValue());
+                */
             }
         });
-
-        /** special case if started by the notification intent from the CigBroadcastReceiver */
+/*
+        /** special case if started by the notification intent from the CigBroadcastReceiver
         if (CigBroadcastReceiver.LOGCIG_ACTION.equals(getIntent().getAction())) {
             CigaretteEvent ev = new CigaretteEvent();
             getContentResolver().insert(Contract.EVENTSURI, ev.toContentValue());
             setIntent(new Intent());
         }
+*/
     }
 
     @Override
@@ -169,6 +199,13 @@ public class Activity extends AppCompatActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_counter, menu);
         return true;
+    }
+
+    public void onOkSmokeEventButtonClick(View v) {
+        EditText text;
+        //text = (EditText) addSmokeEventDiagView.findViewById(R.id.editText);
+        //String test = text.getText().toString();
+        //Toast.makeText(this, test, Toast.LENGTH_SHORT).show();
     }
 
 }

@@ -12,6 +12,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 
 import java.util.List;
 
@@ -113,9 +114,8 @@ public class Mediator {
         @Override
         public void run() {
             /* Collect Data from Sensor */
-            if (sensorServiceBound) {
-                sensorServiceRunning = sensorService.isSensorServiceRunning();
-            }
+            sensorServiceRunning = sensorServiceBound && sensorService.isSensorServiceRunning();
+
             if (sensorServiceRunning) {
                 /* Start continuous measurement */
                 sensorService.triggerContinuousMeasurement();
