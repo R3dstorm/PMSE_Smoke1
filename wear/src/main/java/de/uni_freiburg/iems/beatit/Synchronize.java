@@ -94,7 +94,7 @@ public class Synchronize {
     }
 
     /**/
-    public void sendSyncMessage(LiveData<List<SmokingEvent>> unsynchronizedEvents) {
+    public void sendSyncMessage(List<SmokingEvent> unsynchronizedEvents) {
         byte[] messageData = null;
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();

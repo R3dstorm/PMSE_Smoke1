@@ -138,7 +138,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
 
         /* TODO set isSyncLabel to false*/
         SmokingEvent event = new SmokingEvent("manualEvent", startDate,
-                startTime, stopDate, stopTime, true, true, false);
+                startTime, stopDate, stopTime, true, false, false);
         sensorAiMediator.storeSmokingEvent(event);
     }
 
@@ -151,7 +151,9 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
             /* sensorAiMediator initialized*/
         }
         /* TODO stop ai/sensor activity before syncing */
+        /* TODO set up timer to call sync events multiple times (state machine) */
         sensorAiMediator.synchronizeEvents();
+        //sensorAiMediator.synchronizeEventsBackground();
     }
 
     public void onPlayButtonClick(View v){

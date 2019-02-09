@@ -17,7 +17,7 @@ public class SmokingEventRepository {
     private LiveData<List<SmokingEvent>> mLatestEventId;
 
 
-    SmokingEventRepository(Application application) {
+    public SmokingEventRepository(Application application) {
         SmokingEventRoomDatabase db = SmokingEventRoomDatabase.getDatabase(application);
         mEventDao = db.smokingEventDao();
         mAllEvents = mEventDao.getAllEvents();
@@ -31,6 +31,8 @@ public class SmokingEventRepository {
         return mAllEvents;
     }
 
+    public List<SmokingEvent> getAllEventsList(){ return mEventDao.getAllEventsList();}
+
     LiveData<List<SmokingEvent>> getAllValidEvents(){
         return mAllValidEvents;
     }
@@ -39,10 +41,16 @@ public class SmokingEventRepository {
         return mLatestSyncLabelID;
     }
 
+    public List<SmokingEvent> getLatestSyncLabelIdTest() {return mEventDao.getLatestSyncLabelIdTest();}
+
     LiveData<List<SmokingEvent>> getLatestEventId(){ return mLatestEventId; }
 
     LiveData<List<SmokingEvent>> getNewSyncEvents(int lastSyncLabelId){
         return mEventDao.getNewSyncEvents(lastSyncLabelId);
+    }
+
+    public List<SmokingEvent> getNewSyncEventsTest(int lastSyncLabelId){
+        return mEventDao.getNewSyncEventsTest(lastSyncLabelId);
     }
 
     int setSyncLabel(int tid){

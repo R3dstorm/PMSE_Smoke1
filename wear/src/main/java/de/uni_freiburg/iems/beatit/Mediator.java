@@ -40,10 +40,13 @@ public class Mediator {
     private Handler mainHandler;
     private SmokingEventViewModel mSEViewModel;
 
-    private Synchronize dBsyncHandler; /* Sync handler for data base */
+    private Synchronize dBsyncHandler;          /* Sync handler for data base */
     private State syncState;
-    int eventSyncLabelId; /* Holds the id of the latest sync label*/
-    int latestEventId;
+    int eventSyncLabelId = 0;                   /* Holds the id of the latest sync label*/
+    boolean eventSyncLabelAvailable = false;    /* information on lastSyncLabelId being available */
+    int latestEventId = 0;
+    List<SmokingEvent> newSyncEvents = null;
+    List<SmokingEvent> allEvents = null;
 
     private ServiceConnection sensorServiceConnection = new ServiceConnection() {
 
@@ -71,7 +74,7 @@ public class Mediator {
 
         /* Access Database: Get a new or existing viewModel from viewModelProvider */
         final SmokingEventListAdapter adapter = new SmokingEventListAdapter(myContext);
-        mSEViewModel = ViewModelProviders.of((FragmentActivity) myContext).get(SmokingEventViewModel.class); /* TODO geht daS?*/
+        mSEViewModel = ViewModelProviders.of((FragmentActivity) myContext).get(SmokingEventViewModel.class);
 
         // Add an observer on the LiveData returned by getAlphabetizedWords.
         // The onChanged() method fires when the observed data changes and the activity is
@@ -81,6 +84,7 @@ public class Mediator {
             public void onChanged(@Nullable final List<SmokingEvent> events) {
                 // Update the cached copy of the words in the adapter.
                 adapter.setEvents(events);
+                allEvents = events;
             }
         });
 
@@ -88,11 +92,35 @@ public class Mediator {
             @Override
             public void onChanged(@Nullable List<SmokingEvent> smokingEvents) {
                 /* update */
-                /* TODO check for empty element*/
                 if (!smokingEvents.isEmpty()) {
                     eventSyncLabelId = smokingEvents.get(0).getId();
+                    eventSyncLabelAvailable = true;
                 }
+                else{
+                    /* there has been no SyncLabel set yet */
+                    eventSyncLabelAvailable = false;
+                }
+
                 /* TODO call callback to get events and send to phone?*/
+            }
+        });
+
+        mSEViewModel.getLatestEventId().observe((LifecycleOwner) myContext, new Observer<List<SmokingEvent>>() {
+            @Override
+            public void onChanged(@Nullable List<SmokingEvent> smokingEvents) {
+                if (!smokingEvents.isEmpty()) {
+                    latestEventId = smokingEvents.get(0).getId();
+                }
+            }
+        });
+
+        /* TODO syncLabel ID is fixed to 1 !!! needs to be set depending on Last Sync Label ID */
+        /* TODO Solution: Move this to a function where the observer is constructed every time the function is called? */
+        /* TODO is lastSyncLabel necessary? -> implement Query to get newSyncEvents without id*/
+        mSEViewModel.getNewSyncEvents(1).observe((LifecycleOwner) myContext, new Observer<List<SmokingEvent>>() {
+            @Override
+            public void onChanged(@Nullable List<SmokingEvent> smokingEvents) {
+                newSyncEvents = smokingEvents;
             }
         });
 
@@ -156,23 +184,19 @@ public class Mediator {
     public boolean synchronizeEvents (){
 
         boolean syncDone = false;
-        LiveData<List<SmokingEvent>> unsynchronizedEvents;
+        List<SmokingEvent> unsynchronizedEvents;
         /* TODO put content here... */
         /* Search data base for the sync label and send all later events to phone*/
 
         if (syncState.equals(State.IDLE)) {
             /* Find Sync label:*/
-            //eventSyncLabelId = mSEViewModel.getLatestSyncLabelId();
-            /* TODO needs a callback to be called as soon as LifeData has been evaluated and eventSyncLabelId is available?*/
-            if (eventSyncLabelId == 0) {
-                /* No Sync label has been set yet -> need to synchronize all elements */
-                unsynchronizedEvents = mSEViewModel.getAllEvents();
-            } else {
+            if (eventSyncLabelAvailable) {
                 /* only get not synchronized events */
-                unsynchronizedEvents = mSEViewModel.getNewSyncEvents(eventSyncLabelId);
+                unsynchronizedEvents = newSyncEvents;
+            } else {
+                /* No Sync label has been set yet -> need to synchronize all elements */
+                unsynchronizedEvents = allEvents;
             }
-            /* TODO unsynchronizedEvents also needs an observer and a callback
-             -> get the data-Elements, and send the dataElements....*/
 
             /* Send data to phone */
             dBsyncHandler.sendSyncMessage(unsynchronizedEvents);
@@ -188,19 +212,29 @@ public class Mediator {
             /* Data received -> import new received elements to database */
             /* TODO ... */
             /* set synchronization label */
-            //latestEventId = mSEViewModel.getLatestEventId();
             mSEViewModel.setSyncLabel(latestEventId);
             syncState = State.IDLE;
             syncDone = true;
+            /* TODO reset syncDone? */
         }
 
-        //dBsyncHandler.buildSendMessage();
 
-//        byte[] blub = {1,2,3};
-//        dBsyncHandler.sendDataToPhone(blub);
 
         return syncDone;
     }
+
+    public boolean synchronizeEventsBackground(){
+        Intent synchronizeServiceIntent = new Intent(myContext, SynchronizeService.class);
+        synchronizeServiceIntent.putExtra("SYNCHRONIZE_DATA", true); /* TODO is this necessary? */
+        SynchronizeService.enqueueWork(myContext, synchronizeServiceIntent);
+        return true;
+    }
+
+    /* Old Stuff: */
+    //dBsyncHandler.buildSendMessage();
+
+//        byte[] blub = {1,2,3};
+//        dBsyncHandler.sendDataToPhone(blub);
 
 //    private void fetchData() {
 //        StringBuilder sb = new StringBuilder();
