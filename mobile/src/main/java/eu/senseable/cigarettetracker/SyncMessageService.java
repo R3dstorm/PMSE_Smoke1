@@ -12,10 +12,11 @@ public class SyncMessageService extends WearableListenerService {
     public void onMessageReceived(MessageEvent messageEvent) {
 
         /* If the message’s path equals "/smokeSync"...*/
-        if (messageEvent.getPath().equals("/smokeSync")) {
+        if (messageEvent.getPath().equals("/watch/newSmokeEvents")) {
 
             /* ...retrieve the message */
-            final String message = new String(messageEvent.getData());
+            //final String message = new String(messageEvent.getData());
+            final byte[] message = messageEvent.getData();
 
             Intent messageIntent = new Intent();
             messageIntent.setAction(Intent.ACTION_SEND);

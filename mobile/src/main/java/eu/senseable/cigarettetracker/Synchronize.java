@@ -60,6 +60,7 @@ public class Synchronize {
         public void onReceive(Context context, Intent intent) {
 
             //Upon receiving each message from the wearable, display the following text//
+            byte[] data = intent.getByteArrayExtra("message");
 
             String message = "I just received a message from the wearable " + receivedMessageNumber++;;
             Log.d (TAG_SYNC, message);
