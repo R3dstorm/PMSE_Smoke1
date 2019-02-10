@@ -5,6 +5,8 @@ import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
 
+import com.example.commondataobjects.SmokingEventDTO;
+
 @Entity(tableName = "smoking_event_table")
 public class SmokingEvent {
 
@@ -66,4 +68,10 @@ public class SmokingEvent {
     public boolean getEventConfirmed(){return eventConfirmed;}
     public boolean getIsSyncLabel(){return isSyncLabel;}
     public boolean getRemoved(){return removed;}
+    public SmokingEventDTO getTransferObject(){
+        return new SmokingEventDTO(id, mTest, startDate, startTime, stopDate, stopTime, eventConfirmed, isSyncLabel, removed);
+    }
+    public SmokingEvent setTransferObject(SmokingEventDTO eventDto){
+        return new SmokingEvent(eventDto.getTest(), eventDto.getStartDate(), getStartTime(), getStopDate(), getStopTime(), getEventConfirmed(), getIsSyncLabel(), getRemoved());
+    }
 }
