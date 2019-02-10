@@ -15,8 +15,17 @@ import com.google.android.gms.tasks.Tasks;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.Wearable;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+
+import eu.senseable.SQLiteDatabaseModule.SmokingEvent;
 
 public class Synchronize {
     private Handler myHandler;
@@ -25,25 +34,22 @@ public class Synchronize {
     private int sentMessageNumber;
     private static final String TAG_SYNC = "SYNCHRONIZE";
 
+    private List<SmokingEvent> unsynchronizedEvents;
+
     Synchronize (Context context){
 
         myContext = context;
         receivedMessageNumber = sentMessageNumber = 0;
 
-        //Create a message handler//
-        myHandler = new Handler(new Handler.Callback() {
-            @Override
-            public boolean handleMessage(Message msg) {
-                Bundle stuff = msg.getData();
-                messageText(stuff.getString("messageText"));
-                return true;
-            }
-        });
-
         //Register to receive local broadcasts, which we'll be creating in the next step//
         IntentFilter messageFilter = new IntentFilter(Intent.ACTION_SEND);
         Receiver messageReceiver = new Receiver();
         LocalBroadcastManager.getInstance(myContext).registerReceiver(messageReceiver, messageFilter);
+
+        /* Trigger Synchronize Service Intent */
+//        Intent synchronizeServiceIntent = new Intent(context, SynchronizeService.class);
+//        synchronizeServiceIntent.putExtra ("RECEIVED_EVENTS", "blub");
+//        SynchronizeService.enqueueWork(context, synchronizeServiceIntent);
 
     }
 
@@ -59,73 +65,125 @@ public class Synchronize {
 
         public void onReceive(Context context, Intent intent) {
 
+            /* TODO distinguish between receiving data and acknowledge from watch */
             //Upon receiving each message from the wearable, display the following text//
-            byte[] data = intent.getByteArrayExtra("message");
+            byte[] receivedEvents = intent.getByteArrayExtra("message");
+
+            /* Trigger Synchronize Service Intent */
+            Intent synchronizeServiceIntent = new Intent(myContext, SynchronizeService.class);
+            synchronizeServiceIntent.putExtra ("RECEIVED_EVENTS", receivedEvents);
+            SynchronizeService.enqueueWork(myContext, synchronizeServiceIntent);
+
+//            /*Create object from bytes:*/
+//            ByteArrayInputStream bis = new ByteArrayInputStream(data);
+//            ObjectInput in = null;
+//            try {
+//                in = new ObjectInputStream(bis);
+//                unsynchronizedEvents = (List<SmokingEvent>) in.readObject();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            } catch (ClassNotFoundException e) {
+//                e.printStackTrace();
+//            } finally {
+//                try {
+//                    if (in != null) {
+//                        in.close();
+//                    }
+//                } catch (IOException ex) {
+//                    // ignore close exception
+//                }
+//            }
 
             String message = "I just received a message from the wearable " + receivedMessageNumber++;;
             Log.d (TAG_SYNC, message);
             //textview.setText(message);
 
+            /* TODO acknowledge received -> accept data -> synchronize */
+            /* Wait for Acknowledge....  */
+
+            /* Accept Data / Synchronize: */
+
+
         }
     }
 
-    private void buildSendMessage() {
-        String message = "Sending message.... ";
-        Log.d (TAG_SYNC, message);
-        //textview.setText(message);
+    /* Create a send routine */
+    public void buildSendMessage() {
+        String message = "I just sent the handheld a message " + sentMessageNumber++;
+        Log.d(TAG_SYNC, message);
 
-        /* Sending a message can block the main UI thread, so use a new thread */
-        new NewThread("/smokeSync", message).start();
-
+        //Make sure you’re using the same path value//
+        String dataPath = "/smokeSync";
+        new SendMessage(dataPath, message.getBytes()).start();
     }
 
-    /* Use a Bundle to encapsulate our message */
-    public void sendMessage(String messageText) {
-        Bundle bundle = new Bundle();
-        bundle.putString("messageText", messageText);
-        Message msg = myHandler.obtainMessage();
-        msg.setData(bundle);
-        myHandler.sendMessage(msg);
+    public void sendSyncMessage(List<SmokingEvent> unsynchronizedEvents) {
+        byte[] messageData = null;
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutput out = null;
+        try {
+            out = new ObjectOutputStream(bos);
+            out.writeObject(unsynchronizedEvents);
+            out.flush();
+            messageData = bos.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                bos.close();
+            } catch (IOException ex) {
+                // ignore close exception
+            }
+        }
+        String dataPath = "/watch/newSmokeEvents";
+        new SendMessage(dataPath, messageData).start();
     }
 
-    class NewThread extends Thread {
+
+    class SendMessage extends Thread {
         String path;
-        String message;
+        byte[] messageData;
 
-        /* Constructor for sending information to the Data Layer */
-        NewThread(String p, String m) {
+        /* Constructor */
+        SendMessage(String p, byte[] m) {
             path = p;
-            message = m;
+            messageData = m;
         }
+
+        /* Send the message via the thread. This will send the message to all the currently-connected devices */
         public void run() {
-            /* Retrieve the connected devices, known as nodes */
-            Task<List<Node>> wearableList =
+
+            /* Get all the nodes */
+            Task<List<Node>> nodeListTask =
                     Wearable.getNodeClient(myContext).getConnectedNodes();
             try {
-                List<Node> nodes = Tasks.await(wearableList);
+                /* Block on a task and get the result synchronously */
+                List<Node> nodes = Tasks.await(nodeListTask);
+
+                /* Send the message to each device */
                 for (Node node : nodes) {
-                    /* Send the message */
                     Task<Integer> sendMessageTask =
-                            Wearable.getMessageClient(myContext).sendMessage(node.getId(), path, message.getBytes());
+                            Wearable.getMessageClient(myContext).sendMessage(node.getId(), path, messageData);
                     try {
-                        /* Block on a task and get the result synchronously */
                         Integer result = Tasks.await(sendMessageTask);
-                        sendMessage("I just sent the wearable a message " + sentMessageNumber++);
-                        //if the Task fails, then…..//
                     }
                     catch (ExecutionException exception) {
-                        //TO DO: Handle the exception//
+                        //TO DO//
+                        Log.e(TAG_SYNC, "sending message failed; Execution Exception");
                     }
                     catch (InterruptedException exception) {
-                        //TO DO: Handle the exception//
+                        //TO DO//
+                        Log.e(TAG_SYNC, "sending message failed; Interrupted Exception");
+                        Log.d(TAG_SYNC, "Test error");
                     }
                 }
             }
             catch (ExecutionException exception) {
-                //TO DO: Handle the exception//
+                //TO DO//
             }
             catch (InterruptedException exception) {
-                //TO DO: Handle the exception//
+                //TO DO//
             }
         }
     }

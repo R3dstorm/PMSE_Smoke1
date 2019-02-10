@@ -35,15 +35,25 @@ public class SmokingEvent {
     @ColumnInfo(name = "Event_Confirmed")
     private boolean eventConfirmed;
 
+    @NonNull
+    @ColumnInfo(name = "Is_Sync_Label")
+    private boolean isSyncLabel;
+
+    @NonNull
+    @ColumnInfo(name = "Removed")
+    private boolean removed;
+
     public SmokingEvent(@NonNull String test, @NonNull String startDate, @NonNull String startTime,
                         @NonNull String stopDate, @NonNull String stopTime,
-                        @NonNull boolean eventConfirmed) {
+                        @NonNull boolean eventConfirmed, @NonNull boolean isSyncLabel, @NonNull boolean removed) {
         this.mTest = test;
         this.startDate = startDate;
         this.startTime = startTime;
         this.stopDate = stopDate;
         this.stopTime = stopTime;
         this.eventConfirmed = eventConfirmed;
+        this.isSyncLabel = isSyncLabel;
+        this.removed = removed;
     }
 
     public String getMTest(){return mTest;}
@@ -54,4 +64,6 @@ public class SmokingEvent {
     public String getStopDate(){return stopDate;}
     public String getStopTime(){return stopTime;}
     public boolean getEventConfirmed(){return eventConfirmed;}
+    public boolean getIsSyncLabel(){return isSyncLabel;}
+    public boolean getRemoved(){return removed;}
 }

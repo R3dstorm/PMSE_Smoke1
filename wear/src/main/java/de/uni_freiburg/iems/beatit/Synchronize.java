@@ -1,17 +1,12 @@
 package de.uni_freiburg.iems.beatit;
 
 
-import android.arch.lifecycle.LiveData;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
 
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
@@ -131,10 +126,6 @@ public class Synchronize {
 //                // ignore close exception
 //            }
 //        }
-
-
-
-
 
     }
 
