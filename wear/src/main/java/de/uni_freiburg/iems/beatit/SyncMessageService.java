@@ -12,14 +12,21 @@ public class SyncMessageService extends WearableListenerService{
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
 
-        if (messageEvent.getPath().equals("/smokeSync")) {
-            final String message = new String(messageEvent.getData());
+        if (messageEvent.getPath().equals("/phone/newSmokeEvents")) {
+            final byte[] receivedEvents = messageEvent.getData();
+
+            /* Start Intent job to put received data to database */
+            Intent synchronizeServiceIntent = new Intent(getApplicationContext(), SynchronizeService.class);
+            synchronizeServiceIntent.putExtra("SEND_NEW_EVENTS", false);
+            synchronizeServiceIntent.putExtra("NEW_EVENTS_RECEIVED", true);
+            synchronizeServiceIntent.putExtra("NEW_EVENTS_DATA",receivedEvents);
+            SynchronizeService.enqueueWork(getApplicationContext(), synchronizeServiceIntent);
 
             //Broadcast the received data layer messages//
-            Intent messageIntent = new Intent();
-            messageIntent.setAction(Intent.ACTION_SEND);
-            messageIntent.putExtra("message", message);
-            LocalBroadcastManager.getInstance(this).sendBroadcast(messageIntent);
+//            Intent messageIntent = new Intent();
+//            messageIntent.setAction(Intent.ACTION_SEND);
+//            messageIntent.putExtra("message", message);
+//            LocalBroadcastManager.getInstance(this).sendBroadcast(messageIntent);
         }
         else {
             super.onMessageReceived(messageEvent);

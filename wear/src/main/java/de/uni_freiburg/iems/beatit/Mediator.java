@@ -223,7 +223,8 @@ public class Mediator {
 
     public boolean synchronizeEventsBackground(){
         Intent synchronizeServiceIntent = new Intent(myContext, SynchronizeService.class);
-        synchronizeServiceIntent.putExtra("SYNCHRONIZE_DATA", true); /* TODO is this necessary? */
+        synchronizeServiceIntent.putExtra("SEND_NEW_EVENTS", true);
+        synchronizeServiceIntent.putExtra("NEW_EVENTS_RECEIVED", false);
         SynchronizeService.enqueueWork(myContext, synchronizeServiceIntent);
         return true;
     }

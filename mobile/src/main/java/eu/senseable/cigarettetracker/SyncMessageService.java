@@ -15,7 +15,6 @@ public class SyncMessageService extends WearableListenerService {
         if (messageEvent.getPath().equals("/watch/newSmokeEvents")) {
 
             /* ...retrieve the message */
-            //final String message = new String(messageEvent.getData());
             final byte[] receivedEvents = messageEvent.getData();
 
             Intent messageIntent = new Intent();

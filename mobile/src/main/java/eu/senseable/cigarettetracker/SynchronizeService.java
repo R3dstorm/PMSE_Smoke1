@@ -9,10 +9,13 @@ import android.support.v4.app.JobIntentService;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.commondataobjects.SmokingEventDTO;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 import eu.senseable.SQLiteDatabaseModule.SmokingEvent;
@@ -40,12 +43,11 @@ public class SynchronizeService extends JobIntentService {
     @Override
     protected void onHandleWork(Intent intent) {
 
-        //Looper.prepare();
-
         List<SmokingEvent> smokingEvents;
         List<SmokingEvent> unsynchronizedEvents;
         List<SmokingEvent> receivedEvents;
-        //dBsyncHandler = new Synchronize(getApplicationContext());
+        /* TODO memory leakage issue? */
+        dBsyncHandler = new Synchronize(getApplicationContext());
 
         /* Direct access to database/repository (running in own thread without View): */
         smEvRepo = new SmokingEventRepository(getApplication());
@@ -58,14 +60,14 @@ public class SynchronizeService extends JobIntentService {
 //        toast("Executing: " + label);
         /* Retrieve the received events from intent: */
         byte[] data = intent.getByteArrayExtra("RECEIVED_EVENTS");
+        List<SmokingEventDTO> serialEvents = null;
 
         /* Cache the received events from watch */
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         ObjectInput in = null;
         try {
             in = new ObjectInputStream(bis);
-            //receivedEvents = (List<SmokingEvent>) in.readObject();
-            Object o = in.readObject();
+            serialEvents = (List<SmokingEventDTO>)in.readObject();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
@@ -79,6 +81,17 @@ public class SynchronizeService extends JobIntentService {
                 // ignore close exception
             }
         }
+        /* Convert de/serializable objects to SmokingEvent objects */
+        if (serialEvents != null) {
+            receivedEvents = new ArrayList<>(serialEvents.size());
+            for (SmokingEventDTO eventDto : serialEvents) {
+                SmokingEvent event = new SmokingEvent("0","0","0",
+                        "0","0",false,false,
+                        false);
+                receivedEvents.add(event.setTransferObject(eventDto));
+            }
+        }
+
         /* Search data base for the sync label and send all later events back to watch:*/
         /* Find Sync label*/
         smokingEvents = smEvRepo.getLatestSyncLabelIdTest(); /* TODO rename repo-method */
@@ -93,6 +106,7 @@ public class SynchronizeService extends JobIntentService {
         }
         /* Send data back to watch */
         //dBsyncHandler.sendSyncMessage(unsynchronizedEvents);
+        dBsyncHandler.sendSyncMessage(getTestEvents());
 
         /* TODO wait for message acknowledge from watch  */
 
@@ -123,5 +137,19 @@ public class SynchronizeService extends JobIntentService {
                 Toast.makeText(SynchronizeService.this, text, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    List<SmokingEvent> getTestEvents(){
+        List<SmokingEvent> testEvents = new ArrayList<>(10);
+        int size = 10;
+        while (size >0){
+            SmokingEvent event = new SmokingEvent("0",String.valueOf(10 - size),"0",
+                    "0","0",false,false,
+                    false);
+            testEvents.add(event);
+
+            size -= 1;
+        }
+        return testEvents;
     }
 }

@@ -135,7 +135,6 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         String stopDate = timeOfEvent.format(dateFormatter);
         String stopTime = timeOfEvent.format(timeFormatter);
 
-        /* TODO set isSyncLabel to false*/
         SmokingEvent event = new SmokingEvent("manualEvent", startDate,
                 startTime, stopDate, stopTime, true, false, false);
         sensorAiMediator.storeSmokingEvent(event);

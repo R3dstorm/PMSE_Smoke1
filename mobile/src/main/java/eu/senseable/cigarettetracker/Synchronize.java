@@ -10,6 +10,7 @@ import android.os.Message;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.example.commondataobjects.SmokingEventDTO;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.android.gms.wearable.Node;
@@ -22,6 +23,7 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -74,25 +76,6 @@ public class Synchronize {
             synchronizeServiceIntent.putExtra ("RECEIVED_EVENTS", receivedEvents);
             SynchronizeService.enqueueWork(myContext, synchronizeServiceIntent);
 
-//            /*Create object from bytes:*/
-//            ByteArrayInputStream bis = new ByteArrayInputStream(data);
-//            ObjectInput in = null;
-//            try {
-//                in = new ObjectInputStream(bis);
-//                unsynchronizedEvents = (List<SmokingEvent>) in.readObject();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            } catch (ClassNotFoundException e) {
-//                e.printStackTrace();
-//            } finally {
-//                try {
-//                    if (in != null) {
-//                        in.close();
-//                    }
-//                } catch (IOException ex) {
-//                    // ignore close exception
-//                }
-//            }
 
             String message = "I just received a message from the wearable " + receivedMessageNumber++;;
             Log.d (TAG_SYNC, message);
@@ -120,11 +103,17 @@ public class Synchronize {
     public void sendSyncMessage(List<SmokingEvent> unsynchronizedEvents) {
         byte[] messageData = null;
 
+        /* Convert SmokingEvents to de/serializable objects */
+        List<SmokingEventDTO> serialEvents = new ArrayList<>(unsynchronizedEvents.size());
+        for (SmokingEvent event : unsynchronizedEvents) {
+            serialEvents.add(event.getTransferObject());
+        }
+
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutput out = null;
         try {
             out = new ObjectOutputStream(bos);
-            out.writeObject(unsynchronizedEvents);
+            out.writeObject(serialEvents);
             out.flush();
             messageData = bos.toByteArray();
         } catch (IOException e) {
@@ -136,7 +125,7 @@ public class Synchronize {
                 // ignore close exception
             }
         }
-        String dataPath = "/watch/newSmokeEvents";
+        String dataPath = "/phone/newSmokeEvents";
         new SendMessage(dataPath, messageData).start();
     }
 

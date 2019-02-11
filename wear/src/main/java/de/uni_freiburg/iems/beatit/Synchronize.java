@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.example.commondataobjects.SmokingEventDTO;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.android.gms.wearable.DataClient;
@@ -22,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -52,10 +54,9 @@ public class Synchronize {
         String dataPath = "/watch/newElements";
         dataRequest =  PutDataRequest.create(dataPath);
         dataMapRequest = PutDataMapRequest.create(dataPath);
-
-
     }
 
+    /* TODO data exchange using DataItem not working */
     public void sendDataToPhone(byte[] data) {
         dataRequest.setData(data);
         DataMap dataMap = dataMapRequest.getDataMap();
@@ -92,11 +93,17 @@ public class Synchronize {
     public void sendSyncMessage(List<SmokingEvent> unsynchronizedEvents) {
         byte[] messageData = null;
 
+        /* Convert SmokingEvents to de/serializable objects */
+        List<SmokingEventDTO> serialEvents = new ArrayList<>(unsynchronizedEvents.size());
+        for (SmokingEvent event : unsynchronizedEvents) {
+            serialEvents.add(event.getTransferObject());
+        }
+
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutput out = null;
         try {
             out = new ObjectOutputStream(bos);
-            out.writeObject(unsynchronizedEvents);
+            out.writeObject(serialEvents);
             out.flush();
             messageData = bos.toByteArray();
         } catch (IOException e) {
@@ -110,23 +117,6 @@ public class Synchronize {
         }
         String dataPath = "/watch/newSmokeEvents";
         new SendMessage(dataPath, messageData).start();
-
-        /*Create object from bytes:*/
-//        ByteArrayInputStream bis = new ByteArrayInputStream(yourBytes);
-//        ObjectInput in = null;
-//        try {
-//            in = new ObjectInputStream(bis);
-//            Object o = in.readObject();
-//        } finally {
-//            try {
-//                if (in != null) {
-//                    in.close();
-//                }
-//            } catch (IOException ex) {
-//                // ignore close exception
-//            }
-//        }
-
     }
 
     public class Receiver extends BroadcastReceiver {

@@ -72,6 +72,15 @@ public class SmokingEvent {
         return new SmokingEventDTO(id, mTest, startDate, startTime, stopDate, stopTime, eventConfirmed, isSyncLabel, removed);
     }
     public SmokingEvent setTransferObject(SmokingEventDTO eventDto){
-        return new SmokingEvent(eventDto.getTest(), eventDto.getStartDate(), getStartTime(), getStopDate(), getStopTime(), getEventConfirmed(), getIsSyncLabel(), getRemoved());
+        this.mTest = eventDto.getTest();
+        this.startDate = eventDto.getStartDate();
+        this.startTime = eventDto.getStartTime();
+        this.stopDate = eventDto.getStopDate();
+        this.stopTime = eventDto.getStopTime();
+        this.eventConfirmed = eventDto.isEventConfirmed();
+        this.isSyncLabel = eventDto.isSyncLabel();
+        this.removed = eventDto.isRemoved();
+        return this;
     }
+
 }

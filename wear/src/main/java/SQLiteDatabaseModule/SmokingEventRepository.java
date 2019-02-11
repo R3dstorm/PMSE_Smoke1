@@ -23,9 +23,11 @@ public class SmokingEventRepository {
         mAllEvents = mEventDao.getAllEvents();
         mAllValidEvents = mEventDao.getAllValidEvents();
         /* TODO might be an issue -> latest sync label might be out of date*/
-        mLatestSyncLabelID = mEventDao.getLatestSyncLabelId();  /* TODO causes System crash */
-        mLatestEventId = mEventDao.getLatestEventId();          /* TODO causes System crash */
+        mLatestSyncLabelID = mEventDao.getLatestSyncLabelId();
+        mLatestEventId = mEventDao.getLatestEventId();
     }
+
+    /* TODO Remove/Refactor ...Test- Methods*/
 
     LiveData<List<SmokingEvent>> getAllEvents() {
         return mAllEvents;
@@ -53,7 +55,7 @@ public class SmokingEventRepository {
         return mEventDao.getNewSyncEventsTest(lastSyncLabelId);
     }
 
-    int setSyncLabel(int tid){
+    public int setSyncLabel(int tid){
         return mEventDao.setSyncLabel(tid);
     }
 
