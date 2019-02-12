@@ -33,7 +33,7 @@
             android:textStyle="bold" />
 
         <EditText
-            android:id="@+id/editText"
+            android:id="@+id/cigdate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
@@ -58,7 +58,7 @@
             android:textStyle="bold" />
 
         <EditText
-            android:id="@+id/editText3"
+            android:id="@+id/startTIme"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
@@ -83,7 +83,7 @@
             android:textStyle="bold" />
 
         <EditText
-            android:id="@+id/editText2"
+            android:id="@+id/duration"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
@@ -102,9 +102,9 @@
             android:text="@string/cancelevent"/>
 
         <Button
+            android:id="@+id/okayButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:onClick="onOkSmokeEventButtonClick"
             android:text="@string/saveevent" />
 
     </LinearLayout>
