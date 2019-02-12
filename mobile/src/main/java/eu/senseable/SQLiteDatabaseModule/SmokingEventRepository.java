@@ -1,4 +1,4 @@
-/* Credits: Major parts of sources from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
+/* Credits: Tutorial from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
 
 package eu.senseable.SQLiteDatabaseModule;
 
@@ -23,9 +23,11 @@ public class SmokingEventRepository {
         mAllEvents = mEventDao.getAllEvents();
         mAllValidEvents = mEventDao.getAllValidEvents();
         /* TODO might be an issue -> latest sync label might be out of date*/
-        mLatestSyncLabelID = mEventDao.getLatestSyncLabelId();  /* TODO causes System crash */
-        mLatestEventId = mEventDao.getLatestEventId();          /* TODO causes System crash */
+        mLatestSyncLabelID = mEventDao.getLatestSyncLabelId();
+        mLatestEventId = mEventDao.getLatestEventId();
     }
+
+    /* TODO Remove/Refactor ...Test- Methods*/
 
     LiveData<List<SmokingEvent>> getAllEvents() {
         return mAllEvents;
@@ -45,6 +47,8 @@ public class SmokingEventRepository {
 
     LiveData<List<SmokingEvent>> getLatestEventId(){ return mLatestEventId; }
 
+    public List<SmokingEvent> getLatestEventIdTest() {return mEventDao.getLatestEventIdTest();}
+
     LiveData<List<SmokingEvent>> getNewSyncEvents(int lastSyncLabelId){
         return mEventDao.getNewSyncEvents(lastSyncLabelId);
     }
@@ -53,13 +57,15 @@ public class SmokingEventRepository {
         return mEventDao.getNewSyncEventsTest(lastSyncLabelId);
     }
 
-    int setSyncLabel(int tid){
+    public int setSyncLabel(int tid){
         return mEventDao.setSyncLabel(tid);
     }
 
     public void insert (SmokingEvent event) {
         new insertAsyncTask(mEventDao).execute(event);
     }
+
+    public void insertBlocking (SmokingEvent event) { mEventDao.insert(event);}
 
     private static class insertAsyncTask extends AsyncTask<SmokingEvent, Void, Void> {
 

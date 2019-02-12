@@ -79,11 +79,11 @@ public class SynchronizeService extends JobIntentService{
 
             /* import the events into the data base: */
             for (SmokingEvent smokingEvent : receivedSmokingEvents) {
-                smEvRepo.insert(smokingEvent);
+                smEvRepo.insertBlocking(smokingEvent);
             }
 
             /* set synchronization label */
-            List<SmokingEvent> latestEvent = smEvRepo.getLatestSyncLabelIdTest();
+            List<SmokingEvent> latestEvent = smEvRepo.getLatestEventIdTest();
             latestEventId = latestEvent.get(0).getId();
             smEvRepo.setSyncLabel(latestEventId);
         }

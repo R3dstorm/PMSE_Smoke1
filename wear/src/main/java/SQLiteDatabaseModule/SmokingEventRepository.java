@@ -47,6 +47,8 @@ public class SmokingEventRepository {
 
     LiveData<List<SmokingEvent>> getLatestEventId(){ return mLatestEventId; }
 
+    public List<SmokingEvent> getLatestEventIdTest() {return mEventDao.getLatestEventIdTest();}
+
     LiveData<List<SmokingEvent>> getNewSyncEvents(int lastSyncLabelId){
         return mEventDao.getNewSyncEvents(lastSyncLabelId);
     }
@@ -62,6 +64,8 @@ public class SmokingEventRepository {
     public void insert (SmokingEvent event) {
         new insertAsyncTask(mEventDao).execute(event);
     }
+
+    public void insertBlocking (SmokingEvent event) { mEventDao.insert(event);}
 
     private static class insertAsyncTask extends AsyncTask<SmokingEvent, Void, Void> {
 

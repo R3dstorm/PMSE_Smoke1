@@ -56,6 +56,11 @@ public interface SmokingEventDao {
     @Query("SELECT * from smoking_event_table WHERE Is_Sync_Label = 1 ORDER BY id DESC LIMIT 1")
     List<SmokingEvent> getLatestSyncLabelIdTest();
 
+    /* Query to get latest element id */
+    @Query("SELECT * from smoking_event_table ORDER BY id DESC LIMIT 1")
+    List<SmokingEvent>  getLatestEventIdTest();
+
+
     /* Update the sync label */
     @Query("UPDATE smoking_event_table SET Is_Sync_Label = 1 WHERE id = :tid")
     int setSyncLabel(int tid);

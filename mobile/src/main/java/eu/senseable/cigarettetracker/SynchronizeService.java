@@ -3,7 +3,6 @@ package eu.senseable.cigarettetracker;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.SystemClock;
 import android.support.v4.app.JobIntentService;
 import android.util.Log;
@@ -43,9 +42,8 @@ public class SynchronizeService extends JobIntentService {
     @Override
     protected void onHandleWork(Intent intent) {
 
-        List<SmokingEvent> smokingEvents;
-        List<SmokingEvent> unsynchronizedEvents;
-        List<SmokingEvent> receivedEvents;
+        List<SmokingEvent> newSmokingEvents = null;
+        List<SmokingEvent> receivedSmokingEvents = null;
         /* TODO memory leakage issue? */
         dBsyncHandler = new Synchronize(getApplicationContext());
 
@@ -58,70 +56,41 @@ public class SynchronizeService extends JobIntentService {
 //            label = intent.toString();
 //        }
 //        toast("Executing: " + label);
-        /* Retrieve the received events from intent: */
-        byte[] data = intent.getByteArrayExtra("RECEIVED_EVENTS");
-        List<SmokingEventDTO> serialEvents = null;
 
-        /* Cache the received events from watch */
-        ByteArrayInputStream bis = new ByteArrayInputStream(data);
-        ObjectInput in = null;
-        try {
-            in = new ObjectInputStream(bis);
-            serialEvents = (List<SmokingEventDTO>)in.readObject();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (in != null) {
-                    in.close();
-                }
-            } catch (IOException ex) {
-                // ignore close exception
-            }
-        }
-        /* Convert de/serializable objects to SmokingEvent objects */
-        if (serialEvents != null) {
-            receivedEvents = new ArrayList<>(serialEvents.size());
-            for (SmokingEventDTO eventDto : serialEvents) {
-                SmokingEvent event = new SmokingEvent("0","0","0",
-                        "0","0",false,false,
-                        false);
-                receivedEvents.add(event.setTransferObject(eventDto));
-            }
-        }
+        /* Data received -> retrieve the new events: */
+        /* Get the received events from phone: */
+        byte[] data = intent.getByteArrayExtra("RECEIVED_EVENTS");
+        receivedSmokingEvents = deserializeEvents(data);
 
         /* Search data base for the sync label and send all later events back to watch:*/
         /* Find Sync label*/
-        smokingEvents = smEvRepo.getLatestSyncLabelIdTest(); /* TODO rename repo-method */
-        if (!smokingEvents.isEmpty()) {
+        newSmokingEvents = smEvRepo.getLatestSyncLabelIdTest(); /* TODO rename repo-method */
+        if (!newSmokingEvents.isEmpty()) {
             /* SyncLabel available -> only get not synchronized events */
-            lastSyncLabelId = smokingEvents.get(0).getId();
-            unsynchronizedEvents = smEvRepo.getNewSyncEventsTest(lastSyncLabelId);
+            lastSyncLabelId = newSmokingEvents.get(0).getId();
+            newSmokingEvents = smEvRepo.getNewSyncEventsTest(lastSyncLabelId);
         }
         else{
             /* there has been no SyncLabel set yet -> get all events */
-            unsynchronizedEvents = smEvRepo.getAllEventsList();
+            newSmokingEvents = smEvRepo.getAllEventsList();
         }
         /* Send data back to watch */
-        //dBsyncHandler.sendSyncMessage(unsynchronizedEvents);
-        dBsyncHandler.sendSyncMessage(getTestEvents());
+        dBsyncHandler.sendSyncMessage(newSmokingEvents);
+        //dBsyncHandler.sendSyncMessage(getTestEvents());
 
-        /* TODO wait for message acknowledge from watch  */
+        /* import retrieved elements to database: */
+        for (SmokingEvent smokingEvent : receivedSmokingEvents) {
+            smEvRepo.insertBlocking(smokingEvent);
+        }
 
-        /* Data received -> import new received elements to database */
-        /* TODO ... */
         /* set synchronization label */
-        //mSEViewModel.setSyncLabel(latestEventId);
-        //syncState = State.IDLE;
-        //syncDone = true;
-        /* TODO reset syncDone? */
-
-        /* TODO state machine nötig?*/
-
+        List<SmokingEvent> latestEvent = smEvRepo.getLatestEventIdTest();
+        latestEventId = latestEvent.get(0).getId();
+        smEvRepo.setSyncLabel(latestEventId);
 
         Log.i("SimpleJobIntentService", "Completed service @ " + SystemClock.elapsedRealtime());
+        dBsyncHandler = null;
+        smEvRepo = null;
     }
 
     @Override
@@ -151,5 +120,39 @@ public class SynchronizeService extends JobIntentService {
             size -= 1;
         }
         return testEvents;
+    }
+
+    List<SmokingEvent> deserializeEvents(byte[] data){
+        List<SmokingEventDTO> serialEvents = null;
+        List<SmokingEvent> deserializedEvents = null;
+        ByteArrayInputStream bis = new ByteArrayInputStream(data);
+        ObjectInput in = null;
+        try {
+            in = new ObjectInputStream(bis);
+            serialEvents = (List<SmokingEventDTO>)in.readObject();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (in != null) {
+                    in.close();
+                }
+            } catch (IOException ex) {
+                // ignore close exception
+            }
+        }
+        /* Convert de/serializable objects to SmokingEvent objects */
+        if (serialEvents != null) {
+            deserializedEvents = new ArrayList<>(serialEvents.size());
+            for (SmokingEventDTO eventDto : serialEvents) {
+                SmokingEvent event = new SmokingEvent("0","0","0",
+                        "0","0",false,false,
+                        false);
+                deserializedEvents.add(event.setTransferObject(eventDto));
+            }
+        }
+        return deserializedEvents;
     }
 }

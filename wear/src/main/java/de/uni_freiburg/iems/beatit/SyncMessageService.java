@@ -21,12 +21,6 @@ public class SyncMessageService extends WearableListenerService{
             synchronizeServiceIntent.putExtra("NEW_EVENTS_RECEIVED", true);
             synchronizeServiceIntent.putExtra("NEW_EVENTS_DATA",receivedEvents);
             SynchronizeService.enqueueWork(getApplicationContext(), synchronizeServiceIntent);
-
-            //Broadcast the received data layer messages//
-//            Intent messageIntent = new Intent();
-//            messageIntent.setAction(Intent.ACTION_SEND);
-//            messageIntent.putExtra("message", message);
-//            LocalBroadcastManager.getInstance(this).sendBroadcast(messageIntent);
         }
         else {
             super.onMessageReceived(messageEvent);

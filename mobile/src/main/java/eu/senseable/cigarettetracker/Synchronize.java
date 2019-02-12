@@ -47,12 +47,6 @@ public class Synchronize {
         IntentFilter messageFilter = new IntentFilter(Intent.ACTION_SEND);
         Receiver messageReceiver = new Receiver();
         LocalBroadcastManager.getInstance(myContext).registerReceiver(messageReceiver, messageFilter);
-
-        /* Trigger Synchronize Service Intent */
-//        Intent synchronizeServiceIntent = new Intent(context, SynchronizeService.class);
-//        synchronizeServiceIntent.putExtra ("RECEIVED_EVENTS", "blub");
-//        SynchronizeService.enqueueWork(context, synchronizeServiceIntent);
-
     }
 
     public void messageText(String newinfo) {
@@ -67,9 +61,7 @@ public class Synchronize {
 
         public void onReceive(Context context, Intent intent) {
 
-            /* TODO distinguish between receiving data and acknowledge from watch */
-            //Upon receiving each message from the wearable, display the following text//
-            byte[] receivedEvents = intent.getByteArrayExtra("message");
+            byte[] receivedEvents = intent.getByteArrayExtra("NEW_EVENTS_DATA");
 
             /* Trigger Synchronize Service Intent */
             Intent synchronizeServiceIntent = new Intent(myContext, SynchronizeService.class);
@@ -80,25 +72,18 @@ public class Synchronize {
             String message = "I just received a message from the wearable " + receivedMessageNumber++;;
             Log.d (TAG_SYNC, message);
             //textview.setText(message);
-
-            /* TODO acknowledge received -> accept data -> synchronize */
-            /* Wait for Acknowledge....  */
-
-            /* Accept Data / Synchronize: */
-
-
         }
     }
 
-    /* Create a send routine */
-    public void buildSendMessage() {
-        String message = "I just sent the handheld a message " + sentMessageNumber++;
-        Log.d(TAG_SYNC, message);
-
-        //Make sure you’re using the same path value//
-        String dataPath = "/smokeSync";
-        new SendMessage(dataPath, message.getBytes()).start();
-    }
+//    /* Create a send routine */
+//    public void buildSendMessage() {
+//        String message = "I just sent the handheld a message " + sentMessageNumber++;
+//        Log.d(TAG_SYNC, message);
+//
+//        //Make sure you’re using the same path value//
+//        String dataPath = "/smokeSync";
+//        new SendMessage(dataPath, message.getBytes()).start();
+//    }
 
     public void sendSyncMessage(List<SmokingEvent> unsynchronizedEvents) {
         byte[] messageData = null;
