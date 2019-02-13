@@ -189,7 +189,8 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         sensorAiMediator.storeSmokingEvent(event);
     }
 
-    public void onPlayButtonClick(View v){
+    public void onPlayButtonClick(View v) {
+        isDetectionStarted = !isDetectionStarted;
         toggleDetection();
     }
 
