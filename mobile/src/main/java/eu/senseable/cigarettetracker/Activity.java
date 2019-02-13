@@ -162,6 +162,14 @@ public class Activity extends AppCompatActivity {
                 */
             }
         });
+
+        FloatingActionButton fabDel = (FloatingActionButton) findViewById(R.id.fabDel);
+        fabDel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mSEViewModel.deleteAll();
+            }
+        });
 /*
         /** special case if started by the notification intent from the CigBroadcastReceiver
         if (CigBroadcastReceiver.LOGCIG_ACTION.equals(getIntent().getAction())) {
