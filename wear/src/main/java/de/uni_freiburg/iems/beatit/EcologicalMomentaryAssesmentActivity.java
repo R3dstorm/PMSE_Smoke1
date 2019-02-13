@@ -1,7 +1,11 @@
 package de.uni_freiburg.iems.beatit;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.util.Log;
 import android.support.v7.app.AppCompatActivity;
 import android.support.wear.ambient.AmbientModeSupport;
@@ -9,7 +13,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -21,6 +24,9 @@ import java.time.format.DateTimeFormatter;
 import SQLiteDatabaseModule.SmokingEvent;
 import SensorReadoutModule.dataAcquisitionActivity;
 import SensorReadoutModule.SensorReadoutService;
+
+import static android.content.Intent.ACTION_DREAMING_STARTED;
+import static android.content.Intent.ACTION_DREAMING_STOPPED;
 
 /* Callback interface for measurementCompleteEvent*/
 interface ModelEvaluatedListener {
@@ -37,7 +43,12 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     private AmbientModeSupport.AmbientController mAmbientController;
     private LocalDateTime smokingStartTime;
     private LocalDateTime smokingEndTime;
-    private boolean isFirstStart = true;
+    private boolean isDetectionStarted = false;
+    private PowerManager powerManager;
+    private PowerManager.WakeLock wakeLock = null;
+    private PowerManager.WakeLock screenLock = null;
+    private BroadcastReceiver powerSaveReceiver = null;
+    private IntentFilter actionFilter = null;
 
     /* TODO remove this as soon smoking notification exists*/
     private CheckBox smokingDetected;
@@ -92,27 +103,64 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         stateText = findViewById(R.id.stateText);
         framesText = findViewById(R.id.framesText);
 
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"MyApp::MyWakelockTag");
+        wakeLock.acquire();
+
+        powerSaveReceiver = new BroadcastReceiver() {
+            @Override public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                if(action == ACTION_DREAMING_STARTED) {
+                    WindowManager.LayoutParams params = getWindow().getAttributes();
+                    params.screenBrightness = 0.01f;
+                    getWindow().setAttributes(params);
+                } else if(action == ACTION_DREAMING_STOPPED) {
+                    WindowManager.LayoutParams params = getWindow().getAttributes();
+                    params.screenBrightness = -1;
+                    getWindow().setAttributes(params);
+                }
+            }
+        };
+
+        IntentFilter actionFilter = new IntentFilter();
+        actionFilter.addAction(ACTION_DREAMING_STARTED);
+        actionFilter.addAction(ACTION_DREAMING_STOPPED);
+        registerReceiver(powerSaveReceiver, actionFilter);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
+        isDetectionStarted = true;
+        playButton.setChecked(true);
         toggleDetection();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(sensorServiceStarted)
-        {
-            stopService(sensorServiceIntent);
+        if(wakeLock != null) {
+            if (wakeLock.isHeld()) {
+                wakeLock.release();
+            }
+            wakeLock = null;
+        }
+        if(actionFilter != null) {
+            actionFilter = null;
+        }
+        if(powerSaveReceiver != null) {
+            unregisterReceiver(powerSaveReceiver);
+            powerSaveReceiver = null;
         }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        if(isDetectionStarted) {
+            isDetectionStarted = false;
+            toggleDetection();
+        }
     }
 
     @Override
@@ -146,23 +194,16 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     }
 
     private void toggleDetection() {
-        if(isFirstStart)
-        {
-            isFirstStart = false;
-            playButton.setChecked(true);
-        }
-        if (playButton.isChecked() == true) {
+        if(isDetectionStarted) {
             sensorServiceIntent = new Intent(EcologicalMomentaryAssesmentActivity.this, SensorReadoutService.class);
             startService(sensorServiceIntent);
             sensorServiceStarted = true;
 
             if (sensorAiMediator != null) {
                 sensorAiMediator = null;
-                Log.i("ML", "previous sensorAiMediator instance deleted");
             }
             sensorAiMediator = new Mediator(this, true, EcologicalMomentaryAssesmentActivity.this);
         } else {
-            Log.i("ML", "stop service");
             stopService(sensorServiceIntent);
             sensorServiceIntent = null;
             /* tell connected modules to unbind */
