@@ -20,7 +20,7 @@ public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventLi
 
         private SmokingEventViewHolder(View itemView) {
             super(itemView);
-            smokingEventItemView = itemView.findViewById(R.id.my_recycler_view);
+            smokingEventItemView = itemView.findViewById(R.id.text_view);
         }
     }
 
@@ -31,7 +31,7 @@ public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventLi
 
     @Override
     public SmokingEventViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View itemView = mInflater.inflate(R.layout.activity_counter, parent, false);
+        View itemView = mInflater.inflate(R.layout.my_item_view, parent, false);
         return new SmokingEventViewHolder(itemView);
     }
 
