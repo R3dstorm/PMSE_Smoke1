@@ -19,11 +19,10 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import java.util.List;
 
@@ -38,7 +37,12 @@ public class Activity extends AppCompatActivity {
     private SmokingEventListAdapter mAdapter;
     private Account mAccount;
     private SmokingEventViewModel mSEViewModel;
+    private String startDateSmoke = "";
+    private String startTimeSmoke = "";
+    private String endDateSmoke = "";
+    private String endTimeSmoke = "";
     private Synchronize dbSyncHandler;
+
 
     private ContentObserver mSync = new ContentObserver(new Handler()) {
         Bundle mExtras = null;
@@ -174,9 +178,28 @@ public class Activity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 // Dialog für das hinzufügen muss geöffnet werden.
-                Dialog dia = new Dialog(Activity.this);
+                final Dialog dia = new Dialog(Activity.this);
                 dia.setContentView(R.layout.add_smoke_event);
                 dia.show();
+                Button button = (Button) dia.findViewById(R.id.okayButton);
+                button.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
+
+                        EditText edit=(EditText)dia.findViewById(R.id.cigdate);
+                        startDateSmoke=edit.getText().toString();
+                        endDateSmoke = startDateSmoke;
+                        edit = (EditText)dia.findViewById(R.id.startTIme);
+                        startTimeSmoke= edit.getText().toString();
+                        edit = (EditText)dia.findViewById(R.id.duration);
+                        int duration = Integer.parseInt(edit.getText().toString());
+                        int startTimeInt = Integer.parseInt(startTimeSmoke);
+                        int endTime = startTimeInt + duration;
+                        endTimeSmoke = Integer.toString(endTime);
+
+                        SmokingEvent ev = new SmokingEvent("Smoking", startDateSmoke, startTimeSmoke, endDateSmoke, endTimeSmoke, true, false, false);
+                        mSEViewModel.insert(ev);
+                    }
+                });
 
                 /*
                 CigaretteEvent ev = new CigaretteEvent();
@@ -198,14 +221,7 @@ public class Activity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_counter, menu);
+
         return true;
     }
-
-    public void onOkSmokeEventButtonClick(View v) {
-        EditText text;
-        //text = (EditText) addSmokeEventDiagView.findViewById(R.id.editText);
-        //String test = text.getText().toString();
-        //Toast.makeText(this, test, Toast.LENGTH_SHORT).show();
-    }
-
 }
