@@ -12,21 +12,60 @@ public class SmokingEventRepository {
 
     private SmokingEventDao mEventDao;
     private LiveData<List<SmokingEvent>> mAllEvents;
+    private LiveData<List<SmokingEvent>> mAllValidEvents;
+    private LiveData<List<SmokingEvent>> mLatestSyncLabelID;
+    private LiveData<List<SmokingEvent>> mLatestEventId;
 
-    SmokingEventRepository(Application application) {
+
+    public SmokingEventRepository(Application application) {
         SmokingEventRoomDatabase db = SmokingEventRoomDatabase.getDatabase(application);
         mEventDao = db.smokingEventDao();
         mAllEvents = mEventDao.getAllEvents();
+        mAllValidEvents = mEventDao.getAllValidEvents();
+        /* TODO might be an issue -> latest sync label might be out of date*/
+        mLatestSyncLabelID = mEventDao.getLatestSyncLabelId();
+        mLatestEventId = mEventDao.getLatestEventId();
     }
+
+    /* TODO Remove/Refactor ...Test- Methods*/
 
     LiveData<List<SmokingEvent>> getAllEvents() {
         return mAllEvents;
     }
 
+    public List<SmokingEvent> getAllEventsList(){ return mEventDao.getAllEventsList();}
+
+    LiveData<List<SmokingEvent>> getAllValidEvents(){
+        return mAllValidEvents;
+    }
+
+    LiveData<List<SmokingEvent>> getLatestSyncLabelId(){
+        return mLatestSyncLabelID;
+    }
+
+    public List<SmokingEvent> getLatestSyncLabelIdTest() {return mEventDao.getLatestSyncLabelIdTest();}
+
+    LiveData<List<SmokingEvent>> getLatestEventId(){ return mLatestEventId; }
+
+    public List<SmokingEvent> getLatestEventIdTest() {return mEventDao.getLatestEventIdTest();}
+
+    LiveData<List<SmokingEvent>> getNewSyncEvents(int lastSyncLabelId){
+        return mEventDao.getNewSyncEvents(lastSyncLabelId);
+    }
+
+    public List<SmokingEvent> getNewSyncEventsTest(int lastSyncLabelId){
+        return mEventDao.getNewSyncEventsTest(lastSyncLabelId);
+    }
+
+    public int setSyncLabel(int tid){
+        return mEventDao.setSyncLabel(tid);
+    }
 
     public void insert (SmokingEvent event) {
         new insertAsyncTask(mEventDao).execute(event);
     }
+
+    public void insertBlocking (SmokingEvent event) { mEventDao.insert(event);}
 
     private static class insertAsyncTask extends AsyncTask<SmokingEvent, Void, Void> {
 

@@ -45,4 +45,13 @@
         app:layout_anchorGravity="bottom|end"
         app:srcCompat="@drawable/ic_cig" />
 
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fabDel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        app:layout_anchor="@id/app_bar"
+        app:layout_anchorGravity="bottom|center"
+        app:srcCompat="@android:drawable/btn_dialog" />
+
 </android.support.design.widget.CoordinatorLayout>

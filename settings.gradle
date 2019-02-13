@@ -1,1 +1,1 @@
-include ':wear', ':segfeat', ':mobile', ':cloudsync'
+include ':wear', ':segfeat', ':mobile', ':cloudsync', ':commondataobjects'

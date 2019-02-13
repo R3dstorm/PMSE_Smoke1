@@ -5,6 +5,8 @@ import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
 
+import com.example.commondataobjects.SmokingEventDTO;
+
 @Entity(tableName = "smoking_event_table")
 public class SmokingEvent {
 
@@ -35,15 +37,25 @@ public class SmokingEvent {
     @ColumnInfo(name = "Event_Confirmed")
     private boolean eventConfirmed;
 
+    @NonNull
+    @ColumnInfo(name = "Is_Sync_Label")
+    private boolean isSyncLabel;
+
+    @NonNull
+    @ColumnInfo(name = "Removed")
+    private boolean removed;
+
     public SmokingEvent(@NonNull String test, @NonNull String startDate, @NonNull String startTime,
                         @NonNull String stopDate, @NonNull String stopTime,
-                        @NonNull boolean eventConfirmed) {
+                        @NonNull boolean eventConfirmed, @NonNull boolean isSyncLabel, @NonNull boolean removed) {
         this.mTest = test;
         this.startDate = startDate;
         this.startTime = startTime;
         this.stopDate = stopDate;
         this.stopTime = stopTime;
         this.eventConfirmed = eventConfirmed;
+        this.isSyncLabel = isSyncLabel;
+        this.removed = removed;
     }
 
     public String getMTest(){return mTest;}
@@ -54,4 +66,21 @@ public class SmokingEvent {
     public String getStopDate(){return stopDate;}
     public String getStopTime(){return stopTime;}
     public boolean getEventConfirmed(){return eventConfirmed;}
+    public boolean getIsSyncLabel(){return isSyncLabel;}
+    public boolean getRemoved(){return removed;}
+    public SmokingEventDTO getTransferObject(){
+        return new SmokingEventDTO(id, mTest, startDate, startTime, stopDate, stopTime, eventConfirmed, isSyncLabel, removed);
+    }
+    public SmokingEvent setTransferObject(SmokingEventDTO eventDto){
+        this.mTest = eventDto.getTest();
+        this.startDate = eventDto.getStartDate();
+        this.startTime = eventDto.getStartTime();
+        this.stopDate = eventDto.getStopDate();
+        this.stopTime = eventDto.getStopTime();
+        this.eventConfirmed = eventDto.isEventConfirmed();
+        this.isSyncLabel = eventDto.isSyncLabel();
+        this.removed = eventDto.isRemoved();
+        return this;
+    }
+
 }
