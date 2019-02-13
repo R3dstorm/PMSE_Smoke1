@@ -196,6 +196,7 @@ public class Activity extends AppCompatActivity {
 
                         SmokingEvent ev = new SmokingEvent("Smoking", startDateSmoke, startTimeSmoke, endDateSmoke, endTimeSmoke, true);
                         mSEViewModel.insert(ev);
+                        getContentResolver().insert(Contract.EVENTURI(), ev.)
                     }
                 });
 
