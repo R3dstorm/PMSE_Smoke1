@@ -53,7 +53,6 @@ public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventLi
     }
 
     // getItemCount() is called many times, and when it is first called,
-    // mWords has not been updated (means initially, it's null, and we can't return null).
     @Override
     public int getItemCount() {
         if (mSmokingEvents != null)

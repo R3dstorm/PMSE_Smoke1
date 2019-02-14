@@ -49,12 +49,6 @@ public class Synchronize {
         LocalBroadcastManager.getInstance(myContext).registerReceiver(messageReceiver, messageFilter);
     }
 
-    public void messageText(String newinfo) {
-        if (newinfo.compareTo("") != 0) {
-            //textview.append("\n" + newinfo);
-        }
-    }
-
     //Define a nested class that extends BroadcastReceiver//
     public class Receiver extends BroadcastReceiver {
         @Override
@@ -75,15 +69,6 @@ public class Synchronize {
         }
     }
 
-//    /* Create a send routine */
-//    public void buildSendMessage() {
-//        String message = "I just sent the handheld a message " + sentMessageNumber++;
-//        Log.d(TAG_SYNC, message);
-//
-//        //Make sure you’re using the same path value//
-//        String dataPath = "/smokeSync";
-//        new SendMessage(dataPath, message.getBytes()).start();
-//    }
 
     public void sendSyncMessage(List<SmokingEvent> unsynchronizedEvents) {
         byte[] messageData = null;

@@ -22,7 +22,6 @@ public class SmokingEventRepository {
         mEventDao = db.smokingEventDao();
         mAllEvents = mEventDao.getAllEvents();
         mAllValidEvents = mEventDao.getAllValidEvents();
-        /* TODO might be an issue -> latest sync label might be out of date*/
         mLatestSyncLabelID = mEventDao.getLatestSyncLabelId();
         mLatestEventId = mEventDao.getLatestEventId();
     }

@@ -85,9 +85,10 @@ public class SynchronizeService extends JobIntentService {
 
         /* set synchronization label */
         List<SmokingEvent> latestEvent = smEvRepo.getLatestEventIdTest();
-        latestEventId = latestEvent.get(0).getId();
-        smEvRepo.setSyncLabel(latestEventId);
-
+        if (!latestEvent.isEmpty()) {
+            latestEventId = latestEvent.get(0).getId();
+            smEvRepo.setSyncLabel(latestEventId);
+        }
         Log.i("SimpleJobIntentService", "Completed service @ " + SystemClock.elapsedRealtime());
         dBsyncHandler = null;
         smEvRepo = null;

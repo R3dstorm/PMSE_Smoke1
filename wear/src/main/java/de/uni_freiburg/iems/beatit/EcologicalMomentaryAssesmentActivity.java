@@ -98,6 +98,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
 
         /* TODO remove this as soon smoking notification exists*/
         smokingDetected = findViewById(R.id.checkBox);
+
         detectorText = findViewById(R.id.detectorText);
         timingText = findViewById(R.id.timingText);
         stateText = findViewById(R.id.stateText);
@@ -169,7 +170,6 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         startActivity(intent);
     }
 
-    /* TODO Put some more useful content here */
     public void onAddEventButtonClick(View v){
         if (sensorAiMediator == null) {
             /* sensorAiMediator not initialized */
@@ -198,8 +198,6 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
             /* sensorAiMediator initialized*/
         }
         /* TODO stop ai/sensor activity before syncing */
-        /* TODO set up timer to call sync events multiple times (state machine) */
-        //sensorAiMediator.synchronizeEvents();
         sensorAiMediator.synchronizeEventsBackground();
     }
 

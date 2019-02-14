@@ -1,19 +1,13 @@
 package de.uni_freiburg.iems.beatit;
 
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.example.commondataobjects.SmokingEventDTO;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.android.gms.wearable.DataClient;
-import com.google.android.gms.wearable.DataItem;
-import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
@@ -31,8 +25,6 @@ import SQLiteDatabaseModule.SmokingEvent;
 
 public class Synchronize {
 
-    int receivedMessageNumber = 1;
-    int sentMessageNumber = 1;
     private Context myContext;
     private PutDataRequest dataRequest;
     private PutDataMapRequest dataMapRequest;
@@ -45,51 +37,12 @@ public class Synchronize {
     Synchronize(Context context) {
         myContext = context;
 
-        /* Register the local broadcast receiver */
-        IntentFilter newFilter = new IntentFilter(Intent.ACTION_SEND);
-        Receiver messageReceiver = new Receiver();
-        LocalBroadcastManager.getInstance(myContext).registerReceiver(messageReceiver, newFilter);
-
         /* Handle Data Objects */
         String dataPath = "/watch/newElements";
         dataRequest =  PutDataRequest.create(dataPath);
         dataMapRequest = PutDataMapRequest.create(dataPath);
     }
 
-    /* TODO data exchange using DataItem not working */
-    public void sendDataToPhone(byte[] data) {
-        dataRequest.setData(data);
-        DataMap dataMap = dataMapRequest.getDataMap();
-        /* TODO DRY! -> use SYNC_KEY instead of path */
-        /* TODO Need for "setUrgent()"? */
-        String dataPath = "/watch/newElements";
-        dataMap.putByteArray(SYNC_KEY, data);
-        dataMapRequest.setUrgent();
-        PutDataRequest putDataReq = dataMapRequest.asPutDataRequest();
-        Task<DataItem> putDataTask = Wearable.getDataClient(myContext).putDataItem(putDataReq);//dataClient.putDataItem(putDataReq);
-
-        /* TODO wait for Task objecT?*/
-//        try {
-//            DataItem item = Tasks.await(dataItemTask);
-//            Log.d(TAG, "Data item set: " + item.getUri());
-//        } catch (ExecutionException | InterruptedException e) {
-//  ...
-//        }
-
-
-    }
-
-    /* Create a send routine */
-    public void buildSendMessage() {
-        String message = "I just sent the handheld a message " + sentMessageNumber++;
-        Log.d(TAG_SYNC, message);
-
-        //Make sure you’re using the same path value//
-        String dataPath = "/smokeSync";
-        new SendMessage(dataPath, message.getBytes()).start();
-    }
-
-    /**/
     public void sendSyncMessage(List<SmokingEvent> unsynchronizedEvents) {
         byte[] messageData = null;
 
@@ -119,14 +72,6 @@ public class Synchronize {
         new SendMessage(dataPath, messageData).start();
     }
 
-    public class Receiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String onMessageReceived = "I just received a  message from the handheld " + receivedMessageNumber++;
-            //textView.setText(onMessageReceived);
-            Log.d(TAG_SYNC, onMessageReceived);
-        }
-    }
 
     class SendMessage extends Thread {
         String path;
