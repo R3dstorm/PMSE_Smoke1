@@ -54,7 +54,7 @@ public class SynchronizeService extends JobIntentService{
             if (label == null) {
                 label = intent.toString();
             }
-            toast("Executing: " + label);
+            toast("Sync Starting");
 
             /* Search data base for the sync label and send all later events to phone:*/
             /* Find Sync label*/
@@ -97,7 +97,7 @@ public class SynchronizeService extends JobIntentService{
     @Override
     public void onDestroy() {
         super.onDestroy();
-        toast("All work complete");
+        toast("Sync Finished");
     }
 
     // Helper for showing tests
