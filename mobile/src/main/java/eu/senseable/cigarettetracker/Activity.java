@@ -1,16 +1,11 @@
 package eu.senseable.cigarettetracker;
 
 import android.accounts.Account;
-import android.accounts.AccountManager;
 import android.app.Dialog;
 import android.arch.lifecycle.LifecycleOwner;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
-import android.content.ContentResolver;
-import android.database.ContentObserver;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
@@ -18,15 +13,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-import de.senseable.cloudsync.Contract;
 import eu.senseable.SQLiteDatabaseModule.SmokingEvent;
 import eu.senseable.SQLiteDatabaseModule.SmokingEventListAdapter;
 import eu.senseable.SQLiteDatabaseModule.SmokingEventViewModel;
@@ -42,6 +37,9 @@ public class Activity extends AppCompatActivity {
     private String endDateSmoke = "";
     private String endTimeSmoke = "";
     private Synchronize dbSyncHandler;
+
+    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("ddMMyy");
+    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,11 +131,22 @@ public class Activity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 // Dialog für das hinzufügen muss geöffnet werden.
+                LocalDateTime defaultValuePopUp = LocalDateTime.now();
+                String startDateDefault = defaultValuePopUp.format(dateFormatter);
+                String startTimeDefault = defaultValuePopUp.format(timeFormatter);
+                String durationTimeDefault = "0500";
+
                 final Dialog dia = new Dialog(Activity.this);
                 dia.setContentView(R.layout.add_smoke_event);
+                EditText edit=(EditText)dia.findViewById(R.id.cigdate);
+                edit.setText(startDateDefault);
+                edit = (EditText) dia.findViewById(R.id.startTIme);
+                edit.setText(startTimeDefault);
+                edit = (EditText)dia.findViewById(R.id.duration);
+                edit.setText(durationTimeDefault);
                 dia.show();
-                Button button = (Button) dia.findViewById(R.id.okayButton);
-                button.setOnClickListener(new View.OnClickListener() {
+                Button addButton = (Button) dia.findViewById(R.id.okayButton);
+                addButton.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
 
                         EditText edit=(EditText)dia.findViewById(R.id.cigdate);
@@ -153,6 +162,15 @@ public class Activity extends AppCompatActivity {
 
                         SmokingEvent ev = new SmokingEvent("Smoking", startDateSmoke, startTimeSmoke, endDateSmoke, endTimeSmoke, true, false, false);
                         mSEViewModel.insert(ev);
+                        dia.dismiss();
+                    }
+                });
+
+                Button abortButton = (Button) dia.findViewById(R.id.abortButton);
+                abortButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dia.dismiss();
                     }
                 });
 
