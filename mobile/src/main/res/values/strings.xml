@@ -10,4 +10,10 @@
     <string name="permission_denied">exporting events requires access to external storage</string>
     <string name="logcig">push this notification to log a cigarette</string>
     <string name="logcigtitle">log cigarette</string>
+    <string name="addevent">New cigarette</string>
+    <string name="startdate">Date</string>
+    <string name="starttime">Time</string>
+    <string name="endtime">Duration</string>
+    <string name="saveevent">OK</string>
+    <string name="cancelevent">Abort</string>
 </resources>

@@ -9,6 +9,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/cloudsync" />
+            <option value="$PROJECT_DIR$/commondataobjects" />
             <option value="$PROJECT_DIR$/mobile" />
             <option value="$PROJECT_DIR$/segfeat" />
             <option value="$PROJECT_DIR$/wear" />

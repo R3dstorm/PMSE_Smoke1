@@ -1,7 +1,5 @@
 package de.uni_freiburg.iems.beatit;
 
-import android.arch.lifecycle.LifecycleOwner;
-import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.ComponentName;
 import android.content.Context;
@@ -9,14 +7,10 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Handler;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentActivity;
-
-import java.util.List;
 
 import MachineLearningModule.SmokeDetector;
 import SQLiteDatabaseModule.SmokingEvent;
-import SQLiteDatabaseModule.SmokingEventListAdapter;
 import SQLiteDatabaseModule.SmokingEventViewModel;
 import SensorReadoutModule.SensorReadoutService;
 import SensorReadoutModule.SensorReadoutService.SensorReadoutBinder;
@@ -35,6 +29,8 @@ public class Mediator {
     private Context myContext;
     private Handler mainHandler;
     private SmokingEventViewModel mSEViewModel;
+
+    private Synchronize dBsyncHandler;          /* Sync handler for data base */
 
     private ServiceConnection sensorServiceConnection = new ServiceConnection() {
 
@@ -57,20 +53,12 @@ public class Mediator {
     Mediator(Context context, boolean bindSensorService, ModelEvaluatedListener _modelEvaluatedListener) {
         myContext = context;
         mainHandler = new Handler(myContext.getMainLooper());
-        /* Access Database: Get a new or existing viewModel from viewModelProvider */
-        final SmokingEventListAdapter adapter = new SmokingEventListAdapter(myContext);
-        mSEViewModel = ViewModelProviders.of((FragmentActivity) myContext).get(SmokingEventViewModel.class); /* TODO geht daS?*/
+        dBsyncHandler = new Synchronize(myContext);
 
-        // Add an observer on the LiveData returned by getAlphabetizedWords.
-        // The onChanged() method fires when the observed data changes and the activity is
-        // in the foreground.
-        mSEViewModel.getAllEvents().observe((LifecycleOwner) myContext, new Observer<List<SmokingEvent>>() {
-            @Override
-            public void onChanged(@Nullable final List<SmokingEvent> events) {
-                // Update the cached copy of the words in the adapter.
-                adapter.setEvents(events);
-            }
-        });
+        /* Access Database: Get a new or existing viewModel from viewModelProvider */
+        mSEViewModel = ViewModelProviders.of((FragmentActivity) myContext).get(SmokingEventViewModel.class);
+
+
 
         if (bindSensorService) {
             /* Start ModelCalcCycleTimerTask */
@@ -90,9 +78,8 @@ public class Mediator {
         @Override
         public void run() {
             /* Collect Data from Sensor */
-            if (sensorServiceBound) {
-                sensorServiceRunning = sensorService.isSensorServiceRunning();
-            }
+            sensorServiceRunning = sensorServiceBound && sensorService.isSensorServiceRunning();
+
             if (sensorServiceRunning) {
                 /* Start continuous measurement */
                 sensorService.triggerContinuousMeasurement();
@@ -103,7 +90,6 @@ public class Mediator {
                     smokeDetector.feedSensorData(sensorService.getContinuousMeasurementDataStorage());
                     modelEvaluatedListener.modelEvaluatedCB(smokeDetector.isSmokingDetected());
                 }
-                /* TODO Connect to GUI?*/
             }
             mainHandler.postDelayed(runnable, SLIDING_STEP_MS);
         }
@@ -128,13 +114,11 @@ public class Mediator {
         mSEViewModel.insert(smokingEvent);
     }
 
-//    private void fetchData() {
-//        StringBuilder sb = new StringBuilder();
-//        List<User> youngUsers = mDb.userModel().loadAllUsers();
-//        for (User youngUser : youngUsers) {
-//            sb.append(String.format("%s, %s (%d)\n",
-//                    youngUser.lastName, youngUser.name, youngUser.age));
-//        }
-//        mYoungUsersTextView.setText(sb);
-//    }
+    public boolean synchronizeEventsBackground(){
+        Intent synchronizeServiceIntent = new Intent(myContext, SynchronizeService.class);
+        synchronizeServiceIntent.putExtra("SEND_NEW_EVENTS", true);
+        synchronizeServiceIntent.putExtra("NEW_EVENTS_RECEIVED", false);
+        SynchronizeService.enqueueWork(myContext, synchronizeServiceIntent);
+        return true;
+    }
 }
