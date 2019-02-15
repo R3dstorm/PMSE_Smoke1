@@ -7,14 +7,25 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AnimationSet;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.RotateAnimation;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import org.joda.time.DateTime;
+
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import eu.senseable.cigarettetracker.R;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventListAdapter.SmokingEventViewHolder> {
 
@@ -30,12 +41,14 @@ public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventLi
 
     private final LayoutInflater mInflater;
     private List<SmokingEvent> mSmokingEvents; // Cached copy of smoking events
+    private ImageView mClockView;
 
     public SmokingEventListAdapter(Context context) { mInflater = LayoutInflater.from(context); }
 
     @Override
     public SmokingEventViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = mInflater.inflate(R.layout.my_item_view, parent, false);
+        mClockView = itemView.findViewById(R.id.clock_view);
         return new SmokingEventViewHolder(itemView);
     }
 
@@ -49,8 +62,35 @@ public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventLi
             Date startTime = new Date();
             startTime = ConvertToTime(current.getStartTime());
             String startTimeFormatted = ConvertTimeToString(startTime);
+            DateTime tmpTimeStamp = new DateTime(startTime.getTime());
+
+            AnimationSet animSet = new AnimationSet(true);
+            animSet.setInterpolator(new DecelerateInterpolator());
+            animSet.setFillAfter(true);
+            animSet.setFillEnabled(true);
+
+            float secs = tmpTimeStamp.getMillisOfDay()  * (360f / (24*60*60*1000));
+
+            final RotateAnimation animRotate = new RotateAnimation(0.0f, secs,
+                    RotateAnimation.RELATIVE_TO_SELF, 0.5f,
+                    RotateAnimation.RELATIVE_TO_SELF, 0.5f);
+
+            animRotate.setDuration(1500);
+            animRotate.setFillAfter(true);
+            animSet.addAnimation(animRotate);
+
+            mClockView.startAnimation(animSet);
+            TimeUnit timeUnit = TimeUnit.MILLISECONDS;
+            Date stopTime = new Date();
+            stopTime = ConvertToTime(current.getStopTime());
+            long tmpMilliDiff = stopTime.getTime() - startTime.getTime();
+            long milliDiff = timeUnit.convert(tmpMilliDiff,MILLISECONDS);
+
+            DateFormat durationFormatter = new SimpleDateFormat("mm:ss");
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(milliDiff);
             /* Write display data to view */
-            holder.smokingEventItemView.setText(startDateFormatted + " " + startTimeFormatted);
+            holder.smokingEventItemView.setText(startDateFormatted + " " + startTimeFormatted + " " + durationFormatter.format(calendar.getTime()));
         } else {
             // Covers the case of data not being ready yet.
             holder.smokingEventItemView.setText("No Smoke Event");
