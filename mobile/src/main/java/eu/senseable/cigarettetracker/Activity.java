@@ -159,6 +159,9 @@ public class Activity extends AppCompatActivity {
                         int startTimeInt = Integer.parseInt(startTimeSmoke);
                         int endTime = startTimeInt + duration;
                         endTimeSmoke = Integer.toString(endTime);
+                        if(endTimeSmoke.length() == 5) {
+                            endTimeSmoke = "0" + endTimeSmoke;
+                        }
 
                         SmokingEvent ev = new SmokingEvent("Smoking", startDateSmoke, startTimeSmoke, endDateSmoke, endTimeSmoke, true, false, false);
                         mSEViewModel.insert(ev);
