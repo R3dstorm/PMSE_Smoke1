@@ -38,7 +38,7 @@ public class Activity extends AppCompatActivity {
     private String endTimeSmoke = "";
     private Synchronize dbSyncHandler;
 
-    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("ddMMyy");
+    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyMMdd");
     DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
 
     @Override
