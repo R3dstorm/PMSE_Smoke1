@@ -37,15 +37,15 @@ public class Synchronize {
     private static final String TAG_SYNC = "SYNCHRONIZE";
 
     private List<SmokingEvent> unsynchronizedEvents;
+    Receiver messageReceiver = new Receiver();
 
     Synchronize (Context context){
 
         myContext = context;
         receivedMessageNumber = sentMessageNumber = 0;
-
         //Register to receive local broadcasts, which we'll be creating in the next step//
         IntentFilter messageFilter = new IntentFilter(Intent.ACTION_SEND);
-        Receiver messageReceiver = new Receiver();
+
         LocalBroadcastManager.getInstance(myContext).registerReceiver(messageReceiver, messageFilter);
     }
 
@@ -69,6 +69,8 @@ public class Synchronize {
         }
     }
 
-
+    public void unregisterReceivers(){
+        LocalBroadcastManager.getInstance(myContext).unregisterReceiver(messageReceiver);
+    }
 
 }

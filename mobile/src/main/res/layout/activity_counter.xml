@@ -54,13 +54,4 @@
         app:layout_anchorGravity="bottom|center"
         app:srcCompat="@android:drawable/btn_dialog" />
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fabAddTestSet"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:clickable="true"
-        app:layout_anchor="@id/app_bar"
-        app:layout_anchorGravity="bottom"
-        app:srcCompat="@android:drawable/ic_input_add" />
-
 </android.support.design.widget.CoordinatorLayout>
