@@ -1,4 +1,4 @@
-/* Credits: Major parts of sources from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
+/* Credits: Tutorial from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
 
 package SQLiteDatabaseModule;
 
@@ -40,7 +40,7 @@ public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventLi
         if (mSmokingEvents != null) {
             SmokingEvent current = mSmokingEvents.get(position);
             /* Write display data to view */
-            holder.smokingEventItemView.setText(current.getStartTime());
+            holder.smokingEventItemView.setText(current.getStartDate() + " " + current.getStartTime());
         } else {
             // Covers the case of data not being ready yet.
             holder.smokingEventItemView.setText("No Smoke Event");

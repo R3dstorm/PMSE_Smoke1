@@ -30,8 +30,6 @@ public class Mediator {
     private Handler mainHandler;
     private SmokingEventViewModel mSEViewModel;
 
-    private Synchronize dBsyncHandler;          /* Sync handler for data base */
-
     private ServiceConnection sensorServiceConnection = new ServiceConnection() {
 
         @Override
@@ -53,7 +51,6 @@ public class Mediator {
     Mediator(Context context, boolean bindSensorService, ModelEvaluatedListener _modelEvaluatedListener) {
         myContext = context;
         mainHandler = new Handler(myContext.getMainLooper());
-        dBsyncHandler = new Synchronize(myContext);
 
         /* Access Database: Get a new or existing viewModel from viewModelProvider */
         mSEViewModel = ViewModelProviders.of((FragmentActivity) myContext).get(SmokingEventViewModel.class);
