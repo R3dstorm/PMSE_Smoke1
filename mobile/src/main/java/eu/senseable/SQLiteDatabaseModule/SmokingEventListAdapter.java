@@ -111,7 +111,7 @@ public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventLi
     }
 
     private Date ConvertToDate(String dateString){
-        SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyy");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMdd");
 
         Date convertedDate = new Date();
         try {
