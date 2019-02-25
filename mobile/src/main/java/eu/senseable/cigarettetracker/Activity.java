@@ -191,6 +191,24 @@ public class Activity extends AppCompatActivity {
                 mSEViewModel.deleteAll();
             }
         });
+
+        FloatingActionButton fabAddTestSet = (FloatingActionButton) findViewById(R.id.fabAddTestSet);
+        fabAddTestSet.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                /* For Test set a test-set*/
+                SmokingEvent event1 = new SmokingEvent("manualEvent", "190224",
+                        "020100", "190224", "020101", true, false, false);
+                mSEViewModel.insert(event1);
+                SmokingEvent event2 = new SmokingEvent("manualEvent", "190225",
+                        "030100", "190225", "030101", true, false, false);
+                mSEViewModel.insert(event2);
+                SmokingEvent event3 = new SmokingEvent("manualEvent", "190226",
+                        "040100", "190226", "040101", true, false, false);
+                mSEViewModel.insert(event3);
+            }
+        });
+
 /*
         /** special case if started by the notification intent from the CigBroadcastReceiver
         if (CigBroadcastReceiver.LOGCIG_ACTION.equals(getIntent().getAction())) {
