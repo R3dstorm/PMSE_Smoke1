@@ -57,7 +57,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     private TextView stateText;
     private TextView framesText;
 
-    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyMMdd");
     DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
 
     private int requestCode = 11;
