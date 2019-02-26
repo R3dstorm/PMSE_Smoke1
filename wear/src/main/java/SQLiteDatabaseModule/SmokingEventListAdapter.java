@@ -43,7 +43,9 @@ public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventLi
     public void onBindViewHolder(SmokingEventViewHolder holder, int position) {
         if (mSmokingEvents != null && getItemCount() > 0) {
             /* Write display data to view */
-            holder.smokingEventItemView.setText(formatEvent(mSmokingEvents.get(getItemCount() - position - 1)));
+            if(position < 30) {
+                holder.smokingEventItemView.setText(formatEvent(mSmokingEvents.get(getItemCount() - position - 1)));
+            }
         } else {
             // Covers the case of data not being ready yet.
             holder.smokingEventItemView.setText("No Smoke Event");
