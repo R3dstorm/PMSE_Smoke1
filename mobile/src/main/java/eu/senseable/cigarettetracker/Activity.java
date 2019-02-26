@@ -38,7 +38,7 @@ public class Activity extends AppCompatActivity {
     private String endTimeSmoke = "";
     private Synchronize dbSyncHandler;
 
-    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("ddMMyy");
+    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyMMdd");
     DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
 
     @Override
@@ -159,6 +159,9 @@ public class Activity extends AppCompatActivity {
                         int startTimeInt = Integer.parseInt(startTimeSmoke);
                         int endTime = startTimeInt + duration;
                         endTimeSmoke = Integer.toString(endTime);
+                        if(endTimeSmoke.length() == 5) {
+                            endTimeSmoke = "0" + endTimeSmoke;
+                        }
 
                         SmokingEvent ev = new SmokingEvent("Smoking", startDateSmoke, startTimeSmoke, endDateSmoke, endTimeSmoke, true, false, false);
                         mSEViewModel.insert(ev);
@@ -196,6 +199,17 @@ public class Activity extends AppCompatActivity {
             setIntent(new Intent());
         }
 */
+    }
+
+    @Override
+    protected void onStop(){
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        dbSyncHandler.unregisterReceivers();
     }
 
     @Override

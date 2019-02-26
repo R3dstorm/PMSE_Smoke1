@@ -9,13 +9,21 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.example.commondataobjects.SmokingEventDTO;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
+import com.google.android.gms.wearable.Node;
+import com.google.android.gms.wearable.Wearable;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import eu.senseable.SQLiteDatabaseModule.SmokingEvent;
 import eu.senseable.SQLiteDatabaseModule.SmokingEventRepository;
@@ -28,10 +36,10 @@ public class SynchronizeService extends JobIntentService {
     static final int JOB_ID = 1000;
     final Handler mHandler = new Handler();
     private SmokingEventRepository smEvRepo;
+    private Context myContext;
 
     int lastSyncLabelId = 0;                /* Holds the id of the latest sync label*/
     int latestEventId = 0;
-    private Synchronize dBsyncHandler;      /* Sync handler for data base */
     /**
      * Convenience method for enqueuing work in to this service.
      */
@@ -44,8 +52,7 @@ public class SynchronizeService extends JobIntentService {
 
         List<SmokingEvent> newSmokingEvents = null;
         List<SmokingEvent> receivedSmokingEvents = null;
-        /* TODO memory leakage issue? */
-        dBsyncHandler = new Synchronize(getApplicationContext());
+        myContext = getApplicationContext();
 
         /* Direct access to database/repository (running in own thread without View): */
         smEvRepo = new SmokingEventRepository(getApplication());
@@ -75,8 +82,8 @@ public class SynchronizeService extends JobIntentService {
             newSmokingEvents = smEvRepo.getAllEventsList();
         }
         /* Send data back to watch */
-        dBsyncHandler.sendSyncMessage(newSmokingEvents);
-        //dBsyncHandler.sendSyncMessage(getTestEvents());
+        sendSyncMessage(newSmokingEvents);
+        //sendSyncMessage(getTestEvents());
 
         /* import retrieved elements to database: */
         for (SmokingEvent smokingEvent : receivedSmokingEvents) {
@@ -90,7 +97,6 @@ public class SynchronizeService extends JobIntentService {
             smEvRepo.setSyncLabel(latestEventId);
         }
         Log.i("SimpleJobIntentService", "Completed service @ " + SystemClock.elapsedRealtime());
-        dBsyncHandler = null;
         smEvRepo = null;
     }
 
@@ -155,5 +161,78 @@ public class SynchronizeService extends JobIntentService {
             }
         }
         return deserializedEvents;
+    }
+
+    private void sendSyncMessage(List<SmokingEvent> unsynchronizedEvents) {
+        byte[] messageData = null;
+
+        /* Convert SmokingEvents to de/serializable objects */
+        List<SmokingEventDTO> serialEvents = new ArrayList<>(unsynchronizedEvents.size());
+        for (SmokingEvent event : unsynchronizedEvents) {
+            serialEvents.add(event.getTransferObject());
+        }
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutput out = null;
+        try {
+            out = new ObjectOutputStream(bos);
+            out.writeObject(serialEvents);
+            out.flush();
+            messageData = bos.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                bos.close();
+            } catch (IOException ex) {
+                // ignore close exception
+            }
+        }
+        String dataPath = "/phone/newSmokeEvents";
+        new SendMessage(dataPath, messageData).start();
+    }
+
+    class SendMessage extends Thread {
+        String path;
+        byte[] messageData;
+
+        /* Constructor */
+        SendMessage(String p, byte[] m) {
+            path = p;
+            messageData = m;
+        }
+
+        /* Send the message via the thread. This will send the message to all the currently-connected devices */
+        public void run() {
+
+            /* Get all the nodes */
+            Task<List<Node>> nodeListTask =
+                    Wearable.getNodeClient(myContext).getConnectedNodes();
+            try {
+                /* Block on a task and get the result synchronously */
+                List<Node> nodes = Tasks.await(nodeListTask);
+
+                /* Send the message to each device */
+                for (Node node : nodes) {
+                    Task<Integer> sendMessageTask =
+                            Wearable.getMessageClient(myContext).sendMessage(node.getId(), path, messageData);
+                    try {
+                        Integer result = Tasks.await(sendMessageTask);
+                    }
+                    catch (ExecutionException exception) {
+                        //TO DO//
+                    }
+                    catch (InterruptedException exception) {
+                        //TO DO//
+                    }
+                }
+            }
+            catch (ExecutionException exception) {
+                //TO DO//
+            }
+            catch (InterruptedException exception) {
+                //TO DO//
+            }
+        }
     }
 }

@@ -1,4 +1,4 @@
-/* Credits: Major parts of sources from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
+/* Credits: Tutorial from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
 
 package eu.senseable.SQLiteDatabaseModule;
 
@@ -111,7 +111,7 @@ public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventLi
     }
 
     private Date ConvertToDate(String dateString){
-        SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyy");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMdd");
 
         Date convertedDate = new Date();
         try {

@@ -18,6 +18,8 @@ import SQLiteDatabaseModule.SmokingEventViewModel;
 
 public class SmokingLogActivity extends AppCompatActivity {
 
+    final public boolean syncModuleTestEnabled = false;
+
     private SmokingEventViewModel mSEViewModel;
 
     @Override
@@ -47,8 +49,22 @@ public class SmokingLogActivity extends AppCompatActivity {
         });
     }
 
+    /* TODO delete button using this functionality (DEBUG only) */
     public void delAllEvents (View v){
 
-        //mSEViewModel.deleteAll();
+        /* For Test not only deleting but setting a test-set*/
+        mSEViewModel.deleteAll();
+
+        if (syncModuleTestEnabled) {
+            SmokingEvent event1 = new SmokingEvent("manualEvent", "190224",
+                    "000000", "190224", "000001", true, false, false);
+            mSEViewModel.insert(event1);
+            SmokingEvent event2 = new SmokingEvent("manualEvent", "190224",
+                    "000100", "190224", "000101", true, false, false);
+            mSEViewModel.insert(event2);
+            SmokingEvent event3 = new SmokingEvent("manualEvent", "190224",
+                    "010100", "190224", "010100", true, false, false);
+            mSEViewModel.insert(event3);
+        }
     }
 }
