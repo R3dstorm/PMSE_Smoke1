@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.view.WindowManager;
 
 import java.util.List;
 
@@ -24,11 +25,13 @@ public class SmokingLogActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log);
 
-        RecyclerView recyclerView = findViewById(R.id.recyclerview);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
         final SmokingEventListAdapter adapter = new SmokingEventListAdapter(this);
+
+        RecyclerView recyclerView = findViewById(R.id.recyclerview);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
 
         // Add an observer on the LiveData returned by getAlphabetizedWords.
         // The onChanged() method fires when the observed data changes and the activity is
@@ -46,6 +49,6 @@ public class SmokingLogActivity extends AppCompatActivity {
 
     public void delAllEvents (View v){
 
-        mSEViewModel.deleteAll();
+        //mSEViewModel.deleteAll();
     }
 }

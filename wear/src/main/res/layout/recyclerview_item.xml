@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:layout_marginTop="-8dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -22,9 +23,19 @@
             android:id="@+id/textView6"
             style="@style/word_title"
             android:layout_height="wrap_content"
-            android:background="@android:color/holo_green_light"
+            android:background="@color/dark_grey"
+            android:fontFamily="sans-serif-condensed"
+            android:padding="@dimen/box_inset_layout_padding"
+            android:paddingStart="@dimen/box_inset_layout_padding"
+            android:paddingTop="@dimen/box_inset_layout_padding"
+            android:paddingEnd="@dimen/box_inset_layout_padding"
+            android:paddingBottom="@dimen/box_inset_layout_padding"
             android:text="TextView"
-            android:textAlignment="center" />
+            android:textAlignment="center"
+            android:textColor="@color/ambient_mode_text"
+            android:textSize="12sp"
+            android:typeface="sans"
+            tools:layout_height="wrap_content" />
     </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>
