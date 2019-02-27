@@ -49,6 +49,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     private PowerManager.WakeLock screenLock = null;
     private BroadcastReceiver powerSaveReceiver = null;
     private IntentFilter actionFilter = null;
+    private Boolean bNoDetection = false;
 
     /* TODO remove this as soon smoking notification exists*/
     private CheckBox smokingDetected;
@@ -61,6 +62,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
 
     private int requestCode = 11;
+    private int requestCodeDAQ = 12;
 
     @Override
     public AmbientModeSupport.AmbientCallback getAmbientCallback() {
@@ -129,7 +131,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         registerReceiver(powerSaveReceiver, actionFilter);
     }
 
-    @Override
+            @Override
     protected void onStart() {
         super.onStart();
         isDetectionStarted = true;
@@ -167,7 +169,8 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     @Override
     public void onClick(View v) {
         Intent intent = new Intent(this, dataAcquisitionActivity.class);
-        startActivity(intent);
+        bNoDetection = true;
+        startActivityForResult(intent, requestCodeDAQ);
     }
 
     public void onAddEventButtonClick(View v){
@@ -254,7 +257,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
                 stateText.setText(currentState);
             } // <---
 
-            if (smoking) {
+            if (smoking && !bNoDetection) {
                 showSmokingDetectedPopUp(sd.getStartTime(), sd.getStopTime());
             }
         }
@@ -282,6 +285,9 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
                 Toast.makeText(this, "Event declined", Toast.LENGTH_SHORT).show();
                 // no action needed. Event is not saved
             }
+        }
+        else if (requestedCode == requestCodeDAQ){
+            bNoDetection = false;
         }
     }
 

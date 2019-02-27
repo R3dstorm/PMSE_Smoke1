@@ -4,45 +4,49 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#1f2020"
     tools:context="SensorReadoutModule.dataAcquisitionActivity">
 
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="Welcome to DAQ"
-        app:layout_constraintBottom_toBottomOf="parent"
+    <Button
+        android:id="@+id/DAQ_Button"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="@drawable/rectanglebutton"
+        android:gravity="center"
+        android:text = "SMOKING DAQ"
+        android:textColor="@color/white"
+        android:onClick="OnClickMainText"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.02" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/button2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="5dp"
-        android:text="StoreData"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginBottom="0dp"
+        android:background="@drawable/rectanglebutton"
+        android:gravity="center"
+        android:text="Store Data"
+        android:textColor="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.495"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toggleButton"
-        app:layout_constraintVertical_bias="0.947"
-        tools:text="StoreData" />
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/textView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="8dp"
         android:text="N/A"
+        android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.1"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
+        app:layout_constraintTop_toBottomOf="@+id/DAQ_Button" />
 
     <TextView
         android:id="@+id/textView3"
@@ -51,6 +55,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="1dp"
         android:text="N/A"
+        android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.1"
         app:layout_constraintStart_toStartOf="parent"
@@ -63,6 +68,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="1dp"
         android:text="N/A"
+        android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.1"
         app:layout_constraintStart_toStartOf="parent"
@@ -72,13 +78,14 @@
         android:id="@+id/textView8"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:text="N/A"
+        android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.9"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
+        app:layout_constraintTop_toBottomOf="@+id/DAQ_Button" />
 
     <TextView
         android:id="@+id/textView9"
@@ -87,6 +94,7 @@
         android:layout_marginTop="1dp"
         android:layout_marginEnd="8dp"
         android:text="N/A"
+        android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.9"
         app:layout_constraintStart_toStartOf="parent"
@@ -99,6 +107,7 @@
         android:layout_marginTop="1dp"
         android:layout_marginEnd="8dp"
         android:text="N/A"
+        android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.9"
         app:layout_constraintStart_toStartOf="parent"
@@ -106,29 +115,29 @@
 
     <ToggleButton
         android:id="@+id/toggleButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="79dp"
+        android:layout_height="42dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="3dp"
+        android:layout_marginTop="8dp"
         android:text="recordingStatus"
-        android:textOff="Idle"
-        android:textOn="Recording"
+        android:textOff="Record"
+        android:textOn="Record"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_bias="0.063"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView4" />
 
     <ToggleButton
         android:id="@+id/toggleButton2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="3dp"
+        android:layout_width="89dp"
+        android:layout_height="42dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:text="smokingLabel"
-        android:textOff="NonSmoking"
+        android:textOff="Smoking"
         android:textOn="Smoking"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintHorizontal_bias="0.931"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView10" />
 
