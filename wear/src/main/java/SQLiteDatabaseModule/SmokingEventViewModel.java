@@ -1,4 +1,4 @@
-/* Credits: Major part of sources from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
+/* Credits: Tutorial from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
 
 package SQLiteDatabaseModule;
 
