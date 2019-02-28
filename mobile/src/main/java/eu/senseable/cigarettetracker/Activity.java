@@ -47,6 +47,7 @@ public class Activity extends AppCompatActivity {
 
     DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyMMdd");
     DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
+    DateTimeFormatter exportFormatter = DateTimeFormatter.ofPattern("yyMMdd_hhmmss");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -204,12 +205,14 @@ public class Activity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 RoomDatabase db = mSEViewModel.getDatabase();
+                LocalDateTime defaultValuePopUp = LocalDateTime.now();
+                String exportTime = defaultValuePopUp.format(exportFormatter);
                 try {
                     Cursor c = db.query("SELECT * FROM smoking_event_table", null);
                     int rowcount = 0;
                     int colcount = 0;
                     File sdCardDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
-                    String filename = "SmokeEvents.csv";
+                    String filename = "SmokeEvents_" + exportTime + ".csv";
                     // the name of the file to export with
                     File saveFile = new File(sdCardDir, filename);
                     FileWriter fw = new FileWriter(saveFile);
@@ -244,6 +247,7 @@ public class Activity extends AppCompatActivity {
                             }
                             bw.newLine();
                         }
+                        bw.flush();
                         bw.close();
                     }
                 } catch (IOException ex) {
