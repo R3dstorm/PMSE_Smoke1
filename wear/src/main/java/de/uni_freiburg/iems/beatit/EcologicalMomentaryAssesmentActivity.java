@@ -21,6 +21,8 @@ import android.widget.ToggleButton;
 import MachineLearningModule.SmokeDetector;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 
 import SQLiteDatabaseModule.SmokingEvent;
 import SQLiteDatabaseModule.SmokingEventRoomDatabase;
@@ -62,9 +64,10 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
 
     DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyMMdd");
     DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
-
+  
     private int requestCode = 11;
     private int requestCodeDAQ = 12;
+    private int requestCodeManual = 15;
 
     @Override
     public AmbientModeSupport.AmbientCallback getAmbientCallback() {
@@ -191,22 +194,8 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     }
 
     public void onAddEventButtonClick(View v){
-        if (sensorAiMediator == null) {
-            /* sensorAiMediator not initialized */
-            sensorAiMediator = new Mediator(this, false,EcologicalMomentaryAssesmentActivity.this);
-        }
-        else{
-            /* sensorAiMediator initialized*/
-        }
-        timeOfEvent = LocalDateTime.now();
-        String startDate = timeOfEvent.format(dateFormatter);
-        String startTime = timeOfEvent.format(timeFormatter);
-        String stopDate = timeOfEvent.format(dateFormatter);
-        String stopTime = timeOfEvent.format(timeFormatter);
-
-        SmokingEvent event = new SmokingEvent("manualEvent", startDate,
-                startTime, stopDate, stopTime, true, false, false);
-        sensorAiMediator.storeSmokingEvent(event);
+        Intent intent = new Intent(this, ManualSmokeEvent.class);
+        startActivityForResult(intent, requestCodeManual);
     }
 
     public void onSyncButtonClick(View v){
@@ -285,12 +274,13 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         Intent intent = new Intent(this, SmokeDetectedPopUpActivity.class);
         smokingStartTime = startTime;
         smokingEndTime = stopTime;
-        startActivityForResult(intent, requestCode);
+        startActivityForResult(intent, requestCodePopUp);
     }
 
     @Override
     protected void onActivityResult(int requestedCode, int resultCode, Intent intent) {
-        if(requestedCode == requestCode) {
+
+        if(requestedCode == requestCodePopUp) {
             if(resultCode == 0) {
                 // user timeout
                 setSmokingDetectionNoUserAction();
@@ -303,9 +293,46 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
                 // no action needed. Event is not saved
             }
         }
+
+        else if (requestedCode == requestCodeManual) {
+            if (resultCode != 0) {
+
+                Bundle b = intent.getExtras();
+                String value ;
+                if(b != null) {
+                    value = b.getString("Time");
+                    LocalDateTime ldt = LocalDateTime.parse(value, DateTimeFormatter.ISO_DATE_TIME);
+                    CreateNewManualSmokeEvent(ldt);
+                }
+            }
+        }
         else if (requestedCode == requestCodeDAQ){
             bNoDetection = false;
         }
+    }
+
+    protected void  CreateNewManualSmokeEvent(LocalDateTime StartTime)
+    {
+        String startDate = StartTime.format(dateFormatter);
+        String startTime = StartTime.format(timeFormatter);
+
+        StartTime = StartTime.plus(5, (TemporalUnit) ChronoUnit.MINUTES);
+
+        String stopDate = StartTime.format(dateFormatter);
+        String stopTime = StartTime.format(timeFormatter);
+
+        SmokingEvent event = new SmokingEvent("Smoking", startDate,
+                startTime, stopDate, stopTime, true, false, false);
+
+        if (sensorAiMediator == null) {
+            // sensorAiMediator not initialized
+            sensorAiMediator = new Mediator(this, false,EcologicalMomentaryAssesmentActivity.this);
+        }
+        else{
+            //sensorAiMediator initialized
+        }
+
+        sensorAiMediator.storeSmokingEvent(event);
     }
 
     public void setSmokingIsDetectedCorrectly()
