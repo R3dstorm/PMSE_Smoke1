@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.util.Log;
@@ -20,8 +21,11 @@ import android.widget.ToggleButton;
 import MachineLearningModule.SmokeDetector;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 
 import SQLiteDatabaseModule.SmokingEvent;
+import SQLiteDatabaseModule.SmokingEventRoomDatabase;
 import SensorReadoutModule.dataAcquisitionActivity;
 import SensorReadoutModule.SensorReadoutService;
 
@@ -49,6 +53,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     private PowerManager.WakeLock screenLock = null;
     private BroadcastReceiver powerSaveReceiver = null;
     private IntentFilter actionFilter = null;
+    private Boolean bNoDetection = false;
 
     /* TODO remove this as soon smoking notification exists*/
     private CheckBox smokingDetected;
@@ -57,10 +62,12 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     private TextView stateText;
     private TextView framesText;
 
-    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyMMdd");
     DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
 
-    private int requestCode = 11;
+    private int requestCodePopUp = 11;
+    private int requestCodeDAQ = 12;
+    private int requestCodeManual = 15;
 
     @Override
     public AmbientModeSupport.AmbientCallback getAmbientCallback() {
@@ -96,6 +103,8 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         playButton = findViewById(R.id.startPageButtonPlay);
         daqButton.setOnClickListener(this);
 
+//        insertTestEvents();
+
         /* TODO remove this as soon smoking notification exists*/
         smokingDetected = findViewById(R.id.checkBox);
 
@@ -127,6 +136,19 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         actionFilter.addAction(ACTION_DREAMING_STARTED);
         actionFilter.addAction(ACTION_DREAMING_STOPPED);
         registerReceiver(powerSaveReceiver, actionFilter);
+    }
+
+    private void insertTestEvents() {
+        // An ugly but working but way to initialize the database
+        // PopulateDbAsync is never called on my watch
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                SmokingEventRoomDatabase.getDatabase(getApplicationContext()).smokingEventDao().insert(new SmokingEvent(
+                        "newEvent", "20190223","1550", "20190223", "1555", false, false,false
+                ));
+            }
+        });
     }
 
     @Override
@@ -167,26 +189,13 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     @Override
     public void onClick(View v) {
         Intent intent = new Intent(this, dataAcquisitionActivity.class);
-        startActivity(intent);
+        bNoDetection = true;
+        startActivityForResult(intent, requestCodeDAQ);
     }
 
     public void onAddEventButtonClick(View v){
-        if (sensorAiMediator == null) {
-            /* sensorAiMediator not initialized */
-            sensorAiMediator = new Mediator(this, false,EcologicalMomentaryAssesmentActivity.this);
-        }
-        else{
-            /* sensorAiMediator initialized*/
-        }
-        timeOfEvent = LocalDateTime.now();
-        String startDate = timeOfEvent.format(dateFormatter);
-        String startTime = timeOfEvent.format(timeFormatter);
-        String stopDate = timeOfEvent.format(dateFormatter);
-        String stopTime = timeOfEvent.format(timeFormatter);
-
-        SmokingEvent event = new SmokingEvent("manualEvent", startDate,
-                startTime, stopDate, stopTime, true, false, false);
-        sensorAiMediator.storeSmokingEvent(event);
+        Intent intent = new Intent(this, ManualSmokeEvent.class);
+        startActivityForResult(intent, requestCodeManual);
     }
 
     public void onSyncButtonClick(View v){
@@ -254,7 +263,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
                 stateText.setText(currentState);
             } // <---
 
-            if (smoking) {
+            if (smoking && !bNoDetection) {
                 showSmokingDetectedPopUp(sd.getStartTime(), sd.getStopTime());
             }
         }
@@ -265,12 +274,13 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         Intent intent = new Intent(this, SmokeDetectedPopUpActivity.class);
         smokingStartTime = startTime;
         smokingEndTime = stopTime;
-        startActivityForResult(intent, requestCode);
+        startActivityForResult(intent, requestCodePopUp);
     }
 
     @Override
     protected void onActivityResult(int requestedCode, int resultCode, Intent intent) {
-        if(requestedCode == requestCode) {
+
+        if(requestedCode == requestCodePopUp) {
             if(resultCode == 0) {
                 // user timeout
                 setSmokingDetectionNoUserAction();
@@ -283,6 +293,45 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
                 // no action needed. Event is not saved
             }
         }
+        else if (requestedCode == requestCodeManual) {
+            if (resultCode != 0) {
+
+                Bundle b = intent.getExtras();
+                String value ;
+                if(b != null) {
+                    value = b.getString("Time");
+                    LocalDateTime ldt = LocalDateTime.parse(value, DateTimeFormatter.ISO_DATE_TIME);
+                    CreateNewManualSmokeEvent(ldt);
+                }
+            }
+        }
+        else if (requestedCode == requestCodeDAQ){
+            bNoDetection = false;
+        }
+    }
+
+    protected void  CreateNewManualSmokeEvent(LocalDateTime StartTime)
+    {
+        String startDate = StartTime.format(dateFormatter);
+        String startTime = StartTime.format(timeFormatter);
+
+        StartTime = StartTime.plus(5, (TemporalUnit) ChronoUnit.MINUTES);
+
+        String stopDate = StartTime.format(dateFormatter);
+        String stopTime = StartTime.format(timeFormatter);
+
+        SmokingEvent event = new SmokingEvent("Smoking", startDate,
+                startTime, stopDate, stopTime, true, false, false);
+
+        if (sensorAiMediator == null) {
+            // sensorAiMediator not initialized
+            sensorAiMediator = new Mediator(this, false,EcologicalMomentaryAssesmentActivity.this);
+        }
+        else{
+            //sensorAiMediator initialized
+        }
+
+        sensorAiMediator.storeSmokingEvent(event);
     }
 
     public void setSmokingIsDetectedCorrectly()
