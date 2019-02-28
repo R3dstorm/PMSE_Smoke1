@@ -26,4 +26,8 @@ public class SmokingEventViewModel extends AndroidViewModel {
 
     public void deleteAll () {mRepository.deleteAll();}
 
+    public SmokingEventRoomDatabase getDatabase() {
+        return mRepository.getDatabase();
+    }
+
 }

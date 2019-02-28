@@ -5,7 +5,10 @@ import android.app.Dialog;
 import android.arch.lifecycle.LifecycleOwner;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
+import android.arch.persistence.room.RoomDatabase;
+import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
@@ -18,6 +21,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -40,6 +47,7 @@ public class Activity extends AppCompatActivity {
 
     DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyMMdd");
     DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
+    DateTimeFormatter exportFormatter = DateTimeFormatter.ofPattern("yyMMdd_hhmmss");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -189,6 +197,64 @@ public class Activity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 mSEViewModel.deleteAll();
+            }
+        });
+
+        FloatingActionButton fabDbExp = (FloatingActionButton) findViewById(R.id.fabDbExp);
+        fabDbExp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                RoomDatabase db = mSEViewModel.getDatabase();
+                LocalDateTime defaultValuePopUp = LocalDateTime.now();
+                String exportTime = defaultValuePopUp.format(exportFormatter);
+                try {
+                    Cursor c = db.query("SELECT * FROM smoking_event_table", null);
+                    int rowcount = 0;
+                    int colcount = 0;
+                    File sdCardDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+                    String filename = "SmokeEvents_" + exportTime + ".csv";
+                    // the name of the file to export with
+                    File saveFile = new File(sdCardDir, filename);
+                    FileWriter fw = new FileWriter(saveFile);
+
+                    BufferedWriter bw = new BufferedWriter(fw);
+                    rowcount = c.getCount();
+                    colcount = c.getColumnCount();
+                    if (rowcount > 0) {
+                        c.moveToFirst();
+
+                        for (int i = 0; i < colcount; i++) {
+                            if (i != colcount - 1) {
+
+                                bw.write(c.getColumnName(i) + ",");
+
+                            } else {
+
+                                bw.write(c.getColumnName(i));
+
+                            }
+                        }
+                        bw.newLine();
+
+                        for (int i = 0; i < rowcount; i++) {
+                            c.moveToPosition(i);
+
+                            for (int j = 0; j < colcount; j++) {
+                                if (j != colcount - 1)
+                                    bw.write(c.getString(j) + ",");
+                                else
+                                    bw.write(c.getString(j));
+                            }
+                            bw.newLine();
+                        }
+                        bw.flush();
+                        bw.close();
+                    }
+                } catch (IOException ex) {
+                    if(db.isOpen()){
+                        db.close();
+                    }
+                }
             }
         });
 /*
