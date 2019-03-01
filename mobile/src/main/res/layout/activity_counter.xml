@@ -46,6 +46,15 @@
         app:srcCompat="@drawable/ic_cig" />
 
     <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fabDbExp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="72dp"
+        app:layout_anchor="@id/app_bar"
+        app:layout_anchorGravity="bottom|end"
+        app:srcCompat="@android:drawable/arrow_down_float" />
+
+    <android.support.design.widget.FloatingActionButton
         android:id="@+id/fabDel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

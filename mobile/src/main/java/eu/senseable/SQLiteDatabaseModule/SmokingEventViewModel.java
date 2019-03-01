@@ -1,4 +1,4 @@
-/* Credits: Major part of sources from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
+/* Credits: Tutorial from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
 
 package eu.senseable.SQLiteDatabaseModule;
 
@@ -25,5 +25,9 @@ public class SmokingEventViewModel extends AndroidViewModel {
     public void insert(SmokingEvent event) { mRepository.insert(event); }
 
     public void deleteAll () {mRepository.deleteAll();}
+
+    public SmokingEventRoomDatabase getDatabase() {
+        return mRepository.getDatabase();
+    }
 
 }

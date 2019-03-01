@@ -15,11 +15,12 @@ public class SmokingEventRepository {
     private LiveData<List<SmokingEvent>> mAllValidEvents;
     private LiveData<List<SmokingEvent>> mLatestSyncLabelID;
     private LiveData<List<SmokingEvent>> mLatestEventId;
+    private SmokingEventRoomDatabase mSmokeEventDatabase;
 
 
     public SmokingEventRepository(Application application) {
-        SmokingEventRoomDatabase db = SmokingEventRoomDatabase.getDatabase(application);
-        mEventDao = db.smokingEventDao();
+        mSmokeEventDatabase = SmokingEventRoomDatabase.getDatabase(application);
+        mEventDao = mSmokeEventDatabase.smokingEventDao();
         mAllEvents = mEventDao.getAllEvents();
         mAllValidEvents = mEventDao.getAllValidEvents();
         mLatestSyncLabelID = mEventDao.getLatestSyncLabelId();
@@ -95,6 +96,10 @@ public class SmokingEventRepository {
             mAsyncTaskDao.deleteAll();
             return null;
         }
+    }
+
+    public SmokingEventRoomDatabase getDatabase() {
+        return mSmokeEventDatabase;
     }
 
 }

@@ -1,4 +1,4 @@
-/* Credits: Major parts of sources from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
+/* Credits: Tutorial from https://codelabs.developers.google.com/codelabs/android-room-with-a-view */
 
 package SQLiteDatabaseModule;
 
@@ -18,7 +18,7 @@ public abstract class SmokingEventRoomDatabase extends RoomDatabase {
     // marking the instance as volatile to ensure atomic access to the variable
     private static volatile SmokingEventRoomDatabase INSTANCE;
 
-    static SmokingEventRoomDatabase getDatabase(final Context context) {
+    public static SmokingEventRoomDatabase getDatabase(final Context context) {
         if (INSTANCE == null) {
             synchronized (SmokingEventRoomDatabase.class) {
                 if (INSTANCE == null) {

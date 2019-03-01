@@ -37,15 +37,15 @@ public class Synchronize {
     private static final String TAG_SYNC = "SYNCHRONIZE";
 
     private List<SmokingEvent> unsynchronizedEvents;
+    Receiver messageReceiver = new Receiver();
 
     Synchronize (Context context){
 
         myContext = context;
         receivedMessageNumber = sentMessageNumber = 0;
-
         //Register to receive local broadcasts, which we'll be creating in the next step//
         IntentFilter messageFilter = new IntentFilter(Intent.ACTION_SEND);
-        Receiver messageReceiver = new Receiver();
+
         LocalBroadcastManager.getInstance(myContext).registerReceiver(messageReceiver, messageFilter);
     }
 
@@ -69,81 +69,8 @@ public class Synchronize {
         }
     }
 
-
-    public void sendSyncMessage(List<SmokingEvent> unsynchronizedEvents) {
-        byte[] messageData = null;
-
-        /* Convert SmokingEvents to de/serializable objects */
-        List<SmokingEventDTO> serialEvents = new ArrayList<>(unsynchronizedEvents.size());
-        for (SmokingEvent event : unsynchronizedEvents) {
-            serialEvents.add(event.getTransferObject());
-        }
-
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutput out = null;
-        try {
-            out = new ObjectOutputStream(bos);
-            out.writeObject(serialEvents);
-            out.flush();
-            messageData = bos.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                bos.close();
-            } catch (IOException ex) {
-                // ignore close exception
-            }
-        }
-        String dataPath = "/phone/newSmokeEvents";
-        new SendMessage(dataPath, messageData).start();
+    public void unregisterReceivers(){
+        LocalBroadcastManager.getInstance(myContext).unregisterReceiver(messageReceiver);
     }
 
-
-    class SendMessage extends Thread {
-        String path;
-        byte[] messageData;
-
-        /* Constructor */
-        SendMessage(String p, byte[] m) {
-            path = p;
-            messageData = m;
-        }
-
-        /* Send the message via the thread. This will send the message to all the currently-connected devices */
-        public void run() {
-
-            /* Get all the nodes */
-            Task<List<Node>> nodeListTask =
-                    Wearable.getNodeClient(myContext).getConnectedNodes();
-            try {
-                /* Block on a task and get the result synchronously */
-                List<Node> nodes = Tasks.await(nodeListTask);
-
-                /* Send the message to each device */
-                for (Node node : nodes) {
-                    Task<Integer> sendMessageTask =
-                            Wearable.getMessageClient(myContext).sendMessage(node.getId(), path, messageData);
-                    try {
-                        Integer result = Tasks.await(sendMessageTask);
-                    }
-                    catch (ExecutionException exception) {
-                        //TO DO//
-                        Log.e(TAG_SYNC, "sending message failed; Execution Exception");
-                    }
-                    catch (InterruptedException exception) {
-                        //TO DO//
-                        Log.e(TAG_SYNC, "sending message failed; Interrupted Exception");
-                        Log.d(TAG_SYNC, "Test error");
-                    }
-                }
-            }
-            catch (ExecutionException exception) {
-                //TO DO//
-            }
-            catch (InterruptedException exception) {
-                //TO DO//
-            }
-        }
-    }
 }

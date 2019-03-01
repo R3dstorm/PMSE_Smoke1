@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.view.WindowManager;
 
 import java.util.List;
 
@@ -17,6 +18,8 @@ import SQLiteDatabaseModule.SmokingEventViewModel;
 
 public class SmokingLogActivity extends AppCompatActivity {
 
+    final public boolean syncModuleTestEnabled = false;
+
     private SmokingEventViewModel mSEViewModel;
 
     @Override
@@ -24,11 +27,13 @@ public class SmokingLogActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log);
 
-        RecyclerView recyclerView = findViewById(R.id.recyclerview);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
         final SmokingEventListAdapter adapter = new SmokingEventListAdapter(this);
+
+        RecyclerView recyclerView = findViewById(R.id.recyclerview);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
 
         // Add an observer on the LiveData returned by getAlphabetizedWords.
         // The onChanged() method fires when the observed data changes and the activity is
@@ -44,8 +49,22 @@ public class SmokingLogActivity extends AppCompatActivity {
         });
     }
 
+    /* TODO delete button using this functionality (DEBUG only) */
     public void delAllEvents (View v){
 
+        /* For Test not only deleting but setting a test-set*/
         mSEViewModel.deleteAll();
+
+        if (syncModuleTestEnabled) {
+            SmokingEvent event1 = new SmokingEvent("manualEvent", "190224",
+                    "000000", "190224", "000001", true, false, false);
+            mSEViewModel.insert(event1);
+            SmokingEvent event2 = new SmokingEvent("manualEvent", "190224",
+                    "000100", "190224", "000101", true, false, false);
+            mSEViewModel.insert(event2);
+            SmokingEvent event3 = new SmokingEvent("manualEvent", "190224",
+                    "010100", "190224", "010100", true, false, false);
+            mSEViewModel.insert(event3);
+        }
     }
 }
