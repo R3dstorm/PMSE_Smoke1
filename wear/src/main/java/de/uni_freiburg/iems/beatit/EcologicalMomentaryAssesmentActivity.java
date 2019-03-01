@@ -64,8 +64,8 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
 
     DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyMMdd");
     DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
-  
-    private int requestCode = 11;
+
+    private int requestCodePopUp = 11;
     private int requestCodeDAQ = 12;
     private int requestCodeManual = 15;
 
