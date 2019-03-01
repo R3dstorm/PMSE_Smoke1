@@ -3,6 +3,7 @@
     package="eu.senseable.cigarettetracker">
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -40,7 +41,7 @@
                 <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
                 //Specify your path, and a host for the filter.//
                 <data
-                    android:host="*" android:scheme="wear" android:pathPrefix="/watch/newSmokeEvents" />
+                    android:host="*" android:scheme="wear" android:pathPrefix="/watch" />
             </intent-filter>
         </service>
         <service

@@ -57,44 +57,71 @@ public class SynchronizeService extends JobIntentService {
         /* Direct access to database/repository (running in own thread without View): */
         smEvRepo = new SmokingEventRepository(getApplication());
 
-//        Log.i("SynchronizeService", "Executing work: " + intent);
-//        String label = intent.getStringExtra("label");
-//        if (label == null) {
-//            label = intent.toString();
-//        }
-        toast("Sync Starting");
+        if (intent.getBooleanExtra("NEW_EVENTS_RECEIVED",false) == true) {
+            toast("Sync Starting");
 
-        /* Data received -> retrieve the new events: */
-        /* Get the received events from phone: */
-        byte[] data = intent.getByteArrayExtra("RECEIVED_EVENTS");
-        receivedSmokingEvents = deserializeEvents(data);
+            /* Data received -> retrieve the new events: */
+            /* Get the received events from phone: */
+            byte[] data = intent.getByteArrayExtra("RECEIVED_EVENTS");
+            receivedSmokingEvents = deserializeEvents(data);
 
-        /* Search data base for the sync label and send all later events back to watch:*/
-        /* Find Sync label*/
-        newSmokingEvents = smEvRepo.getLatestSyncLabelIdTest(); /* TODO rename repo-method */
-        if (!newSmokingEvents.isEmpty()) {
-            /* SyncLabel available -> only get not synchronized events */
-            lastSyncLabelId = newSmokingEvents.get(0).getId();
-            newSmokingEvents = smEvRepo.getNewSyncEventsTest(lastSyncLabelId);
+            /* Search data base for the sync label and send all later events back to watch:*/
+            /* Find Sync label*/
+            newSmokingEvents = smEvRepo.getLatestSyncLabelIdTest(); /* TODO rename repo-method */
+            if (!newSmokingEvents.isEmpty()) {
+                /* SyncLabel available -> only get not synchronized events */
+                lastSyncLabelId = newSmokingEvents.get(0).getId();
+                newSmokingEvents = smEvRepo.getNewSyncEventsTest(lastSyncLabelId);
+            } else {
+                /* there has been no SyncLabel set yet -> get all events */
+                newSmokingEvents = smEvRepo.getAllEventsList();
+            }
+            /* Send data back to watch */
+            sendSyncMessage(newSmokingEvents);
+            //sendSyncMessage(getTestEvents());
+
+            /* import retrieved elements to database: */
+            for (SmokingEvent smokingEvent : receivedSmokingEvents) {
+                smEvRepo.insertBlocking(smokingEvent);
+            }
+
+            /* set synchronization label */
+            List<SmokingEvent> latestEvent = smEvRepo.getLatestEventIdTest();
+            if (!latestEvent.isEmpty()) {
+                latestEventId = latestEvent.get(0).getId();
+                smEvRepo.setSyncLabel(latestEventId);
+            }
         }
-        else{
-            /* there has been no SyncLabel set yet -> get all events */
-            newSmokingEvents = smEvRepo.getAllEventsList();
-        }
-        /* Send data back to watch */
-        sendSyncMessage(newSmokingEvents);
-        //sendSyncMessage(getTestEvents());
+        else if (intent.getBooleanExtra("RECEIVED_SYNC_HASH_LIST_REQUEST",false) == true) {
 
-        /* import retrieved elements to database: */
-        for (SmokingEvent smokingEvent : receivedSmokingEvents) {
-            smEvRepo.insertBlocking(smokingEvent);
-        }
+            /* create hash list of available data sets: */
+            byte[] messageData = null;
+            List<byte[]> hashList = new ArrayList<byte[]>();
 
-        /* set synchronization label */
-        List<SmokingEvent> latestEvent = smEvRepo.getLatestEventIdTest();
-        if (!latestEvent.isEmpty()) {
-            latestEventId = latestEvent.get(0).getId();
-            smEvRepo.setSyncLabel(latestEventId);
+            ExternalStorageController memory = new ExternalStorageController();
+            hashList = memory.getHashList();
+
+            /* serialize and send hash list: */
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ObjectOutput out = null;
+            try {
+                out = new ObjectOutputStream(bos);
+                out.writeObject(hashList);
+                out.flush();
+                messageData = bos.toByteArray();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    bos.close();
+                } catch (IOException ex) {
+                    // ignore close exception
+                }
+            }
+            String dataPath = "/phone/newSensorData";
+            new SynchronizeService.SendMessage(dataPath, messageData).start();
+            /* return hash list */
+
         }
         Log.i("SimpleJobIntentService", "Completed service @ " + SystemClock.elapsedRealtime());
         smEvRepo = null;

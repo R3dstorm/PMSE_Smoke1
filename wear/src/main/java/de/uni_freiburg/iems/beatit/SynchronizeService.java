@@ -2,6 +2,7 @@ package de.uni_freiburg.iems.beatit;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.support.v4.app.JobIntentService;
@@ -14,11 +15,14 @@ import com.google.android.gms.wearable.CapabilityClient;
 import com.google.android.gms.wearable.CapabilityInfo;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.Wearable;
+import com.opencsv.CSVWriter;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -103,6 +107,59 @@ public class SynchronizeService extends JobIntentService{
                 smEvRepo.setSyncLabel(latestEventId);
             }
         }
+
+        else if (intent.getBooleanExtra("REQUEST_SYNC_HASH_LIST",false) == true){
+            /* send request to receive a hashlist for already synced data files */
+            dBsyncHandler.requestHashListMessage();
+        }
+
+        else if (intent.getBooleanExtra("SYNC_HASH_LIST_RECEIVED",false) == true){
+            /* compare hashes of available data with hash list to get unsynchronized data */
+            /* Get the received hash list from phone: */
+            List<byte[]> receivedHashList = null;
+            List<byte[]> internalHashList = new ArrayList<byte[]>();
+            File fileList[] = null;
+            ExternalStorageController storageController = new ExternalStorageController();
+
+            byte[] data = intent.getByteArrayExtra("RECEIVED_HASH_LIST");
+            receivedHashList = deserializeHashList(data);
+
+            /* Get locally stored data and compare hash values */
+            String state = Environment.getExternalStorageState();
+            if (Environment.MEDIA_MOUNTED.equals(state)) {
+                File dir = getExternalFilesDir(Environment.DIRECTORY_MUSIC);
+                fileList = dir.listFiles();
+                if (fileList != null) {
+                    int numFiles = fileList.length;
+                    for (int i=0; i<numFiles; i++){
+                        internalHashList.add(storageController.calcHash(fileList[i]));
+                    }
+                }
+                else{
+                    /* no files available -> nothing to synchronize */
+                }
+                /* Compare Hash lists - Find internal hash list elements that are
+                 * not part of the received hash list:*/
+                int numInternFiles          = internalHashList.size();
+                int[] syncindex             = new int[numInternFiles];
+                int numberOfElementsToSync  = 0;
+
+                for (int i=0; i<numInternFiles; i++){
+                    if (receivedHashList.contains(internalHashList.get(i))){
+                        /* TODO directly store not synced elements to a send-list? */
+                        syncindex[numberOfElementsToSync] = i;
+                        numberOfElementsToSync++;
+                    }
+                }
+
+                /* TODO send all not synchronized files to phone */
+            }
+            else{
+                Log.e("SynchronizeService", "Storage not available");
+            }
+
+        }
+
         Log.i("SimpleJobIntentService", "Completed service @ " + SystemClock.elapsedRealtime());
         dBsyncHandler = null;
         smEvRepo = null;
@@ -180,5 +237,28 @@ public class SynchronizeService extends JobIntentService{
             }
         }
         return deserializedEvents;
+    }
+
+    List<byte[]> deserializeHashList(byte[] data){
+        List<byte[]> deserializedHashList = null;
+        ByteArrayInputStream bis = new ByteArrayInputStream(data);
+        ObjectInput in = null;
+        try {
+            in = new ObjectInputStream(bis);
+            deserializedHashList = (List<byte[]>)in.readObject();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (in != null) {
+                    in.close();
+                }
+            } catch (IOException ex) {
+                // ignore close exception
+            }
+        }
+        return deserializedHashList;
     }
 }

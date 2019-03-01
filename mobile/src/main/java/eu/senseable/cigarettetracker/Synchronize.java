@@ -59,13 +59,10 @@ public class Synchronize {
 
             /* Trigger Synchronize Service Intent */
             Intent synchronizeServiceIntent = new Intent(myContext, SynchronizeService.class);
+            synchronizeServiceIntent.putExtra("NEW_EVENTS_RECEIVED", true);
             synchronizeServiceIntent.putExtra ("RECEIVED_EVENTS", receivedEvents);
             SynchronizeService.enqueueWork(myContext, synchronizeServiceIntent);
 
-
-            String message = "I just received a message from the wearable " + receivedMessageNumber++;;
-            Log.d (TAG_SYNC, message);
-            //textview.setText(message);
         }
     }
 

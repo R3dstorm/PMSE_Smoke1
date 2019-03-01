@@ -13,13 +13,21 @@ public class SyncMessageService extends WearableListenerService{
     public void onMessageReceived(MessageEvent messageEvent) {
 
         if (messageEvent.getPath().equals("/phone/newSmokeEvents")) {
-            final byte[] receivedEvents = messageEvent.getData();
+            final byte[] receivedEventsSerial = messageEvent.getData();
 
             /* Start Intent job to put received data to database */
             Intent synchronizeServiceIntent = new Intent(getApplicationContext(), SynchronizeService.class);
-            synchronizeServiceIntent.putExtra("SEND_NEW_EVENTS", false);
             synchronizeServiceIntent.putExtra("NEW_EVENTS_RECEIVED", true);
-            synchronizeServiceIntent.putExtra("NEW_EVENTS_DATA",receivedEvents);
+            synchronizeServiceIntent.putExtra("NEW_EVENTS_DATA",receivedEventsSerial);
+            SynchronizeService.enqueueWork(getApplicationContext(), synchronizeServiceIntent);
+        }
+        else if (messageEvent.getPath().equals("/phone/newSensorData")){
+            final byte[] receivedHashListSerial = messageEvent.getData();
+
+            /* Start Intent job to put received data to database */
+            Intent synchronizeServiceIntent = new Intent(getApplicationContext(), SynchronizeService.class);
+            synchronizeServiceIntent.putExtra("SYNC_HASH_LIST_RECEIVED", true);
+            synchronizeServiceIntent.putExtra("RECEIVED_HASH_LIST",receivedHashListSerial);
             SynchronizeService.enqueueWork(getApplicationContext(), synchronizeServiceIntent);
         }
         else {

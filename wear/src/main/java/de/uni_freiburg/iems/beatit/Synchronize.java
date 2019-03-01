@@ -72,6 +72,11 @@ public class Synchronize {
         new SendMessage(dataPath, messageData).start();
     }
 
+    public void requestHashListMessage(){
+        String dataPath = "/watch/newSensorData";
+        byte[] dummy= {0};
+        new SendMessage(dataPath, dummy).start();
+    }
 
     class SendMessage extends Thread {
         String path;
