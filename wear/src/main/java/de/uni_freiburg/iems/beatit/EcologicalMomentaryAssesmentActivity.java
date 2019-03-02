@@ -52,6 +52,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     private BroadcastReceiver powerSaveReceiver = null;
     private IntentFilter actionFilter = null;
     private Boolean bNoDetection = false;
+    private boolean isPopupMode = false;
 
     /* TODO remove this as soon smoking notification exists*/
     private CheckBox smokingDetected;
@@ -145,25 +146,27 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(wakeLock != null) {
-            if (wakeLock.isHeld()) {
-                wakeLock.release();
+        if(!isPopupMode) {
+            if (wakeLock != null) {
+                if (wakeLock.isHeld()) {
+                    wakeLock.release();
+                }
+                wakeLock = null;
             }
-            wakeLock = null;
-        }
-        if(actionFilter != null) {
-            actionFilter = null;
-        }
-        if(powerSaveReceiver != null) {
-            unregisterReceiver(powerSaveReceiver);
-            powerSaveReceiver = null;
+            if (actionFilter != null) {
+                actionFilter = null;
+            }
+            if (powerSaveReceiver != null) {
+                unregisterReceiver(powerSaveReceiver);
+                powerSaveReceiver = null;
+            }
         }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        if(isDetectionStarted) {
+        if(!isPopupMode && isDetectionStarted) {
             isDetectionStarted = false;
             toggleDetection();
         }
@@ -247,16 +250,20 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
             } // <---
 
             if (smoking && !bNoDetection) {
-                showSmokingDetectedPopUp(sd.getStartTime(), sd.getStopTime());
+                if(sd.getStartTime() == null || sd.getStopTime() == null) {
+                    Log.i("ML", "no valid start and/or stop time available");
+                } else {
+                    showSmokingDetectedPopUp(sd.getStartTime(), sd.getStopTime());
+                }
             }
         }
     }
 
     private void showSmokingDetectedPopUp(LocalDateTime startTime, LocalDateTime stopTime) {
-        Log.i("ML", "started: " + startTime.toString() + "  stopped: " + stopTime.toString());
         Intent intent = new Intent(this, SmokeDetectedPopUpActivity.class);
         smokingStartTime = startTime;
         smokingEndTime = stopTime;
+        isPopupMode = true;
         startActivityForResult(intent, requestCodePopUp);
     }
 
@@ -292,6 +299,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         else if (requestedCode == requestCodeDAQ){
             bNoDetection = false;
         }
+        isPopupMode = false;
     }
 
     protected void  CreateNewManualSmokeEvent(LocalDateTime StartTime)
