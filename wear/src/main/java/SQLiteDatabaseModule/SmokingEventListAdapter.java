@@ -55,7 +55,7 @@ public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventLi
     private String formatEvent(SmokingEvent event) {
         try {
             String confirmed = (event.getEventConfirmed() ? "\u2713" : "\u2717");
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuuMMdd HHmm");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyMMdd HHmmss");
             LocalDateTime start = LocalDateTime.parse(event.getStartDate() + " " + event.getStartTime(), formatter);
             LocalDateTime stop = LocalDateTime.parse(event.getStopDate() + " " + event.getStopTime(), formatter);
             Duration duration = Duration.between(start, stop);

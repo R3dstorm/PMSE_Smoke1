@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.util.Log;
@@ -25,7 +24,6 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 
 import SQLiteDatabaseModule.SmokingEvent;
-import SQLiteDatabaseModule.SmokingEventRoomDatabase;
 import SensorReadoutModule.dataAcquisitionActivity;
 import SensorReadoutModule.SensorReadoutService;
 
@@ -103,8 +101,6 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         playButton = findViewById(R.id.startPageButtonPlay);
         daqButton.setOnClickListener(this);
 
-//        insertTestEvents();
-
         /* TODO remove this as soon smoking notification exists*/
         smokingDetected = findViewById(R.id.checkBox);
 
@@ -136,19 +132,6 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         actionFilter.addAction(ACTION_DREAMING_STARTED);
         actionFilter.addAction(ACTION_DREAMING_STOPPED);
         registerReceiver(powerSaveReceiver, actionFilter);
-    }
-
-    private void insertTestEvents() {
-        // An ugly but working but way to initialize the database
-        // PopulateDbAsync is never called on my watch
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                SmokingEventRoomDatabase.getDatabase(getApplicationContext()).smokingEventDao().insert(new SmokingEvent(
-                        "newEvent", "20190223","1550", "20190223", "1555", false, false,false
-                ));
-            }
-        });
     }
 
     @Override
