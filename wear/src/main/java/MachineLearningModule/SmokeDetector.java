@@ -1,7 +1,6 @@
 package MachineLearningModule;
 
 import android.content.res.AssetManager;
-import android.util.Log;
 
 import java.time.LocalDateTime;
 
@@ -17,19 +16,19 @@ public class SmokeDetector implements AsyncResponse {
 
     enum State { Initialize, Idle, Start, Smoking, Stop; }
 
-    private ModelHandler modelHandler = null;
+    private ModelHandler modelHandler;
     private State currentState;
-    private boolean reportSmoking;
-    private LocalDateTime startTime;
-    private LocalDateTime stopTime;
-    private long currentTiming;
-    private int currentProbability;
-    private int smokingStartFrame;
-    private int gestureCounter;
-    private int timeoutCounter;
+    private boolean reportSmoking = false;
+    private LocalDateTime startTime = null;
+    private LocalDateTime stopTime = null;
+    private long currentTiming = 0;
+    private int currentProbability = 0;
+    private int smokingStartFrame = 0;
+    private int gestureCounter = 0;
+    private int timeoutCounter = 0;
     private int frameCounter;
-    private int startFrames;
-    private int stopFrames;
+    private int startFrames = 0;
+    private int stopFrames = 0;
 
     public SmokeDetector(AssetManager assets) {
         frameCounter = 0;
