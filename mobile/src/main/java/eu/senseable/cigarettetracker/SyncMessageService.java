@@ -13,19 +13,12 @@ import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.WearableListenerService;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.List;
-
 
 public class SyncMessageService extends WearableListenerService implements DataClient.OnDataChangedListener{
 
+
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
-
         /* Receive incoming data for synchronization from path "/watch/newSmokeEvents" */
         if (messageEvent.getPath().equals("/watch/newSmokeEvents")) {
 
@@ -41,9 +34,9 @@ public class SyncMessageService extends WearableListenerService implements DataC
         }
         else if (messageEvent.getPath().equals("/watch/newSensorData")){
 
-            Intent synchronizeServiceIntent = new Intent(getApplicationContext(), SynchronizeService.class);
+            Intent synchronizeServiceIntent = new Intent(this, SynchronizeService.class);
             synchronizeServiceIntent.putExtra("RECEIVED_SYNC_HASH_LIST_REQUEST", true);
-            SynchronizeService.enqueueWork(getApplicationContext(), synchronizeServiceIntent);
+            SynchronizeService.enqueueWork(this, synchronizeServiceIntent);
 
         }
         else {
@@ -60,10 +53,10 @@ public class SyncMessageService extends WearableListenerService implements DataC
                 DataItem item = event.getDataItem();
                 if (item.getUri().getPath().compareTo("/watchData") == 0) {
                     DataMap dataMap = DataMapItem.fromDataItem(item).getDataMap();
-                    Intent synchronizeServiceIntent = new Intent(getBaseContext(), SynchronizeService.class);
+                    Intent synchronizeServiceIntent = new Intent(this, SynchronizeService.class);
                     synchronizeServiceIntent.putExtra("RECEIVED_SENSOR_DATA_FILE", true);
                     synchronizeServiceIntent.putExtra("SENSOR_DATA_FILE",dataMap.toBundle());
-                    SynchronizeService.enqueueWork(getApplicationContext(), synchronizeServiceIntent);
+                    SynchronizeService.enqueueWork(this, synchronizeServiceIntent);
                 }
             } else if (event.getType() == DataEvent.TYPE_DELETED) {
                 // DataItem deleted

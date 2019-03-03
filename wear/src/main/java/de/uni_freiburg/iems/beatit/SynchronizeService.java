@@ -112,7 +112,7 @@ public class SynchronizeService extends JobIntentService{
         }
 
         else if (intent.getBooleanExtra("REQUEST_SYNC_HASH_LIST",false) == true){
-            /* send request to receive a hashlist for already synced data files */
+            /* send request to receive a hash list for already synced data files */
             dBsyncHandler.requestHashListMessage();
         }
 
@@ -121,7 +121,6 @@ public class SynchronizeService extends JobIntentService{
             /* Get the received hash list from phone: */
             List<String> receivedHashList   = null;
             List<String> internalHashList   = new ArrayList<String>();
-            List<String> sendHashList       = new ArrayList<String>();
             File fileList[] = null;
             ExternalStorageController storageController = new ExternalStorageController();
 
@@ -147,16 +146,21 @@ public class SynchronizeService extends JobIntentService{
                 int numInternFiles          = internalHashList.size();
                 for (int i=0; i<numInternFiles; i++){
                     if (!receivedHashList.contains(internalHashList.get(i))){
+                        /* TODO better send all elements in one asset? */
                         dBsyncHandler.sendCsvAssetToPhone(fileList[i]);
+                        try {
+                            Thread.sleep(100);
+                        }
+                        catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
             else{
                 Log.e("SynchronizeService", "Storage not available");
             }
-
         }
-
         Log.i("SimpleJobIntentService", "Completed service @ " + SystemClock.elapsedRealtime());
         dBsyncHandler = null;
         smEvRepo = null;

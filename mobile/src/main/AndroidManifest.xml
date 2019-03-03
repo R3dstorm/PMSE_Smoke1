@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
+        android:hardwareAccelerated="false"
         android:allowBackup="true"
         android:icon="@drawable/beatsmoking"
         android:label="@string/app_name"
@@ -47,15 +48,6 @@
                 //Specify your path, and a host for the filter.//
                 <data
                     android:host="*" android:scheme="wear" android:pathPrefix="/watch" />
-            </intent-filter>
-        </service>
-        <service
-            android:name=".SyncDataService"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
-                <data android:host="*" android:scheme="wear" android:pathPrefix="/watch/newElements" />
             </intent-filter>
         </service>
         <service

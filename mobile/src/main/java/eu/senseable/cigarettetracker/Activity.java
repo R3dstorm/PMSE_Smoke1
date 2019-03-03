@@ -41,7 +41,6 @@ public class Activity extends AppCompatActivity {
     private String endDateSmoke = "";
     private String endTimeSmoke = "";
     private Synchronize dbSyncHandler;
-    private SyncMessageService syncMessageService;
 
     DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyMMdd");
     DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
@@ -57,7 +56,6 @@ public class Activity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         dbSyncHandler = new Synchronize(this);
-        syncMessageService = new SyncMessageService();
 
         /* Access Database: Get a new or existing viewModel from viewModelProvider */
         mSEViewModel = ViewModelProviders.of((FragmentActivity) this).get(SmokingEventViewModel.class); /* TODO geht daS?*/
@@ -104,8 +102,6 @@ public class Activity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
-        Wearable.getDataClient(this).addListener(syncMessageService);
 
 //        RecyclerView view = findViewById(R.id.my_recycler_view);
 //        mAdapter = new SmokingEventListAdapter(this);
@@ -221,7 +217,6 @@ public class Activity extends AppCompatActivity {
     @Override
     protected void onPause() {
       super.onPause();
-      Wearable.getDataClient(this).removeListener(syncMessageService);
     }
 
     @Override

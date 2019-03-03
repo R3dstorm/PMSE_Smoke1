@@ -16,7 +16,6 @@ import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 
 import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,9 +31,6 @@ import SQLiteDatabaseModule.SmokingEvent;
 public class Synchronize {
 
     private Context myContext;
-    private PutDataRequest dataRequest;
-    private PutDataMapRequest dataMapRequest;
-    private DataClient dataClient;
     private static final String SYNC_KEY = "de.uni_freiburg.iems.beatit";
 
     private static final String TAG_SYNC = "SYNCHRONIZE";
@@ -42,11 +38,6 @@ public class Synchronize {
 
     Synchronize(Context context) {
         myContext = context;
-
-        /* Handle Data Objects */
-        String dataPath = "/watch/newElements";
-        dataRequest =  PutDataRequest.create(dataPath);
-        dataMapRequest = PutDataMapRequest.create(dataPath);
     }
 
     public void sendSyncMessage(List<SmokingEvent> unsynchronizedEvents) {
@@ -79,16 +70,13 @@ public class Synchronize {
     }
 
     public void requestHashListMessage(){
-        String dataPath = "/watch/newSensorData"; /* TODO change path?*/
+        String dataPath = "/watch/newSensorData";
         byte[] dummy= {0};
         new SendMessage(dataPath, dummy).start();
     }
 
-    public void sendMessage(byte[] data){
-        String dataPath = "/watch/newSensorData";
-    }
     public void sendCsvAssetToPhone(File file){
-        Asset asset = createAssetFromCsvFile2(file);
+        Asset asset = createAssetFromCsvFile(file);
         PutDataMapRequest dataMap = PutDataMapRequest.create("/watchData");
         dataMap.getDataMap().putAsset("csv", asset);
         dataMap.getDataMap().putString("title",file.getName());
@@ -98,27 +86,6 @@ public class Synchronize {
     }
 
     Asset createAssetFromCsvFile(File file){
-        Asset output = null;
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutput out = null;
-        try {
-            out = new ObjectOutputStream(bos);
-            out.writeObject(file);
-            out.flush();
-            output = Asset.createFromBytes(bos.toByteArray());
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                bos.close();
-            } catch (IOException ex) {
-                // ignore close exception
-            }
-        }
-        return output;
-    }
-
-    Asset createAssetFromCsvFile2(File file){
         Asset output = null;
         BufferedInputStream buffer= null;
         int fileLength = (int) file.length();
@@ -176,7 +143,6 @@ public class Synchronize {
                     catch (InterruptedException exception) {
                         //TO DO//
                         Log.e(TAG_SYNC, "sending message failed; Interrupted Exception");
-                        Log.d(TAG_SYNC, "Test error");
                     }
                 }
             }

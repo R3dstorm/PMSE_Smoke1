@@ -4,45 +4,14 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
-
-import com.example.commondataobjects.SmokingEventDTO;
-import com.google.android.gms.tasks.Task;
-import com.google.android.gms.tasks.Tasks;
-import com.google.android.gms.wearable.DataClient;
-import com.google.android.gms.wearable.DataEvent;
-import com.google.android.gms.wearable.DataEventBuffer;
-import com.google.android.gms.wearable.DataItem;
-import com.google.android.gms.wearable.DataMap;
-import com.google.android.gms.wearable.DataMapItem;
-import com.google.android.gms.wearable.Node;
-import com.google.android.gms.wearable.Wearable;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-
-import eu.senseable.SQLiteDatabaseModule.SmokingEvent;
 
 public class Synchronize {
-    private Handler myHandler;
     private Context myContext;
     private int receivedMessageNumber;
     private int sentMessageNumber;
     private static final String TAG_SYNC = "SYNCHRONIZE";
 
-    private List<SmokingEvent> unsynchronizedEvents;
     Receiver messageReceiver = new Receiver();
 
     Synchronize (Context context) {

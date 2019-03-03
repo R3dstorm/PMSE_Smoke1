@@ -115,7 +115,7 @@ public class ExternalStorageController {
             file.mkdirs();
         }
         if (!file.mkdirs()) {
-            Log.e(LOG_TAG, "Directory not created");
+            Log.i(LOG_TAG, "Directory not created");
         }
         return file;
     }
