@@ -1,5 +1,6 @@
 package de.uni_freiburg.iems.beatit;
 
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -18,7 +19,9 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import MachineLearningModule.SmokeDetector;
+
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
@@ -99,9 +102,6 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         Button daqButton = findViewById(R.id.startPageButtonLable);
         playButton = findViewById(R.id.startPageButtonPlay);
         daqButton.setOnClickListener(this);
-
-        /* TODO remove this as soon smoking notification exists*/
-        smokingDetected = findViewById(R.id.checkBox);
 
         detectorText = findViewById(R.id.detectorText);
         timingText = findViewById(R.id.timingText);
@@ -240,11 +240,6 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
                 detectorText.setText(sd.getCurrentProbability() + " (" + sd.getCurrentStartStopFrames() + ")");
                 timingText.setText(sd.getCurrentTiming() + " ms");
                 framesText.setText("" + sd.getCurrentFrame());
-                if (sd.isSmokingPhase() && !smokingDetected.isChecked()) {
-                    smokingDetected.setChecked(true);
-                } else if (!sd.isSmokingPhase() && smokingDetected.isChecked()) {
-                    smokingDetected.setChecked(false);
-                }
                 String currentState = sd.getCurrentState();
                 if (currentState == "Start") {
                     currentState += " (" + sd.getGestureCounter() + ")";
@@ -265,10 +260,17 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     }
 
     private void showSmokingDetectedPopUp(LocalDateTime startTime, LocalDateTime stopTime) {
-        Intent intent = new Intent(this, SmokeDetectedPopUpActivity.class);
         smokingStartTime = startTime;
         smokingEndTime = stopTime;
         isPopupMode = true;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd G 'at' HH:mm:ss z");
+        Intent intent = new Intent(this, SmokeDetectedPopUpActivity.class);
+        intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+        intent.setAction("de.uni_freiburg.iems.beatit");
+        intent.putExtra("StartTime", startTime.atZone(ZoneId.of("UTC")).format(formatter));
+        intent.putExtra("StopTime", stopTime.atZone(ZoneId.of("UTC")).format(formatter));
+        intent.putExtra("SenderInfo", "Team1_Smoking_Event");
+        sendOrderedBroadcast(intent,null, new NotificationResultReceiver(),null, Activity.RESULT_OK,null,null);
         startActivityForResult(intent, requestCodePopUp);
     }
 
