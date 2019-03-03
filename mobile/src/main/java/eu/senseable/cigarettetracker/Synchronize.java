@@ -13,6 +13,12 @@ import android.util.Log;
 import com.example.commondataobjects.SmokingEventDTO;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
+import com.google.android.gms.wearable.DataClient;
+import com.google.android.gms.wearable.DataEvent;
+import com.google.android.gms.wearable.DataEventBuffer;
+import com.google.android.gms.wearable.DataItem;
+import com.google.android.gms.wearable.DataMap;
+import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.Wearable;
 
@@ -39,7 +45,7 @@ public class Synchronize {
     private List<SmokingEvent> unsynchronizedEvents;
     Receiver messageReceiver = new Receiver();
 
-    Synchronize (Context context){
+    Synchronize (Context context) {
 
         myContext = context;
         receivedMessageNumber = sentMessageNumber = 0;
@@ -69,5 +75,4 @@ public class Synchronize {
     public void unregisterReceivers(){
         LocalBroadcastManager.getInstance(myContext).unregisterReceiver(messageReceiver);
     }
-
 }

@@ -1,23 +1,25 @@
+/* Credits: https://stackoverflow.com/questions/29790578/android-copy-file-from-internal-storage-to-external */
+
 package eu.senseable.cigarettetracker;
 
 import android.os.Environment;
+import android.util.Base64;
 import android.util.Log;
-import android.widget.Toast;
+
+import com.opencsv.CSVWriter;
 
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Base64;
 
-import com.opencsv.CSVWriter;
-
-import static com.google.android.gms.common.util.Base64Utils.encode;
 import static com.opencsv.ICSVWriter.NO_ESCAPE_CHARACTER;
 import static com.opencsv.ICSVWriter.NO_QUOTE_CHARACTER;
 
@@ -29,17 +31,14 @@ public class ExternalStorageController {
 
     }
 
-    List<byte[]> getHashList (){
+    public List<String> getHashList (){
         int errorCode = 0;
-        File file;
         File fileList[];
-        List<byte[]> hashList = new ArrayList<byte[]>();
+        List<String> hashList = new ArrayList<String>();
 
         /* check if readable */
         if (isExternalStorageReadable()){
             /* find files */
-            //file = new File(getPublicAppStorageDir(),"blub4.csv");
-            //writeTest(file);
             File fileFolder = getPublicAppStorageDir();
             fileList = fileFolder.listFiles();
             if (fileList != null) {
@@ -50,7 +49,6 @@ public class ExternalStorageController {
             }
             else{
                 /* no files available -> send empty hashList */
-                //writeTest(file);
             }
         }
         else {
@@ -59,6 +57,35 @@ public class ExternalStorageController {
         }
 
         return hashList;
+    }
+
+    public void writeFileToStorage (File file, String title){
+        if (isExternalStorageWritable()){
+            String target = getPublicAppStorageDir().getAbsolutePath() + "/" +title;
+            copyFile(file.getAbsolutePath(), target);
+        }
+    }
+
+    public static boolean copyFile(String from, String to) {
+        try {
+            int bytesum = 0;
+            int byteRead = 0;
+            File oldFile = new File(from);
+            if (oldFile.exists()) {
+                InputStream inStream = new FileInputStream(from);
+                FileOutputStream fs = new FileOutputStream(to);
+                byte[] buffer = new byte[1444];
+                while ((byteRead = inStream.read(buffer)) != -1) {
+                    bytesum += byteRead;
+                    fs.write(buffer, 0, byteRead);
+                }
+                inStream.close();
+                fs.close();
+            }
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /* Checks if external storage is available for read and write */
@@ -98,18 +125,17 @@ public class ExternalStorageController {
         try {
             writer = new CSVWriter(new FileWriter(file),' ',NO_QUOTE_CHARACTER, NO_ESCAPE_CHARACTER,"\n");//filePath));
             String data[] = {"test2.csv"};
-                writer.writeNext(data);
+            writer.writeNext(data);
 
             writer.close();
-            //Toast.makeText(this, "Storing finished", Toast.LENGTH_SHORT).show();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-     private byte[] calcHash(File fileName){
+    public String calcHash(File fileName){
         byte[] buffer= new byte[8192];
-        byte[] hash = null;
+        String hash = null;
         int count;
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -119,7 +145,7 @@ public class ExternalStorageController {
             }
             bis.close();
 
-            hash = digest.digest();
+            hash = Base64.encodeToString(digest.digest(), Base64.DEFAULT);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (NoSuchAlgorithmException e) {
@@ -128,3 +154,4 @@ public class ExternalStorageController {
         return hash;
     }
 }
+

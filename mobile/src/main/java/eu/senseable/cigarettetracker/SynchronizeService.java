@@ -2,6 +2,7 @@ package eu.senseable.cigarettetracker;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.support.v4.app.JobIntentService;
@@ -11,16 +12,23 @@ import android.widget.Toast;
 import com.example.commondataobjects.SmokingEventDTO;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
+import com.google.android.gms.wearable.Asset;
+import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.Wearable;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -33,6 +41,7 @@ public class SynchronizeService extends JobIntentService {
     /**
      * Unique job ID for this service.
      */
+    private static final String TAG = "SynchronizeService";
     static final int JOB_ID = 1000;
     final Handler mHandler = new Handler();
     private SmokingEventRepository smEvRepo;
@@ -96,7 +105,7 @@ public class SynchronizeService extends JobIntentService {
 
             /* create hash list of available data sets: */
             byte[] messageData = null;
-            List<byte[]> hashList = new ArrayList<byte[]>();
+            List<String> hashList = new ArrayList<String>();
 
             ExternalStorageController memory = new ExternalStorageController();
             hashList = memory.getHashList();
@@ -122,6 +131,16 @@ public class SynchronizeService extends JobIntentService {
             new SynchronizeService.SendMessage(dataPath, messageData).start();
             /* return hash list */
 
+        }
+        else if (intent.getBooleanExtra("RECEIVED_SENSOR_DATA_FILE",false) == true) {
+            /* Get files from intent: */
+            Bundle bundle = intent.getBundleExtra("SENSOR_DATA_FILE");
+            DataMap dataMap = DataMap.fromBundle(bundle);
+            File csvFile = loadFileFromAsset(dataMap.getAsset("csv"));
+            String title = dataMap.getString("title");
+
+            ExternalStorageController memory = new ExternalStorageController();
+            memory.writeFileToStorage(csvFile, title);
         }
         Log.i("SimpleJobIntentService", "Completed service @ " + SystemClock.elapsedRealtime());
         smEvRepo = null;
@@ -188,6 +207,65 @@ public class SynchronizeService extends JobIntentService {
             }
         }
         return deserializedEvents;
+    }
+
+    File loadFileFromAsset (Asset asset) {
+        File outputFile = null;
+        InputStream assetInputStream = null;
+        if (asset == null) {
+            throw new IllegalArgumentException("Asset must be non-null");
+        }
+        // convert asset into a file descriptor and block until it's ready
+        try {
+            assetInputStream =
+                    Tasks.await(Wearable.getDataClient(myContext).getFdForAsset(asset))
+                            .getInputStream();
+            if (assetInputStream == null) {
+                Log.w(TAG, "Requested an unknown Asset.");
+                return null;
+            }
+        }catch (InterruptedException e) {
+            e.printStackTrace();
+            return null;
+        }catch (ExecutionException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        try {
+            File file = new File(getCacheDir(), "cacheFile.csv");
+            OutputStream output = new FileOutputStream(file);
+            try {
+                byte[] buffer = new byte[4 * 1024]; // or other buffer size
+                int read;
+
+                while ((read = assetInputStream.read(buffer)) != -1) {
+                    output.write(buffer, 0, read);
+                }
+
+                output.flush();
+            }catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    output.close();
+                    outputFile = file;
+                }catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        finally {
+            try {
+                assetInputStream.close();
+            }catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return outputFile;
     }
 
     private void sendSyncMessage(List<SmokingEvent> unsynchronizedEvents) {

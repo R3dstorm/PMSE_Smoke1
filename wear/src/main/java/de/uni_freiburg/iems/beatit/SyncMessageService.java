@@ -24,7 +24,7 @@ public class SyncMessageService extends WearableListenerService{
         else if (messageEvent.getPath().equals("/phone/newSensorData")){
             final byte[] receivedHashListSerial = messageEvent.getData();
 
-            /* Start Intent job to put received data to database */
+            /* Start Intent job to put send new sensor data back to phone */
             Intent synchronizeServiceIntent = new Intent(getApplicationContext(), SynchronizeService.class);
             synchronizeServiceIntent.putExtra("SYNC_HASH_LIST_RECEIVED", true);
             synchronizeServiceIntent.putExtra("RECEIVED_HASH_LIST",receivedHashListSerial);

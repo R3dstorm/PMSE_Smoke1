@@ -18,10 +18,13 @@ import com.google.android.gms.wearable.Wearable;
 import com.opencsv.CSVWriter;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -116,8 +119,9 @@ public class SynchronizeService extends JobIntentService{
         else if (intent.getBooleanExtra("SYNC_HASH_LIST_RECEIVED",false) == true){
             /* compare hashes of available data with hash list to get unsynchronized data */
             /* Get the received hash list from phone: */
-            List<byte[]> receivedHashList = null;
-            List<byte[]> internalHashList = new ArrayList<byte[]>();
+            List<String> receivedHashList   = null;
+            List<String> internalHashList   = new ArrayList<String>();
+            List<String> sendHashList       = new ArrayList<String>();
             File fileList[] = null;
             ExternalStorageController storageController = new ExternalStorageController();
 
@@ -139,20 +143,13 @@ public class SynchronizeService extends JobIntentService{
                     /* no files available -> nothing to synchronize */
                 }
                 /* Compare Hash lists - Find internal hash list elements that are
-                 * not part of the received hash list:*/
+                 * not part of the received hash list -> add to sendHashList:*/
                 int numInternFiles          = internalHashList.size();
-                int[] syncindex             = new int[numInternFiles];
-                int numberOfElementsToSync  = 0;
-
                 for (int i=0; i<numInternFiles; i++){
-                    if (receivedHashList.contains(internalHashList.get(i))){
-                        /* TODO directly store not synced elements to a send-list? */
-                        syncindex[numberOfElementsToSync] = i;
-                        numberOfElementsToSync++;
+                    if (!receivedHashList.contains(internalHashList.get(i))){
+                        dBsyncHandler.sendCsvAssetToPhone(fileList[i]);
                     }
                 }
-
-                /* TODO send all not synchronized files to phone */
             }
             else{
                 Log.e("SynchronizeService", "Storage not available");
@@ -239,13 +236,13 @@ public class SynchronizeService extends JobIntentService{
         return deserializedEvents;
     }
 
-    List<byte[]> deserializeHashList(byte[] data){
-        List<byte[]> deserializedHashList = null;
+    List<String> deserializeHashList(byte[] data){
+        List<String> deserializedHashList = null;
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         ObjectInput in = null;
         try {
             in = new ObjectInputStream(bis);
-            deserializedHashList = (List<byte[]>)in.readObject();
+            deserializedHashList = (List<String>)in.readObject();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
@@ -260,5 +257,26 @@ public class SynchronizeService extends JobIntentService{
             }
         }
         return deserializedHashList;
+    }
+
+    byte[] serializeHashList(List<String> data){
+        byte[] output = null;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutput out = null;
+        try {
+            out = new ObjectOutputStream(bos);
+            out.writeObject(data);
+            out.flush();
+            output = bos.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                bos.close();
+            } catch (IOException ex) {
+                // ignore close exception
+            }
+        }
+        return output;
     }
 }

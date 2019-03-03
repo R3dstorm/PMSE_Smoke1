@@ -7,13 +7,19 @@ import android.util.Log;
 import com.example.commondataobjects.SmokingEventDTO;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
+import com.google.android.gms.wearable.Asset;
 import com.google.android.gms.wearable.DataClient;
+import com.google.android.gms.wearable.DataItem;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
@@ -73,9 +79,67 @@ public class Synchronize {
     }
 
     public void requestHashListMessage(){
-        String dataPath = "/watch/newSensorData";
+        String dataPath = "/watch/newSensorData"; /* TODO change path?*/
         byte[] dummy= {0};
         new SendMessage(dataPath, dummy).start();
+    }
+
+    public void sendMessage(byte[] data){
+        String dataPath = "/watch/newSensorData";
+    }
+    public void sendCsvAssetToPhone(File file){
+        Asset asset = createAssetFromCsvFile2(file);
+        PutDataMapRequest dataMap = PutDataMapRequest.create("/watchData");
+        dataMap.getDataMap().putAsset("csv", asset);
+        dataMap.getDataMap().putString("title",file.getName());
+        dataMap.setUrgent();
+        PutDataRequest request = dataMap.asPutDataRequest();
+        Task<DataItem> putTask = Wearable.getDataClient(myContext).putDataItem(request);
+    }
+
+    Asset createAssetFromCsvFile(File file){
+        Asset output = null;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutput out = null;
+        try {
+            out = new ObjectOutputStream(bos);
+            out.writeObject(file);
+            out.flush();
+            output = Asset.createFromBytes(bos.toByteArray());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                bos.close();
+            } catch (IOException ex) {
+                // ignore close exception
+            }
+        }
+        return output;
+    }
+
+    Asset createAssetFromCsvFile2(File file){
+        Asset output = null;
+        BufferedInputStream buffer= null;
+        int fileLength = (int) file.length();
+        byte[] bytes = new byte[fileLength];
+
+        try {
+            buffer = new BufferedInputStream(new FileInputStream(file));
+            buffer.read(bytes, 0, bytes.length);
+            buffer.close();
+            output = Asset.createFromBytes(bytes);
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                buffer.close();
+            } catch (IOException ex) {
+                // ignore close exception
+            }
+        }
+        return output;
     }
 
     class SendMessage extends Thread {
