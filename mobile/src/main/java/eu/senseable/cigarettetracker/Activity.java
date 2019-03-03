@@ -189,7 +189,7 @@ public class Activity extends AppCompatActivity {
                         startTimeSmoke= edit.getText().toString();
                         edit = (EditText)dia.findViewById(R.id.startTImeMinute);
                         tmp = edit.getText().toString();
-                        startTimeSmoke = startTimeSmoke + tmp;
+                        startTimeSmoke = startTimeSmoke + tmp + "00"; // seconds are assumed as o seconds
                         edit = (EditText)dia.findViewById(R.id.durationminutes);
                         String durationString = edit.getText().toString();
                         edit = (EditText)dia.findViewById(R.id.durationseconds);

@@ -6,7 +6,6 @@ import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.Query;
-import android.arch.persistence.room.Update;
 
 import java.util.List;
 
@@ -20,12 +19,12 @@ public interface SmokingEventDao {
 
     /* TODO Rename getAllEventsLive*/
     /* Get all events */
-    @Query("SELECT * from smoking_event_table ORDER BY Start_Date, Start_Time ASC")
+    @Query("SELECT * from smoking_event_table ORDER BY Start_Date DESC, Start_Time DESC")
     LiveData<List<SmokingEvent>> getAllEvents();
 
     /* TODO Rename */
     /* Get all events */
-    @Query("SELECT * from smoking_event_table ORDER BY Start_Date, Start_Time ASC")
+    @Query("SELECT * from smoking_event_table ORDER BY Start_Date DESC, Start_Time ASC")
     List<SmokingEvent> getAllEventsList();
 
     /* Get all valid events (not removed) */
