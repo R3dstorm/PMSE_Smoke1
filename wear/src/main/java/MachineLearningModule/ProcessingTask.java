@@ -1,7 +1,6 @@
 package MachineLearningModule;
 
 import android.os.AsyncTask;
-import android.util.Log;
 
 public class ProcessingTask extends AsyncTask<Void, Void, Void> {
     AsyncResponse parent;
@@ -23,7 +22,6 @@ public class ProcessingTask extends AsyncTask<Void, Void, Void> {
         // 6x1000/24: max 1569 ms, avg 900 ms
         probability = model.predict(window);
         requiredTime = (System.nanoTime() - start) / 1000000;
-        //Log.i("ML", "" + (System.nanoTime() - start) / 1000000 + " ms (" + hasSmokingLabel + ")");
         return null;
     }
 

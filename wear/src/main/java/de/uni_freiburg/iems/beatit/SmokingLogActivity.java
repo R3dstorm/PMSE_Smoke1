@@ -35,6 +35,10 @@ public class SmokingLogActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
+        if(Globals.getInstance().isDebugMode()) {
+            findViewById(R.id.buttonDelete).setVisibility(View.VISIBLE);
+        }
+
         // Add an observer on the LiveData returned by getAlphabetizedWords.
         // The onChanged() method fires when the observed data changes and the activity is
         // in the foreground.

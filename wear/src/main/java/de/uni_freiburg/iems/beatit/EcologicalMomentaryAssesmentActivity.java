@@ -41,14 +41,12 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     private Intent sensorServiceIntent;
     private Boolean sensorServiceStarted = false;
     private Mediator sensorAiMediator = null;
-    private LocalDateTime timeOfEvent;
     private AmbientModeSupport.AmbientController mAmbientController;
     private LocalDateTime smokingStartTime;
     private LocalDateTime smokingEndTime;
     private boolean isDetectionStarted = false;
     private PowerManager powerManager;
     private PowerManager.WakeLock wakeLock = null;
-    private PowerManager.WakeLock screenLock = null;
     private BroadcastReceiver powerSaveReceiver = null;
     private IntentFilter actionFilter = null;
     private Boolean bNoDetection = false;
@@ -109,6 +107,12 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         timingText = findViewById(R.id.timingText);
         stateText = findViewById(R.id.stateText);
         framesText = findViewById(R.id.framesText);
+        if(Globals.getInstance().isDebugMode()) {
+            detectorText.setVisibility(View.VISIBLE);
+            timingText.setVisibility(View.VISIBLE);
+            stateText.setVisibility(View.VISIBLE);
+            framesText.setVisibility(View.VISIBLE);
+        }
 
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"MyApp::MyWakelockTag");
@@ -232,22 +236,23 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         if(sensorAiMediator != null) {
             SmokeDetector sd = sensorAiMediator.getSmokeDetector();
 
-            // debug stuff --->
-            detectorText.setText(sd.getCurrentProbability() + " (" + sd.getCurrentStartStopFrames() + ")");
-            timingText.setText(sd.getCurrentTiming() + " ms");
-            framesText.setText("" + sd.getCurrentFrame());
-            if (sd.isSmokingPhase() && !smokingDetected.isChecked()) {
-                smokingDetected.setChecked(true);
-            } else if (!sd.isSmokingPhase() && smokingDetected.isChecked()) {
-                smokingDetected.setChecked(false);
+            if(Globals.getInstance().isDebugMode()) {
+                detectorText.setText(sd.getCurrentProbability() + " (" + sd.getCurrentStartStopFrames() + ")");
+                timingText.setText(sd.getCurrentTiming() + " ms");
+                framesText.setText("" + sd.getCurrentFrame());
+                if (sd.isSmokingPhase() && !smokingDetected.isChecked()) {
+                    smokingDetected.setChecked(true);
+                } else if (!sd.isSmokingPhase() && smokingDetected.isChecked()) {
+                    smokingDetected.setChecked(false);
+                }
+                String currentState = sd.getCurrentState();
+                if (currentState == "Start") {
+                    currentState += " (" + sd.getGestureCounter() + ")";
+                }
+                if (stateText.getText() != currentState) {
+                    stateText.setText(currentState);
+                }
             }
-            String currentState = sd.getCurrentState();
-            if (currentState == "Start") {
-                currentState += " (" + sd.getGestureCounter() + ")";
-            }
-            if (stateText.getText() != currentState) {
-                stateText.setText(currentState);
-            } // <---
 
             if (smoking && !bNoDetection) {
                 if(sd.getStartTime() == null || sd.getStopTime() == null) {
