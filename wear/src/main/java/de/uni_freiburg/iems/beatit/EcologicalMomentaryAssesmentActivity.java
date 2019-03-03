@@ -189,6 +189,13 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     }
 
     public void onSyncButtonClick(View v){
+        /* Stop detection */
+        if (isDetectionStarted) {
+            isDetectionStarted = !isDetectionStarted;
+            playButton.setChecked(false);
+            toggleDetection();
+        }
+
         if (sensorAiMediator == null) {
             /* sensorAiMediator not initialized */
             sensorAiMediator = new Mediator(this, false,EcologicalMomentaryAssesmentActivity.this);
@@ -196,7 +203,6 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         else{
             /* sensorAiMediator initialized*/
         }
-        /* TODO stop ai/sensor activity before syncing */
         sensorAiMediator.synchronizeEventsBackground();
     }
 

@@ -113,9 +113,15 @@ public class Mediator {
 
     public boolean synchronizeEventsBackground(){
         Intent synchronizeServiceIntent = new Intent(myContext, SynchronizeService.class);
+        /* Schedule synchronization of smoking events */
         synchronizeServiceIntent.putExtra("SEND_NEW_EVENTS", true);
-        synchronizeServiceIntent.putExtra("NEW_EVENTS_RECEIVED", false);
         SynchronizeService.enqueueWork(myContext, synchronizeServiceIntent);
+
+        /* Schedule synchronization of recorded sensor data */
+        synchronizeServiceIntent = new Intent(myContext, SynchronizeService.class);
+        synchronizeServiceIntent.putExtra("REQUEST_SYNC_HASH_LIST", true);
+        SynchronizeService.enqueueWork(myContext, synchronizeServiceIntent);
+
         return true;
     }
 }
