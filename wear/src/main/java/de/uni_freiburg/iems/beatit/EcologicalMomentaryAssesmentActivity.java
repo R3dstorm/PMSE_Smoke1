@@ -184,6 +184,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     }
 
     public void onAddEventButtonClick(View v){
+        isPopupMode = true;
         Intent intent = new Intent(this, ManualSmokeEvent.class);
         startActivityForResult(intent, requestCodeManual);
     }
