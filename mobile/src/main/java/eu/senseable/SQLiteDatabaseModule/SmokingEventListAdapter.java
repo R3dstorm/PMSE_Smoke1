@@ -32,23 +32,24 @@ public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventLi
 
     public class SmokingEventViewHolder extends RecyclerView.ViewHolder {
         private final TextView smokingEventItemView;
+        private ImageView mClockView;
 
         private SmokingEventViewHolder(View itemView) {
             super(itemView);
             smokingEventItemView = itemView.findViewById(R.id.text_view);
+            mClockView = itemView.findViewById(R.id.clock_view);
         }
     }
 
     private final LayoutInflater mInflater;
     private List<SmokingEvent> mSmokingEvents; // Cached copy of smoking events
-    private ImageView mClockView;
+
 
     public SmokingEventListAdapter(Context context) { mInflater = LayoutInflater.from(context); }
 
     @Override
     public SmokingEventViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = mInflater.inflate(R.layout.my_item_view, parent, false);
-        mClockView = itemView.findViewById(R.id.clock_view);
         return new SmokingEventViewHolder(itemView);
     }
 
@@ -79,7 +80,7 @@ public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventLi
             animRotate.setFillAfter(true);
             animSet.addAnimation(animRotate);
 
-            mClockView.startAnimation(animSet);
+            holder.mClockView.startAnimation(animSet);
             TimeUnit timeUnit = TimeUnit.MILLISECONDS;
             Date stopTime = new Date();
             stopTime = ConvertToTime(current.getStopTime());
