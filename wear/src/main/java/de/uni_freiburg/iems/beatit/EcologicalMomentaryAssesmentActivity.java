@@ -6,10 +6,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.PowerManager;
-import android.util.Log;
 import android.support.v7.app.AppCompatActivity;
 import android.support.wear.ambient.AmbientModeSupport;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -18,17 +19,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import MachineLearningModule.SmokeDetector;
-
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 
+import MachineLearningModule.SmokeDetector;
 import SQLiteDatabaseModule.SmokingEvent;
-import SensorReadoutModule.dataAcquisitionActivity;
 import SensorReadoutModule.SensorReadoutService;
+import SensorReadoutModule.dataAcquisitionActivity;
 
 import static android.content.Intent.ACTION_DREAMING_STARTED;
 import static android.content.Intent.ACTION_DREAMING_STOPPED;
@@ -68,6 +68,9 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     private int requestCodePopUp = 11;
     private int requestCodeDAQ = 12;
     private int requestCodeManual = 15;
+    private int requestCodePause = 16;
+
+    private CountDownTimer PauseTime = null;
 
     @Override
     public AmbientModeSupport.AmbientCallback getAmbientCallback() {
@@ -180,12 +183,16 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     public void onClick(View v) {
         Intent intent = new Intent(this, dataAcquisitionActivity.class);
         bNoDetection = true;
+        isPopupMode = true;
         startActivityForResult(intent, requestCodeDAQ);
     }
 
     public void onAddEventButtonClick(View v){
-        isPopupMode = true;
         Intent intent = new Intent(this, ManualSmokeEvent.class);
+        Bundle b = new Bundle();
+        b.putString("Task", "Manual");
+        intent.putExtras(b);
+        isPopupMode = true;
         startActivityForResult(intent, requestCodeManual);
     }
 
@@ -208,8 +215,23 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     }
 
     public void onPlayButtonClick(View v) {
-        isDetectionStarted = !isDetectionStarted;
-        toggleDetection();
+        if (!isDetectionStarted) {
+            isDetectionStarted = true;
+            toggleDetection();
+            if (PauseTime != null){
+                PauseTime.cancel();
+            }
+        }
+        else {
+            playButton.setChecked(true);
+
+            Intent intent = new Intent(this, ManualSmokeEvent.class);
+            isPopupMode = true;
+            Bundle b = new Bundle();
+            b.putString("Task", "Pause");
+            intent.putExtras(b);
+            startActivityForResult(intent, requestCodePause);
+        }
     }
 
     private void toggleDetection() {
@@ -284,13 +306,24 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     @Override
     protected void onActivityResult(int requestedCode, int resultCode, Intent intent) {
 
+        isPopupMode = false;
+
         if(requestedCode == requestCodePopUp) {
             if(resultCode == 0) {
                 // user timeout
                 setSmokingDetectionNoUserAction();
+                // 30 min Timeout starten
+                this.SetPauseFunction(1800000);
             } else if (resultCode == 1) {
                 // accepted event
                 setSmokingIsDetectedCorrectly();
+                // Nach Timeout fragen
+                Intent intentPause = new Intent(this, ManualSmokeEvent.class);
+                isPopupMode = true;
+                Bundle b = new Bundle();
+                b.putString("Task", "Pause");
+                intentPause.putExtras(b);
+                startActivityForResult(intentPause, requestCodePause);
             } else if (resultCode == 2) {
                 // declined event
                 Toast.makeText(this, "Event declined", Toast.LENGTH_SHORT).show();
@@ -313,7 +346,43 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         else if (requestedCode == requestCodeDAQ){
             bNoDetection = false;
         }
-        isPopupMode = false;
+        else if (requestedCode == requestCodePause) {
+
+            if (resultCode != 0) {
+                Bundle b = intent.getExtras();
+                String value;
+                if (b != null) {
+                    value = b.getString("Time");
+                    long time = new Long(value);
+                    time = time * 60000;
+
+                    this.SetPauseFunction(time);
+                }
+            }
+        }
+    }
+
+    protected void SetPauseFunction(long Timeout){
+
+        // Detektion beenden
+        if (isDetectionStarted) {
+            isDetectionStarted = false;
+            toggleDetection();
+            playButton.setChecked(false);
+        }
+
+        // Timer mit angebebener Zeit fuer Wiederbeginn starten
+        PauseTime = new CountDownTimer(Timeout, 1000) {
+
+            public void onTick(long millisUntilFinished) {
+            }
+
+            public void onFinish() {
+                isDetectionStarted = true;
+                playButton.setChecked(true);
+                toggleDetection();
+            }
+        }.start();
     }
 
     protected void  CreateNewManualSmokeEvent(LocalDateTime StartTime)
