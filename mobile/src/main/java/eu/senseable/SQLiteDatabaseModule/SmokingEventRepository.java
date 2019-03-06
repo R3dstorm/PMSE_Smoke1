@@ -15,12 +15,12 @@ public class SmokingEventRepository {
     private LiveData<List<SmokingEvent>> mAllValidEvents;
     private LiveData<List<SmokingEvent>> mLatestSyncLabelID;
     private LiveData<List<SmokingEvent>> mLatestEventId;
-    private SmokingEventRoomDatabase mSmokeEventDatabase;
+    private SmokingEventRoomDatabase db;
 
 
     public SmokingEventRepository(Application application) {
-        mSmokeEventDatabase = SmokingEventRoomDatabase.getDatabase(application);
-        mEventDao = mSmokeEventDatabase.smokingEventDao();
+        db = SmokingEventRoomDatabase.getDatabase(application);
+        mEventDao = db.smokingEventDao();
         mAllEvents = mEventDao.getAllEvents();
         mAllValidEvents = mEventDao.getAllValidEvents();
         mLatestSyncLabelID = mEventDao.getLatestSyncLabelId();
@@ -61,6 +61,12 @@ public class SmokingEventRepository {
         return mEventDao.setSyncLabel(tid);
     }
 
+    public void removeEvent (int tid) {new removeAsyncTask(mEventDao, tid).execute();}
+
+    public void restoreEvent (int tid) {new restoreAsyncTask(mEventDao, tid).execute();}
+
+    public int removeEventBlocking (int tid) {return mEventDao.removeEvent(tid);}
+
     public void insert (SmokingEvent event) {
         new insertAsyncTask(mEventDao).execute(event);
     }
@@ -82,6 +88,40 @@ public class SmokingEventRepository {
         }
     }
 
+    private static class removeAsyncTask extends AsyncTask<Void, Void, Void> {
+
+        private int mTid;
+        private SmokingEventDao mAsyncTaskDao;
+
+        removeAsyncTask(SmokingEventDao dao, int tid) {
+            mTid = tid;
+            mAsyncTaskDao = dao;
+        }
+
+        @Override
+        protected Void doInBackground(Void ...Params) {
+            mAsyncTaskDao.removeEvent(mTid);
+            return null;
+        }
+    }
+
+    private static class restoreAsyncTask extends AsyncTask<Void, Void, Void> {
+
+        private int mTid;
+        private SmokingEventDao mAsyncTaskDao;
+
+        restoreAsyncTask(SmokingEventDao dao, int tid) {
+            mTid = tid;
+            mAsyncTaskDao = dao;
+        }
+
+        @Override
+        protected Void doInBackground(Void ...Params) {
+            mAsyncTaskDao.restoreEvent(mTid);
+            return null;
+        }
+    }
+
     /* TODO parameters are not necessary -> remove*/
     public void deleteAll() {new deleteAsyncTask(mEventDao).execute();}
 
@@ -99,7 +139,7 @@ public class SmokingEventRepository {
     }
 
     public SmokingEventRoomDatabase getDatabase() {
-        return mSmokeEventDatabase;
+        return db;
     }
 
 }

@@ -29,13 +29,22 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventListAdapter.SmokingEventViewHolder> {
 
-
     public class SmokingEventViewHolder extends RecyclerView.ViewHolder {
+        public SmokingEvent mEvent;
         private final TextView smokingEventItemView;
+        public View foregroundView, backgroundView;
 
         private SmokingEventViewHolder(View itemView) {
             super(itemView);
             smokingEventItemView = itemView.findViewById(R.id.text_view);
+            foregroundView = itemView.findViewById(R.id.view_foreground);
+            backgroundView = itemView.findViewById(R.id.view_background);
+        }
+        public SmokingEvent getItem() {
+            return mEvent;
+        }
+        public void setItem(SmokingEvent event){
+            mEvent = event;
         }
     }
 
@@ -56,6 +65,7 @@ public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventLi
     public void onBindViewHolder(SmokingEventViewHolder holder, int position) {
         if (mSmokingEvents != null) {
             SmokingEvent current = mSmokingEvents.get(position);
+            holder.setItem(current);
             Date startDate = new Date();
             startDate = ConvertToDate(current.getStartDate());
             String startDateFormatted = ConvertDateToString(startDate);

@@ -12,12 +12,14 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
@@ -41,7 +43,6 @@ public class Activity extends AppCompatActivity {
 
     private static final String CHANNEL_ID = Activity.class.getSimpleName();
     private SmokingEventListAdapter mAdapter;
-    private Account mAccount;
     private SmokingEventViewModel mSEViewModel;
     private String startDateSmoke = "";
     private String startTimeSmoke = "";
@@ -71,7 +72,7 @@ public class Activity extends AppCompatActivity {
         dbSyncHandler = new Synchronize(this);
 
         /* Access Database: Get a new or existing viewModel from viewModelProvider */
-        mSEViewModel = ViewModelProviders.of((FragmentActivity) this).get(SmokingEventViewModel.class); /* TODO geht daS?*/
+        mSEViewModel = ViewModelProviders.of((FragmentActivity) this).get(SmokingEventViewModel.class);
 
         RecyclerView recyclerView = findViewById(R.id.my_recycler_view);
         final SmokingEventListAdapter adapter = new SmokingEventListAdapter(this);
@@ -81,71 +82,43 @@ public class Activity extends AppCompatActivity {
         // Add an observer on the LiveData returned by getAlphabetizedWords.
         // The onChanged() method fires when the observed data changes and the activity is
         // in the foreground.
-        mSEViewModel.getAllEvents().observe((LifecycleOwner) this, new Observer<List<SmokingEvent>>() {
+        mSEViewModel.getAllValidEvents().observe((LifecycleOwner) this, new Observer<List<SmokingEvent>>() {
             @Override
             public void onChanged(@Nullable final List<SmokingEvent> events) {
                 // Update the cached copy of the words in the adapter.
                 adapter.setEvents(events);
             }
         });
-/*
-        /** build a Notification for quick logging
-        NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
-        Intent intent = new Intent(this, CigBroadcastReceiver.class);
-        PendingIntent pintent = PendingIntent.getBroadcast(this, 0, intent, 0);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "abc", NotificationManager.IMPORTANCE_DEFAULT);
-            notificationManager.createNotificationChannel(channel);
-        }
+        SwipeController swipe = new SwipeController(0, ItemTouchHelper.LEFT);
+        ItemTouchHelper helper = new ItemTouchHelper(swipe);
+        helper.attachToRecyclerView(recyclerView);
 
-        Notification n = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle(getString(R.string.logcigtitle))
-                .setContentText(getString(R.string.logcig))
-                .setSmallIcon(R.drawable.ic_cig)
-                .setOngoing(true)
-                .setContentIntent(pintent)
-                .build();
+        swipe.setOnSwipedListener(new SwipeController.Listener() {
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder vh, int direction) {
+                final SmokingEvent ev = ((SmokingEventListAdapter.SmokingEventViewHolder) vh).getItem();
 
-        notificationManager.notify(007, n);
-*/
+                mSEViewModel.removeEvent(ev.getId());
 
+                Snackbar.make(findViewById(R.id.layout),
+                        getString(R.string.removed),
+                        Snackbar.LENGTH_LONG)
+                        .setAction(getString(R.string.UNDO), new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                mSEViewModel.restoreEvent(ev.getId());
+                            }
+                        })
+                        .show();
+
+            }
+        });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
-//        RecyclerView view = findViewById(R.id.my_recycler_view);
-//        mAdapter = new SmokingEventListAdapter(this);
-//
-//        view.setLayoutManager(new LinearLayoutManager(this));
-//        view.setAdapter(mAdapter);
-//
-//        SwipeController swipe = new SwipeController(0, ItemTouchHelper.LEFT);
-//        ItemTouchHelper helper = new ItemTouchHelper(swipe);
-//        helper.attachToRecyclerView(view);
-//
-//        swipe.setOnSwipedListener(new SwipeController.Listener() {
-//            @Override
-//            public void onSwiped(RecyclerView.ViewHolder vh, int direction) {
-///*
-//                final CigaretteEvent ev = ((SmokingEventListAdapter.SmokingEventViewHolder) vh).getItem();
-//                getContentResolver().delete(Contract.EVENTURI(ev.mID),null,null);
-//
-//                Snackbar.make(findViewById(R.id.layout),
-//                        getString(R.string.removed),
-//                        Snackbar.LENGTH_LONG)
-//                        .setAction(getString(R.string.UNDO), new View.OnClickListener() {
-//                            @Override
-//                            public void onClick(View view) {
-//                                getContentResolver().insert(Contract.EVENTSURI, ev.toContentValue());
-//                            }
-//                        })
-//                        .show();
-//*/
-//            }
-//        });
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -223,11 +196,6 @@ public class Activity extends AppCompatActivity {
                         dia.dismiss();
                     }
                 });
-
-                /*
-                CigaretteEvent ev = new CigaretteEvent();
-                getContentResolver().insert(Contract.EVENTSURI, ev.toContentValue());
-                */
             }
         });
 
@@ -296,14 +264,6 @@ public class Activity extends AppCompatActivity {
                 }
             }
         });
-/*
-        /** special case if started by the notification intent from the CigBroadcastReceiver
-        if (CigBroadcastReceiver.LOGCIG_ACTION.equals(getIntent().getAction())) {
-            CigaretteEvent ev = new CigaretteEvent();
-            getContentResolver().insert(Contract.EVENTSURI, ev.toContentValue());
-            setIntent(new Intent());
-        }
-*/
     }
 
     @Override

@@ -41,6 +41,15 @@ public class SmokingEventViewModel extends AndroidViewModel {
         return mRepository.getNewSyncEvents(lastSyncLabelId);
     }
 
+    public SmokingEventRoomDatabase getDatabase() {
+        return mRepository.getDatabase();
+    }
+
+    public void removeEvent (int tid) {mRepository.removeEvent(tid);}
+
+    public void restoreEvent (int tid) {mRepository.restoreEvent(tid);}
+
+
     public int setSyncLabel(int tid){
         return mRepository.setSyncLabel(tid);
     }

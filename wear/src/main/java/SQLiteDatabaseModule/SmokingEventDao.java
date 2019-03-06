@@ -64,4 +64,12 @@ public interface SmokingEventDao {
     /* Update the sync label */
     @Query("UPDATE smoking_event_table SET Is_Sync_Label = 1 WHERE id = :tid")
     int setSyncLabel(int tid);
+
+    /* Set Event to removed */
+    @Query("UPDATE smoking_event_table SET Removed = 1 WHERE id = :tid")
+    int removeEvent(int tid);
+
+    /* Restore Event */
+    @Query("UPDATE smoking_event_table SET Removed = 0 WHERE id = :tid")
+    int restoreEvent(int tid);
 }
