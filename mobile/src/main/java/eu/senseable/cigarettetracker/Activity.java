@@ -18,12 +18,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-
-import com.google.android.gms.wearable.Wearable;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -48,6 +47,7 @@ public class Activity extends AppCompatActivity {
     private String endDateSmoke = "";
     private String endTimeSmoke = "";
     private Synchronize dbSyncHandler;
+    private static final String LOG_TAG = "ExternalStorageController";
 
     DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyMMdd");
     DateTimeFormatter dateYearFormatter = DateTimeFormatter.ofPattern("yy");
@@ -231,13 +231,14 @@ public class Activity extends AppCompatActivity {
             }
         });
 
-        FloatingActionButton fabDel = (FloatingActionButton) findViewById(R.id.fabDel);
-        fabDel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mSEViewModel.deleteAll();
-            }
-        });
+
+        //     FloatingActionButton fabDel = (FloatingActionButton) findViewById(R.id.fabDel);
+        //     fabDel.setOnClickListener(new View.OnClickListener() {
+        //         @Override
+        //         public void onClick(View view) {
+        //             mSEViewModel.deleteAll();
+        //         }
+        //     });
 
         FloatingActionButton fabDbExp = (FloatingActionButton) findViewById(R.id.fabDbExp);
         fabDbExp.setOnClickListener(new View.OnClickListener() {
@@ -250,10 +251,9 @@ public class Activity extends AppCompatActivity {
                     Cursor c = db.query("SELECT * FROM smoking_event_table", null);
                     int rowcount = 0;
                     int colcount = 0;
-                    File sdCardDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
                     String filename = "SmokeEvents_" + exportTime + ".csv";
                     // the name of the file to export with
-                    File saveFile = new File(sdCardDir, filename);
+                    File saveFile = new File(getPublicAppStorageDir().getAbsolutePath() + "/" +filename);
                     FileWriter fw = new FileWriter(saveFile);
 
                     BufferedWriter bw = new BufferedWriter(fw);
@@ -313,7 +313,7 @@ public class Activity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
-      super.onPause();
+        super.onPause();
     }
 
     @Override
@@ -328,5 +328,18 @@ public class Activity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_counter, menu);
 
         return true;
+    }
+
+    public File getPublicAppStorageDir() {
+        // Get the directory for the user's public pictures directory.
+        File file = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS), "BeatSmoking");
+        if(!file.exists()) {
+            file.mkdirs();
+        }
+        if (!file.mkdirs()) {
+            Log.i(LOG_TAG, "Directory not created");
+        }
+        return file;
     }
 }
