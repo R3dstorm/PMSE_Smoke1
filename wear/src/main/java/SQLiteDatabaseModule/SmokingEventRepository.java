@@ -57,6 +57,8 @@ public class SmokingEventRepository {
         return mEventDao.getNewSyncEventsTest(lastSyncLabelId);
     }
 
+    public List<SmokingEvent> getEventByUID(String uniqueID) {return mEventDao.getEventByUID(uniqueID);}
+
     public int setSyncLabel(int tid){
         return mEventDao.setSyncLabel(tid);
     }

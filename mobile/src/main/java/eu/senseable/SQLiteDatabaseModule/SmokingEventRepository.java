@@ -15,6 +15,7 @@ public class SmokingEventRepository {
     private LiveData<List<SmokingEvent>> mAllValidEvents;
     private LiveData<List<SmokingEvent>> mLatestSyncLabelID;
     private LiveData<List<SmokingEvent>> mLatestEventId;
+    private LiveData<List<SmokingEvent>> mAllRemovedEvents;
     private SmokingEventRoomDatabase db;
 
 
@@ -56,6 +57,8 @@ public class SmokingEventRepository {
     public List<SmokingEvent> getNewSyncEventsTest(int lastSyncLabelId){
         return mEventDao.getNewSyncEventsTest(lastSyncLabelId);
     }
+
+    public List<SmokingEvent> getAllRemovedEvents(){return mEventDao.getAllRemovedEventsList();}
 
     public int setSyncLabel(int tid){
         return mEventDao.setSyncLabel(tid);

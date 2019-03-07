@@ -10,7 +10,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 
-@Database(entities = {SmokingEvent.class}, version = 3)
+@Database(entities = {SmokingEvent.class}, version = 5)
 public abstract class SmokingEventRoomDatabase extends RoomDatabase {
 
     public abstract SmokingEventDao smokingEventDao();
@@ -74,7 +74,8 @@ public abstract class SmokingEventRoomDatabase extends RoomDatabase {
             mDao.deleteAll();
 
             SmokingEvent event = new SmokingEvent("firstEvent", "20190101",
-                    "1125", "20190102", "1200", false, false,false);
+                    "1125", "20190102", "1200",
+                    false, false,true, "0");
             mDao.insert(event);
             return null;
         }

@@ -60,6 +60,9 @@ public interface SmokingEventDao {
     @Query("SELECT * from smoking_event_table ORDER BY id DESC LIMIT 1")
     List<SmokingEvent>  getLatestEventIdTest();
 
+    /* Query to get all elements created after last syncLabel */
+    @Query("SELECT * from smoking_event_table WHERE Unique_ID = :uniqueID ORDER BY id DESC")
+    List<SmokingEvent> getEventByUID(String uniqueID);
 
     /* Update the sync label */
     @Query("UPDATE smoking_event_table SET Is_Sync_Label = 1 WHERE id = :tid")

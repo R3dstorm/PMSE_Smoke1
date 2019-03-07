@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.UUID;
 
 import eu.senseable.SQLiteDatabaseModule.SmokingEvent;
 import eu.senseable.SQLiteDatabaseModule.SmokingEventListAdapter;
@@ -183,7 +184,9 @@ public class Activity extends AppCompatActivity {
                             endTimeSmoke = "0" + endTimeSmoke;
                         }
 
-                        SmokingEvent ev = new SmokingEvent("Smoking", startDateSmoke, startTimeSmoke, endDateSmoke, endTimeSmoke, true, false, false);
+                        SmokingEvent ev = new SmokingEvent("Smoking", startDateSmoke,
+                                startTimeSmoke, endDateSmoke, endTimeSmoke, true,
+                                false, false, UUID.randomUUID().toString());
                         mSEViewModel.insert(ev);
                         dia.dismiss();
                     }
