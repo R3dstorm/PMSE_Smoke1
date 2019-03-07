@@ -28,7 +28,7 @@ public interface SmokingEventDao {
     List<SmokingEvent> getAllEventsList();
 
     /* Get all valid events (not removed) */
-    @Query("SELECT * from smoking_event_table WHERE removed = 0 ORDER BY Start_Date, Start_Time ASC")
+    @Query("SELECT * from smoking_event_table WHERE removed = 0 ORDER BY Start_Date DESC, Start_Time DESC")
     LiveData<List<SmokingEvent>> getAllValidEvents();
 
     /* TODO Dismiss*/
