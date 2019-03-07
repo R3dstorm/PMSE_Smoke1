@@ -24,6 +24,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
+import java.util.UUID;
 
 import MachineLearningModule.SmokeDetector;
 import SQLiteDatabaseModule.SmokingEvent;
@@ -396,7 +397,8 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         String stopTime = StartTime.format(timeFormatter);
 
         SmokingEvent event = new SmokingEvent("Smoking", startDate,
-                startTime, stopDate, stopTime, true, false, false);
+                startTime, stopDate, stopTime, true,
+                false, false, UUID.randomUUID().toString());
 
         if (sensorAiMediator == null) {
             // sensorAiMediator not initialized
@@ -419,7 +421,8 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         Toast.makeText(this, "Event accepted", Toast.LENGTH_SHORT).show();
 
         SmokingEvent event = new SmokingEvent("Smoking", startDate,
-                startTime, stopDate, stopTime, true, false, false);
+                startTime, stopDate, stopTime, true,
+                false, false, UUID.randomUUID().toString());
 
         sensorAiMediator.storeSmokingEvent(event);
 
@@ -435,7 +438,8 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
         Toast.makeText(this, "No User Interaction", Toast.LENGTH_SHORT).show();
 
         SmokingEvent event = new SmokingEvent("Smoking", startDate,
-                startTime, stopDate, stopTime, false, false, false);
+                startTime, stopDate, stopTime, false,
+                false, false, UUID.randomUUID().toString());
 
         sensorAiMediator.storeSmokingEvent(event);
 

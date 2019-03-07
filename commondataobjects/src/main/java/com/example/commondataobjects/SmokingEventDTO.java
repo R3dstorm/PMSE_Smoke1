@@ -13,10 +13,11 @@ public class SmokingEventDTO implements Serializable {
     private boolean eventConfirmed;
     private boolean isSyncLabel;
     private boolean removed;
+    private String uniqueID;
 
     public SmokingEventDTO (int id, String test, String startDate, String startTime,
                             String stopDate, String stopTime, boolean eventConfirmed,
-                            boolean isSyncLabel, boolean removed){
+                            boolean isSyncLabel, boolean removed, String uniqueID){
         this.id = id;
         this.test = test;
         this.startDate = startDate;
@@ -26,6 +27,7 @@ public class SmokingEventDTO implements Serializable {
         this.eventConfirmed = eventConfirmed;
         this.isSyncLabel = isSyncLabel;
         this.removed = removed;
+        this.uniqueID = uniqueID;
     }
 
     public String getTest() {
@@ -59,4 +61,6 @@ public class SmokingEventDTO implements Serializable {
     public boolean isRemoved() {
         return removed;
     }
+
+    public String getUniqueID() {return uniqueID;}
 }

@@ -61,6 +61,7 @@ public class SynchronizeService extends JobIntentService {
 
         List<SmokingEvent> newSmokingEvents = null;
         List<SmokingEvent> receivedSmokingEvents = null;
+        List<SmokingEvent> removedSmokingEvents = null;
         myContext = getApplicationContext();
 
         /* Direct access to database/repository (running in own thread without View): */
@@ -85,6 +86,13 @@ public class SynchronizeService extends JobIntentService {
                 /* there has been no SyncLabel set yet -> get all events */
                 newSmokingEvents = smEvRepo.getAllEventsList();
             }
+            /* add removed events to sync-list */
+            removedSmokingEvents = smEvRepo.getAllRemovedEvents();
+            if (!removedSmokingEvents.isEmpty()){
+                /* In case there are removed Events -> add them to newSmokingEvents*/
+                newSmokingEvents.addAll(removedSmokingEvents);
+            }
+
             /* Send data back to watch */
             sendSyncMessage(newSmokingEvents);
             //sendSyncMessage(getTestEvents());
@@ -167,7 +175,7 @@ public class SynchronizeService extends JobIntentService {
         while (size >0){
             SmokingEvent event = new SmokingEvent("0",String.valueOf(10 - size),"0",
                     "0","0",false,false,
-                    false);
+                    false, "0");
             testEvents.add(event);
 
             size -= 1;
@@ -202,7 +210,7 @@ public class SynchronizeService extends JobIntentService {
             for (SmokingEventDTO eventDto : serialEvents) {
                 SmokingEvent event = new SmokingEvent("0","0","0",
                         "0","0",false,false,
-                        false);
+                        false, "0");
                 deserializedEvents.add(event.setTransferObject(eventDto));
             }
         }

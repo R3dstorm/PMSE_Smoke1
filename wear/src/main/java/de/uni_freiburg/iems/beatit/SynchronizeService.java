@@ -100,7 +100,22 @@ public class SynchronizeService extends JobIntentService{
 
             /* import the events into the data base: */
             for (SmokingEvent smokingEvent : receivedSmokingEvents) {
-                smEvRepo.insertBlocking(smokingEvent);
+                if (smokingEvent.getRemoved()){
+                    /* removed event -> find existing and set to removed */
+                    List<SmokingEvent> testEvent =
+                            smEvRepo.getEventByUID(smokingEvent.getUniqueID());
+                    if (!testEvent.isEmpty()){
+                        /* set to removed*/
+                        smEvRepo.removeEventBlocking(testEvent.get(0).getId());
+                    }
+                    else{
+                        /* event has never been synchronized -> do nothing */
+                    }
+                }
+                else{
+                    /* new event -> insert */
+                    smEvRepo.insertBlocking(smokingEvent);
+                }
             }
 
             /* set synchronization label */
@@ -233,7 +248,7 @@ public class SynchronizeService extends JobIntentService{
             for (SmokingEventDTO eventDto : serialEvents) {
                 SmokingEvent event = new SmokingEvent("0","0","0",
                         "0","0",false,false,
-                        false);
+                        false, "0");
                 deserializedEvents.add(event.setTransferObject(eventDto));
             }
         }
