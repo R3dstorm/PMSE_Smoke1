@@ -1,7 +1,6 @@
 package eu.senseable.cigarettetracker;
 
 import android.Manifest;
-import android.accounts.Account;
 import android.app.Dialog;
 import android.arch.lifecycle.LifecycleOwner;
 import android.arch.lifecycle.Observer;
@@ -25,6 +24,7 @@ import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -157,38 +157,40 @@ public class Activity extends AppCompatActivity {
                 Button addButton = (Button) dia.findViewById(R.id.okayButton);
                 addButton.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
+                        boolean checkInputs = checkInputParameter(dia);
+                        if(checkInputs) {
+                            EditText edit = (EditText) dia.findViewById(R.id.cigdateyear);
+                            startDateSmoke = edit.getText().toString();
+                            edit = (EditText) dia.findViewById(R.id.cigdatemonth);
+                            String tmp = edit.getText().toString();
+                            startDateSmoke = startDateSmoke + tmp;
+                            edit = (EditText) dia.findViewById(R.id.cigdateday);
+                            tmp = edit.getText().toString();
+                            startDateSmoke = startDateSmoke + tmp;
+                            endDateSmoke = startDateSmoke;
+                            edit = (EditText) dia.findViewById(R.id.startTImeHour);
+                            startTimeSmoke = edit.getText().toString();
+                            edit = (EditText) dia.findViewById(R.id.startTImeMinute);
+                            tmp = edit.getText().toString();
+                            startTimeSmoke = startTimeSmoke + tmp + "00"; // seconds are assumed as o seconds
+                            edit = (EditText) dia.findViewById(R.id.durationminutes);
+                            String durationString = edit.getText().toString();
+                            edit = (EditText) dia.findViewById(R.id.durationseconds);
+                            durationString = durationString + edit.getText().toString();
+                            int duration = Integer.parseInt(durationString);
+                            int startTimeInt = Integer.parseInt(startTimeSmoke);
+                            int endTime = startTimeInt + duration;
+                            endTimeSmoke = Integer.toString(endTime);
+                            if (endTimeSmoke.length() == 5) {
+                                endTimeSmoke = "0" + endTimeSmoke;
+                            }
 
-                        EditText edit=(EditText)dia.findViewById(R.id.cigdateyear);
-                        startDateSmoke=edit.getText().toString();
-                        edit = (EditText)dia.findViewById(R.id.cigdatemonth);
-                        String tmp = edit.getText().toString();
-                        startDateSmoke = startDateSmoke + tmp;
-                        edit = (EditText)dia.findViewById(R.id.cigdateday);
-                        tmp = edit.getText().toString();
-                        startDateSmoke = startDateSmoke + tmp;
-                        endDateSmoke = startDateSmoke;
-                        edit = (EditText)dia.findViewById(R.id.startTImeHour);
-                        startTimeSmoke= edit.getText().toString();
-                        edit = (EditText)dia.findViewById(R.id.startTImeMinute);
-                        tmp = edit.getText().toString();
-                        startTimeSmoke = startTimeSmoke + tmp + "00"; // seconds are assumed as o seconds
-                        edit = (EditText)dia.findViewById(R.id.durationminutes);
-                        String durationString = edit.getText().toString();
-                        edit = (EditText)dia.findViewById(R.id.durationseconds);
-                        durationString = durationString + edit.getText().toString();
-                        int duration = Integer.parseInt(durationString);
-                        int startTimeInt = Integer.parseInt(startTimeSmoke);
-                        int endTime = startTimeInt + duration;
-                        endTimeSmoke = Integer.toString(endTime);
-                        if(endTimeSmoke.length() == 5) {
-                            endTimeSmoke = "0" + endTimeSmoke;
+                            SmokingEvent ev = new SmokingEvent("Smoking", startDateSmoke,
+                                    startTimeSmoke, endDateSmoke, endTimeSmoke, true,
+                                    false, false, UUID.randomUUID().toString());
+                            mSEViewModel.insert(ev);
+                            dia.dismiss();
                         }
-
-                        SmokingEvent ev = new SmokingEvent("Smoking", startDateSmoke,
-                                startTimeSmoke, endDateSmoke, endTimeSmoke, true,
-                                false, false, UUID.randomUUID().toString());
-                        mSEViewModel.insert(ev);
-                        dia.dismiss();
                     }
                 });
 
@@ -304,5 +306,59 @@ public class Activity extends AppCompatActivity {
             Log.i(LOG_TAG, "Directory not created");
         }
         return file;
+    }
+
+    private boolean checkInputParameter(Dialog dia)
+    {
+        EditText edit=(EditText)dia.findViewById(R.id.cigdateyear);
+        int inputStartDateSmoke=Integer.parseInt(edit.getText().toString());
+        if(inputStartDateSmoke < 18 || inputStartDateSmoke > 19)
+        {
+            Toast.makeText(this, "Incorrect year value", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        edit = (EditText)dia.findViewById(R.id.cigdatemonth);
+        inputStartDateSmoke = Integer.parseInt(edit.getText().toString());
+        if(inputStartDateSmoke < 1 || inputStartDateSmoke > 12)
+        {
+            Toast.makeText(this, "Incorrect month value", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        edit = (EditText)dia.findViewById(R.id.cigdateday);
+        inputStartDateSmoke = Integer.parseInt(edit.getText().toString());
+        if(inputStartDateSmoke < 1 || inputStartDateSmoke > 31)
+        {
+            Toast.makeText(this, "Incorrect day value", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        edit = (EditText)dia.findViewById(R.id.startTImeHour);
+        int inputStartTimeData = Integer.parseInt(edit.getText().toString());
+        if(inputStartTimeData < 0 || inputStartTimeData > 24)
+        {
+            Toast.makeText(this, "Incorrect hour value", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        edit = (EditText)dia.findViewById(R.id.startTImeMinute);
+        inputStartTimeData = Integer.parseInt(edit.getText().toString());
+        if(inputStartTimeData < 0 || inputStartTimeData > 59)
+        {
+            Toast.makeText(this, "Incorrect minutes value", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        edit = (EditText)dia.findViewById(R.id.durationminutes);
+        int durationTime = Integer.parseInt(edit.getText().toString());
+        if(durationTime < 0 || durationTime > 59)
+        {
+            Toast.makeText(this, "Incorrect duration minutes value", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        edit = (EditText)dia.findViewById(R.id.durationseconds);
+        durationTime = Integer.parseInt(edit.getText().toString());
+        if(durationTime < 0 || durationTime > 59)
+        {
+            Toast.makeText(this, "Incorrect duration seconds value", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        return true;
     }
 }
