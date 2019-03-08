@@ -51,11 +51,9 @@ public class Activity extends AppCompatActivity {
     private Synchronize dbSyncHandler;
     private static final String LOG_TAG = "ExternalStorageController";
 
-    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyMMdd");
     DateTimeFormatter dateYearFormatter = DateTimeFormatter.ofPattern("yy");
     DateTimeFormatter dateMonthFormatter = DateTimeFormatter.ofPattern("MM");
     DateTimeFormatter dateDayFormatter = DateTimeFormatter.ofPattern("dd");
-    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
     DateTimeFormatter timeHourFormatter = DateTimeFormatter.ofPattern("HH");
     DateTimeFormatter timeMinutesFormatter = DateTimeFormatter.ofPattern("mm");
     DateTimeFormatter exportFormatter = DateTimeFormatter.ofPattern("yyMMdd_hhmmss");
@@ -127,8 +125,6 @@ public class Activity extends AppCompatActivity {
             public void onClick(View view) {
                 // Dialog für das hinzufügen muss geöffnet werden.
                 LocalDateTime defaultValuePopUp = LocalDateTime.now();
-                String startDateDefault = defaultValuePopUp.format(dateFormatter);
-                String startTimeDefault = defaultValuePopUp.format(timeFormatter);
                 String startDateYearDefault = defaultValuePopUp.format(dateYearFormatter);
                 String startDateMonthDefault = defaultValuePopUp.format(dateMonthFormatter);
                 String startDateDayDefault = defaultValuePopUp.format(dateDayFormatter);
@@ -139,51 +135,18 @@ public class Activity extends AppCompatActivity {
 
                 final Dialog dia = new Dialog(Activity.this);
                 dia.setContentView(R.layout.add_smoke_event);
-                EditText edit=(EditText)dia.findViewById(R.id.cigdateyear);
-                edit.setText(startDateYearDefault);
-                edit=(EditText)dia.findViewById(R.id.cigdatemonth);
-                edit.setText(startDateMonthDefault);
-                edit=(EditText)dia.findViewById(R.id.cigdateday);
-                edit.setText(startDateDayDefault);
-                edit = (EditText) dia.findViewById(R.id.startTImeHour);
-                edit.setText(startTimeHourDefault);
-                edit = (EditText) dia.findViewById(R.id.startTImeMinute);
-                edit.setText(startTimeMinutesDefault);
-                edit = (EditText)dia.findViewById(R.id.durationminutes);
-                edit.setText(durationTimeMinutesDefault);
-                edit = (EditText)dia.findViewById(R.id.durationseconds);
-                edit.setText(durationTimeSecondsDefault);
+
+                setDefaultValuesForDialog(dia, startDateYearDefault, startDateMonthDefault,startDateDayDefault,
+                                               startTimeHourDefault,  startTimeMinutesDefault,
+                                               durationTimeMinutesDefault,  durationTimeSecondsDefault);
+
                 dia.show();
                 Button addButton = (Button) dia.findViewById(R.id.okayButton);
                 addButton.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
                         boolean checkInputs = checkInputParameter(dia);
                         if(checkInputs) {
-                            EditText edit = (EditText) dia.findViewById(R.id.cigdateyear);
-                            startDateSmoke = edit.getText().toString();
-                            edit = (EditText) dia.findViewById(R.id.cigdatemonth);
-                            String tmp = edit.getText().toString();
-                            startDateSmoke = startDateSmoke + tmp;
-                            edit = (EditText) dia.findViewById(R.id.cigdateday);
-                            tmp = edit.getText().toString();
-                            startDateSmoke = startDateSmoke + tmp;
-                            endDateSmoke = startDateSmoke;
-                            edit = (EditText) dia.findViewById(R.id.startTImeHour);
-                            startTimeSmoke = edit.getText().toString();
-                            edit = (EditText) dia.findViewById(R.id.startTImeMinute);
-                            tmp = edit.getText().toString();
-                            startTimeSmoke = startTimeSmoke + tmp + "00"; // seconds are assumed as o seconds
-                            edit = (EditText) dia.findViewById(R.id.durationminutes);
-                            String durationString = edit.getText().toString();
-                            edit = (EditText) dia.findViewById(R.id.durationseconds);
-                            durationString = durationString + edit.getText().toString();
-                            int duration = Integer.parseInt(durationString);
-                            int startTimeInt = Integer.parseInt(startTimeSmoke);
-                            int endTime = startTimeInt + duration;
-                            endTimeSmoke = Integer.toString(endTime);
-                            if (endTimeSmoke.length() == 5) {
-                                endTimeSmoke = "0" + endTimeSmoke;
-                            }
+                            convertInputDataToEventData(dia);
 
                             SmokingEvent ev = new SmokingEvent("Smoking", startDateSmoke,
                                     startTimeSmoke, endDateSmoke, endTimeSmoke, true,
@@ -203,15 +166,6 @@ public class Activity extends AppCompatActivity {
                 });
             }
         });
-
-
-        //     FloatingActionButton fabDel = (FloatingActionButton) findViewById(R.id.fabDel);
-        //     fabDel.setOnClickListener(new View.OnClickListener() {
-        //         @Override
-        //         public void onClick(View view) {
-        //             mSEViewModel.deleteAll();
-        //         }
-        //     });
 
         FloatingActionButton fabDbExp = (FloatingActionButton) findViewById(R.id.fabDbExp);
         fabDbExp.setOnClickListener(new View.OnClickListener() {
@@ -360,5 +314,54 @@ public class Activity extends AppCompatActivity {
             return false;
         }
         return true;
+    }
+
+    private void convertInputDataToEventData(Dialog dia)
+    {
+        EditText edit = (EditText) dia.findViewById(R.id.cigdateyear);
+        startDateSmoke = edit.getText().toString();
+        edit = (EditText) dia.findViewById(R.id.cigdatemonth);
+        String tmp = edit.getText().toString();
+        startDateSmoke = startDateSmoke + tmp;
+        edit = (EditText) dia.findViewById(R.id.cigdateday);
+        tmp = edit.getText().toString();
+        startDateSmoke = startDateSmoke + tmp;
+        endDateSmoke = startDateSmoke;
+        edit = (EditText) dia.findViewById(R.id.startTImeHour);
+        startTimeSmoke = edit.getText().toString();
+        edit = (EditText) dia.findViewById(R.id.startTImeMinute);
+        tmp = edit.getText().toString();
+        startTimeSmoke = startTimeSmoke + tmp + "00"; // seconds are assumed as o seconds
+        edit = (EditText) dia.findViewById(R.id.durationminutes);
+        String durationString = edit.getText().toString();
+        edit = (EditText) dia.findViewById(R.id.durationseconds);
+        durationString = durationString + edit.getText().toString();
+        int duration = Integer.parseInt(durationString);
+        int startTimeInt = Integer.parseInt(startTimeSmoke);
+        int endTime = startTimeInt + duration;
+        endTimeSmoke = Integer.toString(endTime);
+        if (endTimeSmoke.length() == 5) {
+            endTimeSmoke = "0" + endTimeSmoke;
+        }
+    }
+
+    private void setDefaultValuesForDialog(Dialog dia, String startDateYearDefault, String startDateMonthDefault,
+                                           String startDateDayDefault, String startTimeHourDefault, String startTimeMinutesDefault,
+                                           String durationTimeMinutesDefault, String durationTimeSecondsDefault)
+    {
+        EditText edit=(EditText)dia.findViewById(R.id.cigdateyear);
+        edit.setText(startDateYearDefault);
+        edit=(EditText)dia.findViewById(R.id.cigdatemonth);
+        edit.setText(startDateMonthDefault);
+        edit=(EditText)dia.findViewById(R.id.cigdateday);
+        edit.setText(startDateDayDefault);
+        edit = (EditText) dia.findViewById(R.id.startTImeHour);
+        edit.setText(startTimeHourDefault);
+        edit = (EditText) dia.findViewById(R.id.startTImeMinute);
+        edit.setText(startTimeMinutesDefault);
+        edit = (EditText)dia.findViewById(R.id.durationminutes);
+        edit.setText(durationTimeMinutesDefault);
+        edit = (EditText)dia.findViewById(R.id.durationseconds);
+        edit.setText(durationTimeSecondsDefault);
     }
 }
