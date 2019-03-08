@@ -29,12 +29,16 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import org.joda.time.DateTime;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
@@ -60,6 +64,8 @@ public class Activity extends AppCompatActivity {
     DateTimeFormatter timeHourFormatter = DateTimeFormatter.ofPattern("HH");
     DateTimeFormatter timeMinutesFormatter = DateTimeFormatter.ofPattern("mm");
     DateTimeFormatter exportFormatter = DateTimeFormatter.ofPattern("yyMMdd_hhmmss");
+    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyMMdd");
+    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,10 +129,55 @@ public class Activity extends AppCompatActivity {
                         // do whatever
                     }
 
-                    @Override public void onLongItemClick(RecyclerView.ViewHolder view, int position) {
+                    @Override public boolean onDoubleTap(RecyclerView.ViewHolder view, int position) {
                         // do whatever
                         final SmokingEvent ev = ((SmokingEventListAdapter.SmokingEventViewHolder) view).getItem();
-                        mSEViewModel.removeEvent(ev.getId());
+
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyMMdd HHmmss");
+                        LocalDateTime start = LocalDateTime.parse(ev.getStartDate() + " " + ev.getStartTime(), formatter);
+                        LocalDateTime stop = LocalDateTime.parse(ev.getStopDate() + " " + ev.getStopTime(), formatter);
+                        Duration duration = Duration.between(start, stop);
+                        String durationMinutes = String.format("%02d", duration.getSeconds() / 60);
+                        String durationSeconds = String.format("%02d", duration.getSeconds() % 60);
+                        String day = String.format("%02d", start.getDayOfMonth());
+                        String year = (String.format("%02d", start.getYear())).substring(2,4);
+                        String month = String.format("%02d", start.getMonth().getValue());
+                        String hours = String.format("%02d", start.getHour());
+                        String minutes = String.format("%02d", start.getMinute());
+                        final Dialog dia = new Dialog(Activity.this);
+                        dia.setContentView(R.layout.add_smoke_event);
+
+                        setDefaultValuesForDialog(dia, year, month, day,
+                                hours, minutes,
+                                durationMinutes, durationSeconds);
+
+                        dia.show();
+
+                        Button addButton = (Button) dia.findViewById(R.id.okayButton);
+                        addButton.setOnClickListener(new View.OnClickListener() {
+                            public void onClick(View v) {
+                                boolean checkInputs = checkInputParameter(dia);
+                                if (checkInputs) {
+                                    convertInputDataToEventData(dia);
+
+                                    SmokingEvent editedEvent = new SmokingEvent("Smoking", startDateSmoke,
+                                            startTimeSmoke, endDateSmoke, endTimeSmoke, true,
+                                            false, false, UUID.randomUUID().toString());
+                                    mSEViewModel.removeEvent(ev.getId());
+                                    mSEViewModel.insert(editedEvent);
+                                    dia.dismiss();
+                                }
+                            }
+                        });
+
+                        Button abortButton = (Button) dia.findViewById(R.id.abortButton);
+                        abortButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                dia.dismiss();
+                            }
+                        });
+                        return true;
                     }
                 })
         );
@@ -326,6 +377,7 @@ public class Activity extends AppCompatActivity {
     }
 
     private void convertInputDataToEventData(Dialog dia) {
+        DateTime dateTime = new DateTime();
         EditText edit = (EditText) dia.findViewById(R.id.cigdateyear);
         startDateSmoke = edit.getText().toString();
         edit = (EditText) dia.findViewById(R.id.cigdatemonth);
@@ -334,7 +386,6 @@ public class Activity extends AppCompatActivity {
         edit = (EditText) dia.findViewById(R.id.cigdateday);
         tmp = edit.getText().toString();
         startDateSmoke = startDateSmoke + tmp;
-        endDateSmoke = startDateSmoke;
         edit = (EditText) dia.findViewById(R.id.startTImeHour);
         startTimeSmoke = edit.getText().toString();
         edit = (EditText) dia.findViewById(R.id.startTImeMinute);
@@ -342,12 +393,21 @@ public class Activity extends AppCompatActivity {
         startTimeSmoke = startTimeSmoke + tmp + "00"; // seconds are assumed as o seconds
         edit = (EditText) dia.findViewById(R.id.durationminutes);
         String durationString = edit.getText().toString();
+        int durationMinutes = Integer.parseInt(durationString);
         edit = (EditText) dia.findViewById(R.id.durationseconds);
+        int durationSeconds = Integer.parseInt(edit.getText().toString());
         durationString = durationString + edit.getText().toString();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyMMdd HHmmss");
+        LocalDateTime stop = LocalDateTime.parse(startDateSmoke + " " + startTimeSmoke, formatter);
+        stop = stop.plus(durationMinutes, ChronoUnit.MINUTES);
+        stop = stop.plus(durationSeconds, ChronoUnit.SECONDS);
         int duration = Integer.parseInt(durationString);
         int startTimeInt = Integer.parseInt(startTimeSmoke);
-        int endTime = startTimeInt + duration;
-        endTimeSmoke = Integer.toString(endTime);
+
+        endDateSmoke = stop.format(dateFormatter);
+        endTimeSmoke = stop.format(timeFormatter);
+
+
         if (endTimeSmoke.length() == 5) {
             endTimeSmoke = "0" + endTimeSmoke;
         }
@@ -380,7 +440,7 @@ public class Activity extends AppCompatActivity {
         public interface OnItemClickListener {
             public void onItemClick(View view, int position);
 
-            public void onLongItemClick(RecyclerView.ViewHolder view, int position);
+            public boolean onDoubleTap(RecyclerView.ViewHolder view, int position);
         }
 
         GestureDetector mGestureDetector;
@@ -394,12 +454,13 @@ public class Activity extends AppCompatActivity {
                 }
 
                 @Override
-                public void onLongPress(MotionEvent e) {
+                public boolean onDoubleTap(MotionEvent e) {
                     View child = recyclerView.findChildViewUnder(e.getX(), e.getY());
                     RecyclerView.ViewHolder vh = recyclerView.findContainingViewHolder(child);
                     if (child != null && mListener != null) {
-                        mListener.onLongItemClick(vh, recyclerView.getChildAdapterPosition(child));
+                        mListener.onDoubleTap(vh, recyclerView.getChildAdapterPosition(child));
                     }
+                    return true;
                 }
             });
         }
