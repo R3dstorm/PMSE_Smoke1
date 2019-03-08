@@ -68,6 +68,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
 
     private int requestCodePopUp = 11;
     private int requestCodeDAQ = 12;
+    private int requestCodeLog = 13;
     private int requestCodeManual = 15;
     private int requestCodePause = 16;
 
@@ -146,14 +147,20 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     @Override
     protected void onStart() {
         super.onStart();
-        isDetectionStarted = true;
-        playButton.setChecked(true);
-        toggleDetection();
+        if (isDetectionStarted == false && PauseTime == null) {
+            isDetectionStarted = true;
+            playButton.setChecked(true);
+            toggleDetection();
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if(!isPopupMode && isDetectionStarted) {
+            isDetectionStarted = false;
+            toggleDetection();
+        }
         if(!isPopupMode) {
             if (wakeLock != null) {
                 if (wakeLock.isHeld()) {
@@ -174,10 +181,6 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     @Override
     protected void onStop() {
         super.onStop();
-        if(!isPopupMode && isDetectionStarted) {
-            isDetectionStarted = false;
-            toggleDetection();
-        }
     }
 
     @Override
@@ -221,6 +224,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
             toggleDetection();
             if (PauseTime != null){
                 PauseTime.cancel();
+                PauseTime = null;
             }
         }
         else {
@@ -245,6 +249,13 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
                 sensorAiMediator = null;
             }
             sensorAiMediator = new Mediator(this, true, EcologicalMomentaryAssesmentActivity.this);
+
+            if (PauseTime == null){
+                Toast.makeText(this, "Detection started", Toast.LENGTH_SHORT).show();
+            }
+            else{
+                Toast.makeText(this, "Detection resumed", Toast.LENGTH_SHORT).show();
+            }
         } else {
             stopService(sensorServiceIntent);
             sensorServiceIntent = null;
@@ -252,12 +263,19 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
             sensorAiMediator.unbindFromServices();
             sensorServiceStarted = false;
             sensorAiMediator = null;
+            if (PauseTime == null){
+                Toast.makeText(this, "Detection stopped", Toast.LENGTH_SHORT).show();
+            }
+            else{
+                Toast.makeText(this, "Detection paused", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
     public void onLogButtonClick(View v){
+        isPopupMode = true;
         Intent intent = new Intent(this, SmokingLogActivity.class);
-        startActivity(intent);
+        startActivityForResult(intent, requestCodeLog);
     }
 
     @Override
@@ -360,30 +378,47 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
                     this.SetPauseFunction(time);
                 }
             }
+            else
+            {
+                PauseTime = null;
+            }
         }
     }
 
     protected void SetPauseFunction(long Timeout){
 
-        // Detektion beenden
-        if (isDetectionStarted) {
-            isDetectionStarted = false;
-            toggleDetection();
-            playButton.setChecked(false);
-        }
+        if (Timeout != 0) {
 
-        // Timer mit angebebener Zeit fuer Wiederbeginn starten
-        PauseTime = new CountDownTimer(Timeout, 1000) {
+            // Timer mit angebebener Zeit fuer Wiederbeginn starten
+            PauseTime = new CountDownTimer(Timeout, 1000) {
 
-            public void onTick(long millisUntilFinished) {
-            }
+                public void onTick(long millisUntilFinished) {
+                }
 
-            public void onFinish() {
-                isDetectionStarted = true;
-                playButton.setChecked(true);
+                public void onFinish() {
+
+                    if (isPopupMode == false) {
+                        Intent openMainActivity = new Intent(EcologicalMomentaryAssesmentActivity.this, EcologicalMomentaryAssesmentActivity.class);
+                        openMainActivity.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                        startActivityIfNeeded(openMainActivity, 0);
+                    }
+
+                    isDetectionStarted = true;
+                    playButton.setChecked(true);
+                    toggleDetection();
+
+                    PauseTime = null;
+                }
+            }.start();
+
+            // Detektion beenden
+            if (isDetectionStarted) {
+                isDetectionStarted = false;
                 toggleDetection();
+                playButton.setChecked(false);
+                startActivity(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME));
             }
-        }.start();
+        }
     }
 
     protected void  CreateNewManualSmokeEvent(LocalDateTime StartTime)

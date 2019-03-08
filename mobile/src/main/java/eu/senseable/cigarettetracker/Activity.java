@@ -175,7 +175,7 @@ public class Activity extends AppCompatActivity {
                 LocalDateTime defaultValuePopUp = LocalDateTime.now();
                 String exportTime = defaultValuePopUp.format(exportFormatter);
                 try {
-                    Cursor c = db.query("SELECT * FROM smoking_event_table", null);
+                    Cursor c = db.query("SELECT * FROM smoking_event_table WHERE removed = 0", null);
                     int rowcount = 0;
                     int colcount = 0;
                     String filename = "SmokeEvents_" + exportTime + ".csv";

@@ -9,7 +9,6 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
-import android.widget.Toast;
 
 import java.util.Random;
 
@@ -60,7 +59,7 @@ public class SensorReadoutService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Toast.makeText(this, "Detection started", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "Detection started", Toast.LENGTH_SHORT).show();
 
         /* For each start request, send a message to start a job and deliver the start ID */
         Message msg = mServiceHandler.obtainMessage();
@@ -94,7 +93,7 @@ public class SensorReadoutService extends Service {
             handlerThread.quit();
             handlerThread = null;
             sensor = null;
-            Toast.makeText(this, "Detection stopped", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this, "Detection stopped", Toast.LENGTH_SHORT).show();
         }
     }
 
