@@ -23,7 +23,7 @@
             android:id="@+id/textView6"
             style="@style/word_title"
             android:layout_height="wrap_content"
-            android:background="@color/dark_grey"
+            android:background="#1f2020"
             android:fontFamily="sans-serif-condensed"
             android:padding="@dimen/box_inset_layout_padding"
             android:paddingStart="@dimen/box_inset_layout_padding"
