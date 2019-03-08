@@ -76,7 +76,7 @@ public class Activity extends AppCompatActivity {
         /* Access Database: Get a new or existing viewModel from viewModelProvider */
         mSEViewModel = ViewModelProviders.of((FragmentActivity) this).get(SmokingEventViewModel.class);
 
-        RecyclerView recyclerView = findViewById(R.id.my_recycler_view);
+        final RecyclerView recyclerView = findViewById(R.id.my_recycler_view);
         final SmokingEventListAdapter adapter = new SmokingEventListAdapter(this);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -123,12 +123,10 @@ public class Activity extends AppCompatActivity {
                         // do whatever
                     }
 
-                    @Override public void onLongItemClick(View view, int position) {
+                    @Override public void onLongItemClick(RecyclerView.ViewHolder view, int position) {
                         // do whatever
-                        final Dialog dia = new Dialog(Activity.this);
-                        dia.setContentView(R.layout.add_smoke_event);
-                        dia.show();
-
+                        final SmokingEvent ev = ((SmokingEventListAdapter.SmokingEventViewHolder) view).getItem();
+                        mSEViewModel.removeEvent(ev.getId());
                     }
                 })
         );
@@ -382,7 +380,7 @@ public class Activity extends AppCompatActivity {
         public interface OnItemClickListener {
             public void onItemClick(View view, int position);
 
-            public void onLongItemClick(View view, int position);
+            public void onLongItemClick(RecyclerView.ViewHolder view, int position);
         }
 
         GestureDetector mGestureDetector;
@@ -398,8 +396,9 @@ public class Activity extends AppCompatActivity {
                 @Override
                 public void onLongPress(MotionEvent e) {
                     View child = recyclerView.findChildViewUnder(e.getX(), e.getY());
+                    RecyclerView.ViewHolder vh = recyclerView.findContainingViewHolder(child);
                     if (child != null && mListener != null) {
-                        mListener.onLongItemClick(child, recyclerView.getChildAdapterPosition(child));
+                        mListener.onLongItemClick(vh, recyclerView.getChildAdapterPosition(child));
                     }
                 }
             });
