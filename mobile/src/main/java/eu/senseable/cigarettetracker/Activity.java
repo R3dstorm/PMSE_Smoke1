@@ -6,6 +6,7 @@ import android.arch.lifecycle.LifecycleOwner;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.arch.persistence.room.RoomDatabase;
+import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Environment;
@@ -20,18 +21,25 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.Menu;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import org.joda.time.DateTime;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
@@ -57,13 +65,15 @@ public class Activity extends AppCompatActivity {
     DateTimeFormatter timeHourFormatter = DateTimeFormatter.ofPattern("HH");
     DateTimeFormatter timeMinutesFormatter = DateTimeFormatter.ofPattern("mm");
     DateTimeFormatter exportFormatter = DateTimeFormatter.ofPattern("yyMMdd_hhmmss");
+    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyMMdd");
+    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         /* Get permissions */
         ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
+                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
 
         setContentView(R.layout.activity_counter);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -73,7 +83,7 @@ public class Activity extends AppCompatActivity {
         /* Access Database: Get a new or existing viewModel from viewModelProvider */
         mSEViewModel = ViewModelProviders.of((FragmentActivity) this).get(SmokingEventViewModel.class);
 
-        RecyclerView recyclerView = findViewById(R.id.my_recycler_view);
+        final RecyclerView recyclerView = findViewById(R.id.my_recycler_view);
         final SmokingEventListAdapter adapter = new SmokingEventListAdapter(this);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -113,6 +123,67 @@ public class Activity extends AppCompatActivity {
 
             }
         });
+
+        recyclerView.addOnItemTouchListener(
+                new RecyclerItemClickListener(this, recyclerView ,new RecyclerItemClickListener.OnItemClickListener() {
+                    @Override public void onItemClick(View view, int position) {
+                        // do whatever
+                    }
+
+                    @Override public boolean onDoubleTap(RecyclerView.ViewHolder view, int position) {
+                        // do whatever
+                        final SmokingEvent ev = ((SmokingEventListAdapter.SmokingEventViewHolder) view).getItem();
+
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyMMdd HHmmss");
+                        LocalDateTime start = LocalDateTime.parse(ev.getStartDate() + " " + ev.getStartTime(), formatter);
+                        LocalDateTime stop = LocalDateTime.parse(ev.getStopDate() + " " + ev.getStopTime(), formatter);
+                        Duration duration = Duration.between(start, stop);
+                        String durationMinutes = String.format("%02d", duration.getSeconds() / 60);
+                        String durationSeconds = String.format("%02d", duration.getSeconds() % 60);
+                        String day = String.format("%02d", start.getDayOfMonth());
+                        String year = (String.format("%02d", start.getYear())).substring(2,4);
+                        String month = String.format("%02d", start.getMonth().getValue());
+                        String hours = String.format("%02d", start.getHour());
+                        String minutes = String.format("%02d", start.getMinute());
+                        final Dialog dia = new Dialog(Activity.this);
+                        dia.setContentView(R.layout.add_smoke_event);
+                        TextView title = dia.findViewById(R.id.txt_dia);
+                        title.setText("Edit Cigarette");
+
+                        setDefaultValuesForDialog(dia, year, month, day,
+                                hours, minutes,
+                                durationMinutes, durationSeconds);
+
+                        dia.show();
+
+                        Button addButton = (Button) dia.findViewById(R.id.okayButton);
+                        addButton.setOnClickListener(new View.OnClickListener() {
+                            public void onClick(View v) {
+                                boolean checkInputs = checkInputParameter(dia);
+                                if (checkInputs) {
+                                    convertInputDataToEventData(dia);
+
+                                    SmokingEvent editedEvent = new SmokingEvent("Smoking", startDateSmoke,
+                                            startTimeSmoke, endDateSmoke, endTimeSmoke, true,
+                                            false, false, UUID.randomUUID().toString());
+                                    mSEViewModel.removeEvent(ev.getId());
+                                    mSEViewModel.insert(editedEvent);
+                                    dia.dismiss();
+                                }
+                            }
+                        });
+
+                        Button abortButton = (Button) dia.findViewById(R.id.abortButton);
+                        abortButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                dia.dismiss();
+                            }
+                        });
+                        return true;
+                    }
+                })
+        );
     }
 
     @Override
@@ -135,17 +206,19 @@ public class Activity extends AppCompatActivity {
 
                 final Dialog dia = new Dialog(Activity.this);
                 dia.setContentView(R.layout.add_smoke_event);
+                TextView title = dia.findViewById(R.id.txt_dia);
+                title.setText("New Cigarette");
 
-                setDefaultValuesForDialog(dia, startDateYearDefault, startDateMonthDefault,startDateDayDefault,
-                                               startTimeHourDefault,  startTimeMinutesDefault,
-                                               durationTimeMinutesDefault,  durationTimeSecondsDefault);
+                setDefaultValuesForDialog(dia, startDateYearDefault, startDateMonthDefault, startDateDayDefault,
+                        startTimeHourDefault, startTimeMinutesDefault,
+                        durationTimeMinutesDefault, durationTimeSecondsDefault);
 
                 dia.show();
                 Button addButton = (Button) dia.findViewById(R.id.okayButton);
                 addButton.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
                         boolean checkInputs = checkInputParameter(dia);
-                        if(checkInputs) {
+                        if (checkInputs) {
                             convertInputDataToEventData(dia);
 
                             SmokingEvent ev = new SmokingEvent("Smoking", startDateSmoke,
@@ -180,7 +253,7 @@ public class Activity extends AppCompatActivity {
                     int colcount = 0;
                     String filename = "SmokeEvents_" + exportTime + ".csv";
                     // the name of the file to export with
-                    File saveFile = new File(getPublicAppStorageDir().getAbsolutePath() + "/" +filename);
+                    File saveFile = new File(getPublicAppStorageDir().getAbsolutePath() + "/" + filename);
                     FileWriter fw = new FileWriter(saveFile);
 
                     BufferedWriter bw = new BufferedWriter(fw);
@@ -217,7 +290,7 @@ public class Activity extends AppCompatActivity {
                         bw.close();
                     }
                 } catch (IOException ex) {
-                    if(db.isOpen()){
+                    if (db.isOpen()) {
                         db.close();
                     }
                 }
@@ -226,7 +299,7 @@ public class Activity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStop(){
+    protected void onStop() {
         super.onStop();
     }
 
@@ -236,7 +309,7 @@ public class Activity extends AppCompatActivity {
     }
 
     @Override
-    protected void onDestroy(){
+    protected void onDestroy() {
         super.onDestroy();
         dbSyncHandler.unregisterReceivers();
     }
@@ -253,7 +326,7 @@ public class Activity extends AppCompatActivity {
         // Get the directory for the user's public pictures directory.
         File file = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_DOWNLOADS), "BeatSmoking");
-        if(!file.exists()) {
+        if (!file.exists()) {
             file.mkdirs();
         }
         if (!file.mkdirs()) {
@@ -262,62 +335,54 @@ public class Activity extends AppCompatActivity {
         return file;
     }
 
-    private boolean checkInputParameter(Dialog dia)
-    {
-        EditText edit=(EditText)dia.findViewById(R.id.cigdateyear);
-        int inputStartDateSmoke=Integer.parseInt(edit.getText().toString());
-        if(inputStartDateSmoke < 18 || inputStartDateSmoke > 19)
-        {
+    private boolean checkInputParameter(Dialog dia) {
+        EditText edit = (EditText) dia.findViewById(R.id.cigdateyear);
+        int inputStartDateSmoke = Integer.parseInt(edit.getText().toString());
+        if (inputStartDateSmoke < 18 || inputStartDateSmoke > 19) {
             Toast.makeText(this, "Incorrect year value", Toast.LENGTH_LONG).show();
             return false;
         }
-        edit = (EditText)dia.findViewById(R.id.cigdatemonth);
+        edit = (EditText) dia.findViewById(R.id.cigdatemonth);
         inputStartDateSmoke = Integer.parseInt(edit.getText().toString());
-        if(inputStartDateSmoke < 1 || inputStartDateSmoke > 12)
-        {
+        if (inputStartDateSmoke < 1 || inputStartDateSmoke > 12) {
             Toast.makeText(this, "Incorrect month value", Toast.LENGTH_LONG).show();
             return false;
         }
-        edit = (EditText)dia.findViewById(R.id.cigdateday);
+        edit = (EditText) dia.findViewById(R.id.cigdateday);
         inputStartDateSmoke = Integer.parseInt(edit.getText().toString());
-        if(inputStartDateSmoke < 1 || inputStartDateSmoke > 31)
-        {
+        if (inputStartDateSmoke < 1 || inputStartDateSmoke > 31) {
             Toast.makeText(this, "Incorrect day value", Toast.LENGTH_LONG).show();
             return false;
         }
-        edit = (EditText)dia.findViewById(R.id.startTImeHour);
+        edit = (EditText) dia.findViewById(R.id.startTImeHour);
         int inputStartTimeData = Integer.parseInt(edit.getText().toString());
-        if(inputStartTimeData < 0 || inputStartTimeData > 24)
-        {
+        if (inputStartTimeData < 0 || inputStartTimeData > 24) {
             Toast.makeText(this, "Incorrect hour value", Toast.LENGTH_LONG).show();
             return false;
         }
-        edit = (EditText)dia.findViewById(R.id.startTImeMinute);
+        edit = (EditText) dia.findViewById(R.id.startTImeMinute);
         inputStartTimeData = Integer.parseInt(edit.getText().toString());
-        if(inputStartTimeData < 0 || inputStartTimeData > 59)
-        {
+        if (inputStartTimeData < 0 || inputStartTimeData > 59) {
             Toast.makeText(this, "Incorrect minutes value", Toast.LENGTH_LONG).show();
             return false;
         }
-        edit = (EditText)dia.findViewById(R.id.durationminutes);
+        edit = (EditText) dia.findViewById(R.id.durationminutes);
         int durationTime = Integer.parseInt(edit.getText().toString());
-        if(durationTime < 0 || durationTime > 59)
-        {
+        if (durationTime < 0 || durationTime > 59) {
             Toast.makeText(this, "Incorrect duration minutes value", Toast.LENGTH_LONG).show();
             return false;
         }
-        edit = (EditText)dia.findViewById(R.id.durationseconds);
+        edit = (EditText) dia.findViewById(R.id.durationseconds);
         durationTime = Integer.parseInt(edit.getText().toString());
-        if(durationTime < 0 || durationTime > 59)
-        {
+        if (durationTime < 0 || durationTime > 59) {
             Toast.makeText(this, "Incorrect duration seconds value", Toast.LENGTH_LONG).show();
             return false;
         }
         return true;
     }
 
-    private void convertInputDataToEventData(Dialog dia)
-    {
+    private void convertInputDataToEventData(Dialog dia) {
+        DateTime dateTime = new DateTime();
         EditText edit = (EditText) dia.findViewById(R.id.cigdateyear);
         startDateSmoke = edit.getText().toString();
         edit = (EditText) dia.findViewById(R.id.cigdatemonth);
@@ -326,7 +391,6 @@ public class Activity extends AppCompatActivity {
         edit = (EditText) dia.findViewById(R.id.cigdateday);
         tmp = edit.getText().toString();
         startDateSmoke = startDateSmoke + tmp;
-        endDateSmoke = startDateSmoke;
         edit = (EditText) dia.findViewById(R.id.startTImeHour);
         startTimeSmoke = edit.getText().toString();
         edit = (EditText) dia.findViewById(R.id.startTImeMinute);
@@ -334,34 +398,90 @@ public class Activity extends AppCompatActivity {
         startTimeSmoke = startTimeSmoke + tmp + "00"; // seconds are assumed as o seconds
         edit = (EditText) dia.findViewById(R.id.durationminutes);
         String durationString = edit.getText().toString();
+        int durationMinutes = Integer.parseInt(durationString);
         edit = (EditText) dia.findViewById(R.id.durationseconds);
+        int durationSeconds = Integer.parseInt(edit.getText().toString());
         durationString = durationString + edit.getText().toString();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyMMdd HHmmss");
+        LocalDateTime stop = LocalDateTime.parse(startDateSmoke + " " + startTimeSmoke, formatter);
+        stop = stop.plus(durationMinutes, ChronoUnit.MINUTES);
+        stop = stop.plus(durationSeconds, ChronoUnit.SECONDS);
         int duration = Integer.parseInt(durationString);
         int startTimeInt = Integer.parseInt(startTimeSmoke);
-        int endTime = startTimeInt + duration;
-        endTimeSmoke = Integer.toString(endTime);
+
+        endDateSmoke = stop.format(dateFormatter);
+        endTimeSmoke = stop.format(timeFormatter);
+
+
         if (endTimeSmoke.length() == 5) {
             endTimeSmoke = "0" + endTimeSmoke;
         }
     }
 
+
     private void setDefaultValuesForDialog(Dialog dia, String startDateYearDefault, String startDateMonthDefault,
                                            String startDateDayDefault, String startTimeHourDefault, String startTimeMinutesDefault,
-                                           String durationTimeMinutesDefault, String durationTimeSecondsDefault)
-    {
-        EditText edit=(EditText)dia.findViewById(R.id.cigdateyear);
+                                           String durationTimeMinutesDefault, String durationTimeSecondsDefault) {
+        EditText edit = (EditText) dia.findViewById(R.id.cigdateyear);
         edit.setText(startDateYearDefault);
-        edit=(EditText)dia.findViewById(R.id.cigdatemonth);
+        edit = (EditText) dia.findViewById(R.id.cigdatemonth);
         edit.setText(startDateMonthDefault);
-        edit=(EditText)dia.findViewById(R.id.cigdateday);
+        edit = (EditText) dia.findViewById(R.id.cigdateday);
         edit.setText(startDateDayDefault);
         edit = (EditText) dia.findViewById(R.id.startTImeHour);
         edit.setText(startTimeHourDefault);
         edit = (EditText) dia.findViewById(R.id.startTImeMinute);
         edit.setText(startTimeMinutesDefault);
-        edit = (EditText)dia.findViewById(R.id.durationminutes);
+        edit = (EditText) dia.findViewById(R.id.durationminutes);
         edit.setText(durationTimeMinutesDefault);
-        edit = (EditText)dia.findViewById(R.id.durationseconds);
+        edit = (EditText) dia.findViewById(R.id.durationseconds);
         edit.setText(durationTimeSecondsDefault);
     }
 }
+
+    class RecyclerItemClickListener implements RecyclerView.OnItemTouchListener {
+        private OnItemClickListener mListener;
+
+        public interface OnItemClickListener {
+            public void onItemClick(View view, int position);
+
+            public boolean onDoubleTap(RecyclerView.ViewHolder view, int position);
+        }
+
+        GestureDetector mGestureDetector;
+
+        public RecyclerItemClickListener(Context context, final RecyclerView recyclerView, OnItemClickListener listener) {
+            mListener = listener;
+            mGestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+                @Override
+                public boolean onSingleTapUp(MotionEvent e) {
+                    return true;
+                }
+
+                @Override
+                public boolean onDoubleTap(MotionEvent e) {
+                    View child = recyclerView.findChildViewUnder(e.getX(), e.getY());
+                    RecyclerView.ViewHolder vh = recyclerView.findContainingViewHolder(child);
+                    if (child != null && mListener != null) {
+                        mListener.onDoubleTap(vh, recyclerView.getChildAdapterPosition(child));
+                    }
+                    return true;
+                }
+            });
+        }
+
+        @Override public boolean onInterceptTouchEvent(RecyclerView view, MotionEvent e) {
+            View childView = view.findChildViewUnder(e.getX(), e.getY());
+            if (childView != null && mListener != null && mGestureDetector.onTouchEvent(e)) {
+                mListener.onItemClick(childView, view.getChildAdapterPosition(childView));
+                return true;
+            }
+            return false;
+        }
+
+        @Override public void onTouchEvent(RecyclerView view, MotionEvent motionEvent) { }
+
+        @Override
+        public void onRequestDisallowInterceptTouchEvent (boolean disallowIntercept){}
+    }
+
