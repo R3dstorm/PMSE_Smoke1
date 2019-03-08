@@ -27,6 +27,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.joda.time.DateTime;
@@ -146,6 +147,8 @@ public class Activity extends AppCompatActivity {
                         String minutes = String.format("%02d", start.getMinute());
                         final Dialog dia = new Dialog(Activity.this);
                         dia.setContentView(R.layout.add_smoke_event);
+                        TextView title = dia.findViewById(R.id.txt_dia);
+                        title.setText("Edit Cigarette");
 
                         setDefaultValuesForDialog(dia, year, month, day,
                                 hours, minutes,
@@ -203,6 +206,8 @@ public class Activity extends AppCompatActivity {
 
                 final Dialog dia = new Dialog(Activity.this);
                 dia.setContentView(R.layout.add_smoke_event);
+                TextView title = dia.findViewById(R.id.txt_dia);
+                title.setText("New Cigarette");
 
                 setDefaultValuesForDialog(dia, startDateYearDefault, startDateMonthDefault, startDateDayDefault,
                         startTimeHourDefault, startTimeMinutesDefault,
