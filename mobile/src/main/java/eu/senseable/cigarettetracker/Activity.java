@@ -385,16 +385,36 @@ public class Activity extends AppCompatActivity {
         DateTime dateTime = new DateTime();
         EditText edit = (EditText) dia.findViewById(R.id.cigdateyear);
         startDateSmoke = edit.getText().toString();
+        if(startDateSmoke.length() == 1)
+        {
+            startDateSmoke = "0" + startDateSmoke;
+        }
         edit = (EditText) dia.findViewById(R.id.cigdatemonth);
         String tmp = edit.getText().toString();
+        if(tmp.length() == 1)
+        {
+            tmp = "0" + tmp;
+        }
         startDateSmoke = startDateSmoke + tmp;
         edit = (EditText) dia.findViewById(R.id.cigdateday);
         tmp = edit.getText().toString();
+        if(tmp.length() == 1)
+        {
+            tmp = "0" + tmp;
+        }
         startDateSmoke = startDateSmoke + tmp;
         edit = (EditText) dia.findViewById(R.id.startTImeHour);
         startTimeSmoke = edit.getText().toString();
+        if(startTimeSmoke.length() == 1)
+        {
+            startTimeSmoke = "0" + startTimeSmoke;
+        }
         edit = (EditText) dia.findViewById(R.id.startTImeMinute);
         tmp = edit.getText().toString();
+        if(tmp.length() == 1)
+        {
+            tmp = "0" + tmp;
+        }
         startTimeSmoke = startTimeSmoke + tmp + "00"; // seconds are assumed as o seconds
         edit = (EditText) dia.findViewById(R.id.durationminutes);
         String durationString = edit.getText().toString();
