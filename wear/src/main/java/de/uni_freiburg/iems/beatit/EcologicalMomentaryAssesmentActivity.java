@@ -1,13 +1,21 @@
 package de.uni_freiburg.iems.beatit;
 
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.PowerManager;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.app.NotificationCompat.WearableExtender;
 import android.support.v7.app.AppCompatActivity;
 import android.support.wear.ambient.AmbientModeSupport;
 import android.util.Log;
@@ -30,6 +38,7 @@ import MachineLearningModule.SmokeDetector;
 import SQLiteDatabaseModule.SmokingEvent;
 import SensorReadoutModule.SensorReadoutService;
 import SensorReadoutModule.dataAcquisitionActivity;
+import eu.senseable.cigarettetracker.NotificationBroadcastReceiver;
 
 import static android.content.Intent.ACTION_DREAMING_STARTED;
 import static android.content.Intent.ACTION_DREAMING_STOPPED;
@@ -43,7 +52,9 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
 
     private ToggleButton playButton;
     private Intent sensorServiceIntent;
+    private Intent aiServiceIntent;
     private Boolean sensorServiceStarted = false;
+    private Boolean aiServiceStarted = false;
     private Mediator sensorAiMediator = null;
     private AmbientModeSupport.AmbientController mAmbientController;
     private LocalDateTime smokingStartTime;
@@ -55,6 +66,7 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
     private IntentFilter actionFilter = null;
     private Boolean bNoDetection = false;
     private boolean isPopupMode = false;
+
 
     /* TODO remove this as soon smoking notification exists*/
     private CheckBox smokingDetected;
@@ -249,6 +261,49 @@ public class EcologicalMomentaryAssesmentActivity extends AppCompatActivity impl
                 sensorAiMediator = null;
             }
             sensorAiMediator = new Mediator(this, true, EcologicalMomentaryAssesmentActivity.this);
+
+
+
+            /* TODO finish new intent for starting mediator service */
+            aiServiceIntent = new Intent(EcologicalMomentaryAssesmentActivity.this, MediatorForegroundService.class);
+            startService(aiServiceIntent);
+            sensorServiceStarted = true;
+
+//
+//            int ONGOING_NOTIFICATION_ID = 1;
+//            String CHANNEL_ID = "BeatNotification";
+//            String CHANNEL_DEFAULT_IMPORTANCE = "IMPORTANCE_HIGH";
+
+
+//            NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+
+//
+//            Intent notificationIntent = new Intent(this, NotificationBroadcastReceiver.class);
+//            PendingIntent pendingIntent =
+//                    PendingIntent.getActivity(this, 0, notificationIntent, 0);
+
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//                NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "abc", NotificationManager.IMPORTANCE_DEFAULT);
+//                notificationManager.createNotificationChannel(channel);
+//            }
+
+            //NotificationCompat notification = new NotificationCompat.Builder()
+
+//            NotificationCompat.Builder notification =
+//                    new NotificationCompat.Builder(this, CHANNEL_ID)
+//                            .setSmallIcon(R.drawable.beatsmoking)
+//                            .setContentTitle(getText(R.string.notification_title))
+//                            .setContentText(getText(R.string.notification_message))
+//                            .setContentIntent(pendingIntent);
+
+//
+//            NotificationManagerCompat notificationManager =
+//                    NotificationManagerCompat.from(this);
+//            notificationManager.notify(ONGOING_NOTIFICATION_ID,notification.build());
+
+
+
+
 
             if (PauseTime == null){
                 Toast.makeText(this, "Detection started", Toast.LENGTH_SHORT).show();

@@ -6,4 +6,9 @@
     <string name="smokingDetected">Smoking\n Detected</string>
     <string name="ManualSmokeEventButton">New Cigarette</string>
     <string name="ManualSmokeText1">Cigarette was smoked</string>
+    <string name="notification_title">Detection running</string>
+    <string name="notification_message">Detection has been started</string>
+    <string name="ticker_text">ticker text</string>
+
+
 </resources>
