@@ -4,6 +4,7 @@ package eu.senseable.SQLiteDatabaseModule;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,9 +16,11 @@ import android.widget.TextView;
 
 import org.joda.time.DateTime;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -67,12 +70,8 @@ public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventLi
         if (mSmokingEvents != null) {
             SmokingEvent current = mSmokingEvents.get(position);
             holder.setItem(current);
-            Date startDate = new Date();
-            startDate = ConvertToDate(current.getStartDate());
-            String startDateFormatted = ConvertDateToString(startDate);
             Date startTime = new Date();
             startTime = ConvertToTime(current.getStartTime());
-            String startTimeFormatted = ConvertTimeToString(startTime);
             DateTime tmpTimeStamp = new DateTime(startTime.getTime());
 
             AnimationSet animSet = new AnimationSet(true);
@@ -97,11 +96,11 @@ public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventLi
             long tmpMilliDiff = stopTime.getTime() - startTime.getTime();
             long milliDiff = timeUnit.convert(tmpMilliDiff,MILLISECONDS);
 
-            DateFormat durationFormatter = new SimpleDateFormat("mm:ss");
             Calendar calendar = Calendar.getInstance();
             calendar.setTimeInMillis(milliDiff);
+            String eventString = formatEvent(current);
             /* Write display data to view */
-            holder.smokingEventItemView.setText(startDateFormatted + " " + startTimeFormatted + " " + durationFormatter.format(calendar.getTime()));
+            holder.smokingEventItemView.setText(eventString);
         } else {
             // Covers the case of data not being ready yet.
             holder.smokingEventItemView.setText("No Smoke Event");
@@ -121,19 +120,6 @@ public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventLi
         else return 0;
     }
 
-    private Date ConvertToDate(String dateString){
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMdd");
-
-        Date convertedDate = new Date();
-        try {
-            convertedDate = dateFormat.parse(dateString);
-        } catch (ParseException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        return convertedDate;
-    }
-
     private Date ConvertToTime(String dateString){
         SimpleDateFormat dateFormat = new SimpleDateFormat("HHmmss");
 
@@ -147,19 +133,27 @@ public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventLi
         return convertedDate;
     }
 
-    private String ConvertDateToString(Date dateBefore) {
-        SimpleDateFormat formattedDateFormat = new SimpleDateFormat("E dd MMM");
-        String formattedDate = "";
+    private String formatEvent(SmokingEvent event) {
+        try {
+            String confirmed = (event.getEventConfirmed() ? "\u2714" : "\u2718");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyMMdd HHmmss");
+            LocalDateTime start = LocalDateTime.parse(event.getStartDate() + " " + event.getStartTime(), formatter);
+            LocalDateTime stop = LocalDateTime.parse(event.getStopDate() + " " + event.getStopTime(), formatter);
+            Duration duration = Duration.between(start, stop);
+            String durationMinutes = String.format("%02d", duration.getSeconds() / 60);
+            String durationSeconds = String.format("%02d", duration.getSeconds() % 60);
+            String dayName = start.getDayOfWeek().toString().substring(0, 3);
+            String day = String.format("%02d", start.getDayOfMonth());
+            String monthName = start.getMonth().toString().substring(0, 3);
+            String hours = String.format("%02d", start.getHour());
+            String minutes = String.format("%02d", start.getMinute());
+            String seconds = String.format("%02d", start.getSecond());
 
-        formattedDate = formattedDateFormat.format(dateBefore);
-        return formattedDate;
-    }
-
-    private String ConvertTimeToString(Date dateBefore) {
-        SimpleDateFormat formattedDateFormat = new SimpleDateFormat("HH:mm:ss");
-        String formattedDate = "";
-
-        formattedDate = formattedDateFormat.format(dateBefore);
-        return formattedDate;
+            return dayName + ", " + day + ". " + monthName + " " + hours + ":" + minutes + ":" + seconds +
+                    ", " + durationMinutes + ":" + durationSeconds + " " + confirmed;
+        } catch(Exception e) {
+            Log.i("ML", "failed to format event: " + e.getMessage());
+        }
+        return "";
     }
 }
