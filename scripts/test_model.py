@@ -8,7 +8,7 @@ from tensorflow.python.platform import gfile
 
 np.set_printoptions(precision=2, suppress=True, threshold=np.nan)
 
-feature_count  = 12
+feature_count  = 24
 
 dataframe = pandas.read_csv('validation.csv', header=None, engine = 'python', sep='\s+|\t+|,')
 
@@ -30,7 +30,7 @@ with tf.Session() as sess:
     tf.import_graph_def(graph_def)
 
     tensor_input = sess.graph.get_tensor_by_name('import/dense_1_input:0')
-    tensor_output = sess.graph.get_tensor_by_name('import/dense_6/Sigmoid:0')
+    tensor_output = sess.graph.get_tensor_by_name('import/dense_3/Sigmoid:0')
     predictions = sess.run(tf.cast(tf.round(tensor_output), tf.int64),
                            feed_dict={tensor_input: dataset[start:start + length]})
 

@@ -7,13 +7,18 @@ import android.util.Log;
 import com.example.commondataobjects.SmokingEventDTO;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
+import com.google.android.gms.wearable.Asset;
 import com.google.android.gms.wearable.DataClient;
+import com.google.android.gms.wearable.DataItem;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
@@ -26,9 +31,6 @@ import SQLiteDatabaseModule.SmokingEvent;
 public class Synchronize {
 
     private Context myContext;
-    private PutDataRequest dataRequest;
-    private PutDataMapRequest dataMapRequest;
-    private DataClient dataClient;
     private static final String SYNC_KEY = "de.uni_freiburg.iems.beatit";
 
     private static final String TAG_SYNC = "SYNCHRONIZE";
@@ -36,11 +38,6 @@ public class Synchronize {
 
     Synchronize(Context context) {
         myContext = context;
-
-        /* Handle Data Objects */
-        String dataPath = "/watch/newElements";
-        dataRequest =  PutDataRequest.create(dataPath);
-        dataMapRequest = PutDataMapRequest.create(dataPath);
     }
 
     public void sendSyncMessage(List<SmokingEvent> unsynchronizedEvents) {
@@ -72,6 +69,45 @@ public class Synchronize {
         new SendMessage(dataPath, messageData).start();
     }
 
+    public void requestHashListMessage(){
+        String dataPath = "/watch/newSensorData";
+        byte[] dummy= {0};
+        new SendMessage(dataPath, dummy).start();
+    }
+
+    public void sendCsvAssetToPhone(File file){
+        Asset asset = createAssetFromCsvFile(file);
+        PutDataMapRequest dataMap = PutDataMapRequest.create("/watchData");
+        dataMap.getDataMap().putAsset("csv", asset);
+        dataMap.getDataMap().putString("title",file.getName());
+        dataMap.setUrgent();
+        PutDataRequest request = dataMap.asPutDataRequest();
+        Task<DataItem> putTask = Wearable.getDataClient(myContext).putDataItem(request);
+    }
+
+    Asset createAssetFromCsvFile(File file){
+        Asset output = null;
+        BufferedInputStream buffer= null;
+        int fileLength = (int) file.length();
+        byte[] bytes = new byte[fileLength];
+
+        try {
+            buffer = new BufferedInputStream(new FileInputStream(file));
+            buffer.read(bytes, 0, bytes.length);
+            buffer.close();
+            output = Asset.createFromBytes(bytes);
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                buffer.close();
+            } catch (IOException ex) {
+                // ignore close exception
+            }
+        }
+        return output;
+    }
 
     class SendMessage extends Thread {
         String path;
@@ -107,7 +143,6 @@ public class Synchronize {
                     catch (InterruptedException exception) {
                         //TO DO//
                         Log.e(TAG_SYNC, "sending message failed; Interrupted Exception");
-                        Log.d(TAG_SYNC, "Test error");
                     }
                 }
             }

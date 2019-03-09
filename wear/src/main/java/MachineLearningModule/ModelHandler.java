@@ -30,9 +30,7 @@ public class ModelHandler {
     public void loadModel(AssetManager assets) {
         try {
             inferenceInterface = new TensorFlowInferenceInterface(assets, "file:///android_asset/model.pb");
-            Log.i("ML","model successfully loaded");
-        }
-        catch(Exception e) {
+        } catch(Exception e) {
             Log.i("ML","failed to load model: " + e.getMessage());
         }
         Assets = assets;

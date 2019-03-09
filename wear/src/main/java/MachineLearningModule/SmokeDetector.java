@@ -1,15 +1,14 @@
 package MachineLearningModule;
 
 import android.content.res.AssetManager;
-import android.util.Log;
 
 import java.time.LocalDateTime;
 
 public class SmokeDetector implements AsyncResponse {
 
-    private static final int gestureProbability = 80; // min probability to recognize a smoking gesture
-    private static final int gestureThreshold = 8; // consecutive times above sigmoid threshold to recognize smoking gesture
-    private static final int smokingThreshold = 8; // consecutive gesture occurences to enter smoking phase
+    private static final int gestureProbability = 75; // min probability to recognize a smoking gesture
+    private static final int gestureThreshold = 6; // consecutive times above sigmoid threshold to recognize smoking gesture
+    private static final int smokingThreshold = 6; // consecutive gesture occurences to enter smoking phase
     private static final int smokingTimeout = 45; // max frames between two gestures to abort entering smoking phase
     private static final int stopProbability = 70; // max probability to count as stop frame
     private static final int stopThreshold = 30; // consecutive times below stop probability to leave smoking phase
@@ -17,19 +16,19 @@ public class SmokeDetector implements AsyncResponse {
 
     enum State { Initialize, Idle, Start, Smoking, Stop; }
 
-    private ModelHandler modelHandler = null;
+    private ModelHandler modelHandler;
     private State currentState;
-    private boolean reportSmoking;
-    private LocalDateTime startTime;
-    private LocalDateTime stopTime;
-    private long currentTiming;
-    private int currentProbability;
-    private int smokingStartFrame;
-    private int gestureCounter;
-    private int timeoutCounter;
+    private boolean reportSmoking = false;
+    private LocalDateTime startTime = null;
+    private LocalDateTime stopTime = null;
+    private long currentTiming = 0;
+    private int currentProbability = 0;
+    private int smokingStartFrame = 0;
+    private int gestureCounter = 0;
+    private int timeoutCounter = 0;
     private int frameCounter;
-    private int startFrames;
-    private int stopFrames;
+    private int startFrames = 0;
+    private int stopFrames = 0;
 
     public SmokeDetector(AssetManager assets) {
         frameCounter = 0;

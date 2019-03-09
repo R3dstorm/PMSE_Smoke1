@@ -35,12 +35,16 @@ public class SmokingLogActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
+        if(Globals.getInstance().isDebugMode()) {
+            findViewById(R.id.buttonDelete).setVisibility(View.VISIBLE);
+        }
+
         // Add an observer on the LiveData returned by getAlphabetizedWords.
         // The onChanged() method fires when the observed data changes and the activity is
         // in the foreground.
         mSEViewModel = ViewModelProviders.of(this).get(SmokingEventViewModel.class);
 
-        mSEViewModel.getAllEvents().observe(this, new Observer<List<SmokingEvent>>() {
+        mSEViewModel.getAllValidEvents().observe(this, new Observer<List<SmokingEvent>>() {
             @Override
             public void onChanged(@Nullable final List<SmokingEvent> events) {
                 // Update the cached copy of the words in the adapter.
@@ -57,13 +61,16 @@ public class SmokingLogActivity extends AppCompatActivity {
 
         if (syncModuleTestEnabled) {
             SmokingEvent event1 = new SmokingEvent("manualEvent", "190224",
-                    "000000", "190224", "000001", true, false, false);
+                    "000000", "190224", "000001",
+                    true, false, false, "2");
             mSEViewModel.insert(event1);
             SmokingEvent event2 = new SmokingEvent("manualEvent", "190224",
-                    "000100", "190224", "000101", true, false, false);
+                    "000100", "190224", "000101",
+                    true, false, false, "3");
             mSEViewModel.insert(event2);
             SmokingEvent event3 = new SmokingEvent("manualEvent", "190224",
-                    "010100", "190224", "010100", true, false, false);
+                    "010100", "190224", "010100",
+                    true, false, false, "4");
             mSEViewModel.insert(event3);
         }
     }
