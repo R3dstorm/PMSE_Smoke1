@@ -26,7 +26,9 @@ import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -149,10 +151,15 @@ public class Activity extends AppCompatActivity {
                         dia.setContentView(R.layout.add_smoke_event);
                         TextView title = dia.findViewById(R.id.txt_dia);
                         title.setText("Edit Cigarette");
+                        LinearLayout verifiedLayout = dia.findViewById(R.id.verifiedLayout);
+                        verifiedLayout.getLayoutParams().height = LinearLayout.LayoutParams.MATCH_PARENT;
 
                         setDefaultValuesForDialog(dia, year, month, day,
                                 hours, minutes,
                                 durationMinutes, durationSeconds);
+
+                        final CheckBox verified = dia.findViewById(R.id.smokeEventVerified);
+                        verified.setChecked(ev.getEventConfirmed());
 
                         dia.show();
 
@@ -163,8 +170,10 @@ public class Activity extends AppCompatActivity {
                                 if (checkInputs) {
                                     convertInputDataToEventData(dia);
 
+                                    boolean eventConfirmed = verified.isChecked();
+
                                     SmokingEvent editedEvent = new SmokingEvent("Smoking", startDateSmoke,
-                                            startTimeSmoke, endDateSmoke, endTimeSmoke, true,
+                                            startTimeSmoke, endDateSmoke, endTimeSmoke, eventConfirmed,
                                             false, false, UUID.randomUUID().toString());
                                     mSEViewModel.removeEvent(ev.getId());
                                     mSEViewModel.insert(editedEvent);
@@ -206,8 +215,14 @@ public class Activity extends AppCompatActivity {
 
                 final Dialog dia = new Dialog(Activity.this);
                 dia.setContentView(R.layout.add_smoke_event);
+                CheckBox checkBox = dia.findViewById(R.id.smokeEventVerified);
+                checkBox.setVisibility(View.INVISIBLE);
+                TextView textView = dia.findViewById(R.id.verifiedText);
+                textView.setVisibility(View.INVISIBLE);
                 TextView title = dia.findViewById(R.id.txt_dia);
                 title.setText("New Cigarette");
+                LinearLayout verifiedLayout = dia.findViewById(R.id.verifiedLayout);
+                verifiedLayout.getLayoutParams().height = 0;
 
                 setDefaultValuesForDialog(dia, startDateYearDefault, startDateMonthDefault, startDateDayDefault,
                         startTimeHourDefault, startTimeMinutesDefault,
@@ -294,6 +309,7 @@ public class Activity extends AppCompatActivity {
                         db.close();
                     }
                 }
+                Toast.makeText(Activity.this, "Data exported in folder Download", Toast.LENGTH_SHORT).show();
             }
         });
     }
