@@ -15,15 +15,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import com.opencsv.CSVWriter;
-import static com.opencsv.ICSVWriter.NO_ESCAPE_CHARACTER;
-import static com.opencsv.ICSVWriter.NO_QUOTE_CHARACTER;
-
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -38,7 +31,6 @@ interface MeasurementCompleteListener {
 public class dataAcquisitionActivity extends WearableActivity implements MeasurementCompleteListener {
 
     private float[] singleMeasurement;
-    private float[][] dataStorage;
     private Timer timer;
     private PowerManager powerManager;
     private PowerManager.WakeLock wakeLock;
@@ -56,6 +48,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
     private SensorReadoutService sensorService;
     private boolean sensorServiceBound = false;
     private boolean sensorServiceRunning = false;
+    private DataFileWriter dataFile;
 
     private ServiceConnection sensorServiceConnection = new ServiceConnection() {
 
@@ -175,6 +168,7 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
         setAmbientEnabled();
 
         strDaqLabel = "Smoking";
+        dataFile = new DataFileWriter();
     }
 
     @Override
@@ -231,7 +225,6 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
                             dataOutputTextGYRX.setText(String.format("%.3f",singleMeasurement[4]));
                             dataOutputTextGYRY.setText(String.format("%.3f",singleMeasurement[5]));
                             dataOutputTextGYRZ.setText(String.format("%.3f",singleMeasurement[6]));
-                            int numbers = sensorService.getNumberOfSamples();
 
                             if (!DataStorageRequested) {
                                 //TODO Debug output, dismiss in future release:
@@ -239,13 +232,16 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
                                 //daqStatusText.setTextColor(Color.WHITE);
                             }
                             else{
-                                int numberOfSamples;
 
-                                /* Get data */
-                                dataStorage = sensorService.getFullSampleStorage();
-                                numberOfSamples = sensorService.getNumberOfSamples();
+                                /* Build file name */
+                                String prefix = dataFile.getCommonPrefix() + strDaqLabel + "_";
+                                File file = new File(getExternalFilesDir(Environment.DIRECTORY_MUSIC),prefix + "AnalysisData.csv" );
+                                dataFile.setCurrentFile(file);
+
                                 /* Store data */
-                                storeDataToFile(numberOfSamples);
+                                if(dataFile.storeDataToFile(sensorService.getFullSampleStorage(), sensorService.getNumberOfSamples())) {
+                                    Toast.makeText(dataAcquisitionActivity.this, "Storing finished", Toast.LENGTH_SHORT).show();
+                                }
                                 DataStorageRequested = false;
                                 /* Reset recording button*/
                                 storingDataCompleted();
@@ -256,48 +252,6 @@ public class dataAcquisitionActivity extends WearableActivity implements Measure
             }
         };
         timer.scheduleAtFixedRate(refreshTimerTask, 100, repeatDelay);
-    }
-
-    private void storeDataToFile(int numberOfSamples) {
-        /* Checks if external storage is available for read and write */
-        String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state)) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss_");
-            String dateString;
-
-            /* Build file name */
-            File baseDir = getExternalFilesDir(Environment.DIRECTORY_MUSIC);
-            dateString = startOfMeasurement.format(formatter);
-            dateString = dateString + strDaqLabel + "_";
-            File file = new File(baseDir,dateString + "AnalysisData.csv" );
-            CSVWriter writer;
-
-            /* Check for existing files */
-            int fileCounter = 0;
-            while(file.exists()) {
-                fileCounter++;
-                String fileName = dateString + "AnalysisData" + fileCounter+".csv";
-                file = new File(baseDir,fileName );
-            }
-            try {
-                writer = new CSVWriter(new FileWriter(file),' ',NO_QUOTE_CHARACTER, NO_ESCAPE_CHARACTER,"\n");//filePath));
-                for (int i=0;i< numberOfSamples;i++){
-
-                    String[] data = {String.format("%.0f",dataStorage[i][0]),
-                            String.format("%.3f",dataStorage[i][1]),
-                            String.format("%.6f",dataStorage[i][2]),
-                            String.format("%.6f",dataStorage[i][3]),
-                            String.format("%.6f",dataStorage[i][4]),
-                            String.format("%.6f",dataStorage[i][5]),
-                            String.format("%.6f",dataStorage[i][6])};
-                    writer.writeNext(data);
-                }
-                writer.close();
-                Toast.makeText(dataAcquisitionActivity.this, "Storing finished", Toast.LENGTH_SHORT).show();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     @Override

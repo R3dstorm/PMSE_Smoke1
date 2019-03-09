@@ -67,7 +67,7 @@ public class Mediator {
                 context.bindService(sensorServiceIntent, sensorServiceConnection, Context.BIND_AUTO_CREATE);
             }
             modelEvaluatedListener = _modelEvaluatedListener;
-			smokeDetector = new SmokeDetector(context.getAssets());
+			smokeDetector = new SmokeDetector(context);
         }
     }
 

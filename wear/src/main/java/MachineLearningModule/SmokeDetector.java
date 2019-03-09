@@ -1,8 +1,13 @@
 package MachineLearningModule;
 
+import android.content.Context;
 import android.content.res.AssetManager;
+import android.os.Environment;
 
+import java.io.File;
 import java.time.LocalDateTime;
+
+import SensorReadoutModule.DataFileWriter;
 
 public class SmokeDetector implements AsyncResponse {
 
@@ -18,6 +23,9 @@ public class SmokeDetector implements AsyncResponse {
 
     private ModelHandler modelHandler;
     private State currentState;
+    private Context myContext;
+    private File currentFile = null;
+    private DataFileWriter dataFile;
     private boolean reportSmoking = false;
     private LocalDateTime startTime = null;
     private LocalDateTime stopTime = null;
@@ -30,11 +38,13 @@ public class SmokeDetector implements AsyncResponse {
     private int startFrames = 0;
     private int stopFrames = 0;
 
-    public SmokeDetector(AssetManager assets) {
+    public SmokeDetector(Context context) {
         frameCounter = 0;
         currentState = State.Initialize;
         modelHandler = new ModelHandler();
-        modelHandler.loadModel(assets);
+        modelHandler.loadModel(context.getAssets());
+        myContext = context;
+        dataFile = new DataFileWriter();
     }
 
     private void reset() {
@@ -44,6 +54,12 @@ public class SmokeDetector implements AsyncResponse {
         timeoutCounter = 0;
         startFrames = 0;
         stopFrames = 0;
+        if(currentFile != null) {
+            currentFile = null;
+        }
+        currentFile = new File(myContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC), dataFile.getCommonPrefix() + "_LiveData");
+        dataFile.setCurrentFile(currentFile);
+        //dataFile.startSession();
     }
 
     public int getCurrentProbability() {
@@ -91,6 +107,7 @@ public class SmokeDetector implements AsyncResponse {
     public void feedSensorData(final double[][] window) {
         frameCounter++;
         new ProcessingTask(this, modelHandler, window).execute();
+        //dataFile.writeSession(window, window.length); // unlabeled -> TODO: store current state, too
     }
 
     @Override
@@ -154,6 +171,7 @@ public class SmokeDetector implements AsyncResponse {
             stopTime = LocalDateTime.now();
             reportSmoking = true;
             currentState = State.Initialize;
+            //dataFile.finishSession();
         }
     }
 }
