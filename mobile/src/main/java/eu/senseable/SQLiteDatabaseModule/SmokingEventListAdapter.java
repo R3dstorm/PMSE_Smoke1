@@ -96,12 +96,13 @@ public class SmokingEventListAdapter extends RecyclerView.Adapter<SmokingEventLi
             stopTime = ConvertToTime(current.getStopTime());
             long tmpMilliDiff = stopTime.getTime() - startTime.getTime();
             long milliDiff = timeUnit.convert(tmpMilliDiff,MILLISECONDS);
+            String confirmed = (current.getEventConfirmed() ? "\u2714" : "\u2718");
 
             DateFormat durationFormatter = new SimpleDateFormat("mm:ss");
             Calendar calendar = Calendar.getInstance();
             calendar.setTimeInMillis(milliDiff);
             /* Write display data to view */
-            holder.smokingEventItemView.setText(startDateFormatted + " " + startTimeFormatted + " " + durationFormatter.format(calendar.getTime()));
+            holder.smokingEventItemView.setText(startDateFormatted + " " + startTimeFormatted + " " + durationFormatter.format(calendar.getTime()) + " \t" + confirmed);
         } else {
             // Covers the case of data not being ready yet.
             holder.smokingEventItemView.setText("No Smoke Event");
